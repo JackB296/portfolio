@@ -3,6 +3,8 @@ import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { profile } from "@/lib/data";
+import { gradeBootScript } from "@/lib/grades";
+import KonamiCode from "@/components/layout/KonamiCode";
 
 const sans = Space_Grotesk({
   subsets: ["latin"],
@@ -20,7 +22,7 @@ const siteUrl = "https://jbialecki.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: `${profile.name} — ${profile.title}`,
+  title: `${profile.name} · ${profile.title}`,
   description: profile.tagline,
   keywords: [
     "Jackson Bialecki",
@@ -39,7 +41,7 @@ export const metadata: Metadata = {
   creator: profile.name,
   alternates: { canonical: "/" },
   openGraph: {
-    title: `${profile.name} — ${profile.title}`,
+    title: `${profile.name} · ${profile.title}`,
     description: profile.tagline,
     url: siteUrl,
     siteName: profile.name,
@@ -47,7 +49,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${profile.name} — ${profile.title}`,
+    title: `${profile.name} · ${profile.title}`,
     description: profile.tagline,
   },
   robots: {
@@ -90,13 +92,22 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+    // suppressHydrationWarning: the grade boot script mutates <html> (style +
+    // data attributes) before React hydrates; that mismatch is intentional.
+    <html
+      lang="en"
+      className={`${sans.variable} ${mono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased">
+        {/* Re-apply the persisted film grade before first paint (no flash). */}
+        <script dangerouslySetInnerHTML={{ __html: gradeBootScript() }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
         {children}
+        <KonamiCode />
         <Analytics />
       </body>
     </html>

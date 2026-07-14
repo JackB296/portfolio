@@ -4,7 +4,7 @@ import { profile } from "@/lib/data";
 import DemoShell from "@/components/demos/DemoShell";
 
 export const metadata: Metadata = {
-  title: `Raycasting Engine — ${profile.name}`,
+  title: `Raycasting Engine · ${profile.name}`,
   description:
     "An interactive, Wolfenstein-style raycasting renderer running live in the browser. Walk through this pseudo-3D world built from a 2D grid.",
 };

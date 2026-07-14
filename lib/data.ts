@@ -3,10 +3,10 @@ export const profile = {
   firstName: "Jackson",
   title: "Full Stack Engineer",
   specialties: ["Web", "AI / Machine Learning", "Industrial Systems"],
-  status: "Available for co-op — Spring 2027",
+  status: "Available for co-op: Spring 2027",
   location: "Cincinnati, Ohio",
   tagline:
-    "I build production systems where the web meets the real world — full-stack apps, ML experiments, and the SCADA/ERP pipelines that keep factories running.",
+    "I build production systems where the web meets the real world: full-stack apps, ML experiments, and the SCADA/ERP pipelines that keep factories running.",
   bio: [
     "I'm a Full Stack Engineer and Computer Science student at the University of Cincinnati, working through a 5-year co-op program. I've shipped production software at a manufacturing plant, an enterprise software company, and an ed-tech startup.",
     "My range runs from React/Angular front ends and C#/.NET and Node APIs down to PostgreSQL data layers and Ignition SCADA tag historians. I like problems like integrations, migrations, and dashboards that turn messy real-world data into something people can actually use.",
@@ -34,7 +34,7 @@ export const experience: Experience[] = [
     role: "Computer Science Engineer Intern",
     company: "Voyage Foods",
     location: "Mason, OH",
-    period: "May 2026 — Aug 2026",
+    period: "May 2026 - Aug 2026",
     points: [
       "Built and expanded a production manufacturing dashboard integrating Cin7 Core ERP, SafetyChain QA, Ignition SCADA, and PostgreSQL data into one centralized React interface.",
       "Migrated PLC tag storage from SQLite to PostgreSQL and visualized 200+ Ignition tags across 10+ production machines for analysis, graphing, and plant-floor performance monitoring.",
@@ -45,7 +45,7 @@ export const experience: Experience[] = [
     role: "Full Stack Developer Co-op",
     company: "London Computer Systems",
     location: "Cincinnati, OH",
-    period: "Aug 2025 — Dec 2025",
+    period: "Aug 2025 - Dec 2025",
     points: [
       "Resolved 30+ production tickets involving bug fixes, feature enhancements, and database updates across Angular front ends, C#/.NET APIs, and SQL-backed systems.",
       "Collaborated with a 50+ engineer team through code reviews, sprint planning, peer debugging, and production issue investigation in an Agile environment.",
@@ -56,7 +56,7 @@ export const experience: Experience[] = [
     role: "Full Stack Developer",
     company: "JAKAPA",
     location: "Remote",
-    period: "May 2023 — Jun 2025",
+    period: "May 2023 - Jun 2025",
     points: [
       "Built a full-stack Edlink API integration linking JAKAPA's Angular platform to Canvas LMS, automating single sign-on, first-login account creation, and class enrollment from Canvas rosters.",
       "Engineered Node.js services that mirror Canvas rostering into PostgreSQL on login, with idempotent upserts so re-syncing never duplicates a student.",
@@ -67,7 +67,7 @@ export const experience: Experience[] = [
     role: "Database Administrator",
     company: "American Equity Funding, Inc.",
     location: "Remote",
-    period: "Aug 2023 — Oct 2024",
+    period: "Aug 2023 - Oct 2024",
     points: [
       "Managed investor and financial data across multiple databases while maintaining data integrity, security, and reporting accuracy.",
       "Migrated legacy Microsoft Access workflows to PostgreSQL and built Java tools that let non-technical staff safely query and update records.",
@@ -87,6 +87,8 @@ export type Project = {
   accentLabel: string;
   featured?: boolean;
   image?: string;
+  /** Live canvas preview rendered behind the card on hover. */
+  preview?: "life" | "raycaster" | "cloth" | "flappy";
 };
 
 // "Projects" = projects (live demos, hardware, side projects).
@@ -111,6 +113,7 @@ export const projects: Project[] = [
     live: "/flappy",
     liveLabel: "Play the live demo",
     accentLabel: "AI / ML",
+    preview: "flappy",
   },
   {
     name: "Raycasting Engine",
@@ -121,6 +124,7 @@ export const projects: Project[] = [
     live: "/raycaster",
     liveLabel: "Walk through it",
     accentLabel: "Graphics",
+    preview: "raycaster",
   },
   {
     name: "Cloth Simulation",
@@ -131,6 +135,7 @@ export const projects: Project[] = [
     live: "/cloth",
     liveLabel: "Play with it",
     accentLabel: "Physics",
+    preview: "cloth",
   },
   {
     name: "Conway's Game of Life",
@@ -141,6 +146,7 @@ export const projects: Project[] = [
     live: "/game-of-life",
     liveLabel: "Play with it",
     accentLabel: "Simulation",
+    preview: "life",
   },
 ];
 
@@ -178,7 +184,7 @@ export const skillGroups: SkillGroup[] = [
 
 export const education = {
   school: "University of Cincinnati",
-  degree: "B.S. Computer Science — 5-Year Co-op Program",
+  degree: "B.S. Computer Science, 5-Year Co-op Program",
   location: "Cincinnati, Ohio",
   period: "Expected May 2029",
   gpa: "3.44 / 4.00",

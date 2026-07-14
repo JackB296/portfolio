@@ -3,7 +3,7 @@ import { profile } from "@/lib/data";
 import BackLink from "@/components/ui/BackLink";
 
 export const metadata: Metadata = {
-  title: `Privacy Policy — ${profile.name}`,
+  title: `Privacy Policy · ${profile.name}`,
   description: `How ${profile.name}'s portfolio handles the limited personal data it collects.`,
   // No reason to index a boilerplate policy page.
   robots: { index: false, follow: true },

@@ -4,7 +4,7 @@ import { profile } from "@/lib/data";
 import DemoShell from "@/components/demos/DemoShell";
 
 export const metadata: Metadata = {
-  title: `Game of Life — ${profile.name}`,
+  title: `Game of Life · ${profile.name}`,
   description:
     "Conway's Game of Life with age-colored cells, interactive in the browser.",
 };

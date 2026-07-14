@@ -11,26 +11,19 @@ export default function Contact() {
       <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[400px] w-[600px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-[120px]" />
 
       <div className="container-x">
-        <Reveal>
-          <p className="section-label">
-            <span className="h-px w-8 bg-accent" /> Contact
-          </p>
-        </Reveal>
-
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           {/* Left: pitch + direct links */}
           <div>
             <Reveal>
               <h2 className="max-w-md text-4xl font-semibold tracking-tight sm:text-5xl">
-                Let&apos;s build something.
+                Hire me for Spring 2027.
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-5 max-w-md text-base leading-relaxed text-white/60">
-                I&apos;m{" "}
-                <span className="text-emerald-300">available for a Spring 2027 co-op</span>{" "}
-                and always up for a conversation about web, ML, or industrial systems
-                work. Drop me a message and I&apos;ll reply soon.
+                I&apos;m looking for a co-op, and I&apos;m always up for a
+                conversation about web, ML, or industrial systems work. Drop me a
+                message and I&apos;ll reply soon.
               </p>
             </Reveal>
 

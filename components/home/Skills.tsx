@@ -49,11 +49,6 @@ export default function Skills() {
     <section id="skills" className="relative scroll-mt-20 py-28 sm:py-36">
       <div className="container-x">
         <Reveal>
-          <p className="section-label">
-            <span className="h-px w-8 bg-accent" /> Skills
-          </p>
-        </Reveal>
-        <Reveal>
           <h2 className="mb-14 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
             The toolbox.
           </h2>

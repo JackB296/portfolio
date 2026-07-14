@@ -4,7 +4,7 @@ import { profile } from "@/lib/data";
 import DemoShell from "@/components/demos/DemoShell";
 
 export const metadata: Metadata = {
-  title: `Cloth Simulation — ${profile.name}`,
+  title: `Cloth Simulation · ${profile.name}`,
   description:
     "An interactive Verlet-integration cloth simulation running live in the browser. Just drag your mouse across it to slice through the threads.",
 };

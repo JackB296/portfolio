@@ -6,7 +6,7 @@ import BackLink from "@/components/ui/BackLink";
 import { GitHubIcon, ArrowRightIcon } from "@/components/ui/icons";
 
 export const metadata: Metadata = {
-  title: `Neuroevolution Flappy Bird — ${profile.name}`,
+  title: `Neuroevolution Flappy Bird · ${profile.name}`,
   description:
     "An AI-driven Flappy Bird that evolves a population of neural-network agents through neuroevolution. Here it is playable, embedded live in the portfolio.",
 };
@@ -50,7 +50,7 @@ export default function FlappyPage() {
                 <li key={t} className="flex gap-3">
                   <span className="mt-1.5 h-1.5 w-1.5 flex-none rotate-45 bg-accent" />
                   <span>
-                    <b className="text-white/85">{t}</b> — {d}
+                    <b className="text-white/85">{t}</b>: {d}
                   </span>
                 </li>
               ))}
@@ -80,7 +80,7 @@ export default function FlappyPage() {
           <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-ink shadow-2xl shadow-accent/10 lg:w-[480px]">
             <iframe
               src="/neat-flappy/index.html"
-              title="Neuroevolution Flappy Bird — live demo"
+              title="Neuroevolution Flappy Bird live demo"
               sandbox="allow-scripts allow-same-origin"
               className="block h-[760px] w-full"
               loading="lazy"

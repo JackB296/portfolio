@@ -9,7 +9,7 @@ export default function NotFound() {
         <span className="gradient-accent">Lost the thread.</span>
       </h1>
       <p className="mt-5 max-w-md text-white/60">
-        This page drifted off-screen — like a bird that didn&apos;t clear the pipe.
+        This page drifted off-screen, like a bird that didn&apos;t clear the pipe.
       </p>
       <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
         <Link

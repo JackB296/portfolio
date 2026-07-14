@@ -1,11 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { profile } from "@/lib/data";
 import MagneticButton from "../ui/MagneticButton";
-
-const HeroScene = dynamic(() => import("../three/HeroScene"), { ssr: false });
+import HeroBackdrop from "./HeroBackdrop";
 
 const container = {
   hidden: {},
@@ -22,34 +20,28 @@ export default function Hero() {
       id="top"
       className="relative flex min-h-[100svh] items-center overflow-hidden"
     >
-      {/* 3D backdrop */}
-      <div className="absolute inset-0 z-0">
-        <HeroScene />
+      {/* Ambient color wash behind the automaton */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute right-[5%] top-[18%] h-[440px] w-[440px] rounded-full bg-accent/20 blur-[140px]" />
+        <div className="absolute bottom-[8%] left-[12%] h-[320px] w-[360px] rounded-full bg-accent-dim/25 blur-[120px]" />
       </div>
+      {/* Switchable backdrop: Game of Life automaton or the 3D orbit scene. */}
+      <HeroBackdrop />
       {/* Vignette + gradient wash so text stays legible */}
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(5,6,10,0.55)_70%,rgba(5,6,10,0.95)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,transparent_0%,rgb(var(--ink-rgb)/0.55)_70%,rgb(var(--ink-rgb)/0.95)_100%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-40 bg-gradient-to-t from-ink to-transparent" />
 
-      <div className="container-x relative z-10">
+      <div className="container-x relative z-10 py-20">
         <motion.div
+          data-testid="hero-intro"
           variants={container}
           initial="hidden"
           animate="show"
           className="max-w-3xl"
         >
-          <motion.div variants={item}>
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 font-mono text-xs tracking-wide text-emerald-300">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              {profile.status}
-            </span>
-          </motion.div>
-
           <motion.h1
             variants={item}
-            className="mt-7 text-[2.7rem] font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+            className="text-[2.7rem] font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
           >
             <span className="text-white">{profile.name}</span>
           </motion.h1>
@@ -89,25 +81,6 @@ export default function Hero() {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Scroll hint */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.4 }}
-        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
-      >
-        <div className="flex flex-col items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-white/60">
-          Scroll
-          <span className="flex h-9 w-5 items-start justify-center rounded-full border border-white/20 p-1">
-            <motion.span
-              animate={{ y: [0, 10, 0] }}
-              transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-              className="h-1.5 w-1.5 rounded-full bg-accent"
-            />
-          </span>
-        </div>
-      </motion.div>
     </section>
   );
 }

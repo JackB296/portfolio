@@ -4,7 +4,7 @@ import { profile } from "@/lib/data";
 import DemoShell from "@/components/demos/DemoShell";
 
 export const metadata: Metadata = {
-  title: `Mandelbrot Set — ${profile.name}`,
+  title: `Mandelbrot Set · ${profile.name}`,
   description:
     "An interactive Mandelbrot set renderer with zoom, ported from my Python notebook.",
 };

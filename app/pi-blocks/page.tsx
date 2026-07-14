@@ -4,7 +4,7 @@ import { profile } from "@/lib/data";
 import DemoShell from "@/components/demos/DemoShell";
 
 export const metadata: Metadata = {
-  title: `Pi from Collisions — ${profile.name}`,
+  title: `Pi from Collisions · ${profile.name}`,
   description:
     "Two colliding blocks compute the digits of pi, an interactive physics demo.",
 };

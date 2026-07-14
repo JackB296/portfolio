@@ -5,7 +5,12 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import DistortedSphere from "./DistortedSphere";
 import ParticleField from "./ParticleField";
-import { ACCENT } from "@/lib/theme";
+import { GRADE_EVENT } from "@/lib/grades";
+import {
+  DEFAULT_THEME_PALETTE,
+  getLiveThemePalette,
+  type LiveThemePalette,
+} from "@/lib/theme";
 
 /** Eases the camera toward the pointer so the whole scene parallaxes. */
 function CameraRig() {
@@ -20,6 +25,17 @@ function CameraRig() {
 }
 
 export default function HeroScene() {
+  const [palette, setPalette] = useState<LiveThemePalette>(DEFAULT_THEME_PALETTE);
+
+  // Film grades are CSS variables on <html>. Resample them after hydration and
+  // whenever the theater previews, selects, or restores a grade.
+  useEffect(() => {
+    const syncPalette = () => setPalette(getLiveThemePalette());
+    syncPalette();
+    window.addEventListener(GRADE_EVENT, syncPalette);
+    return () => window.removeEventListener(GRADE_EVENT, syncPalette);
+  }, []);
+
   // When the visitor asks their OS for reduced motion, stop the continuous
   // render loop ("demand" only paints on mount/resize) so the sphere and
   // particles settle into a static frame instead of perpetually animating.
@@ -47,20 +63,29 @@ export default function HeroScene() {
   }, []);
 
   return (
-    <Canvas
-      camera={{ position: [0, 0, 6], fov: 45 }}
-      dpr={[1, 1.8]}
-      gl={{ antialias: true, alpha: true }}
-      frameloop={reducedMotion ? "demand" : "always"}
-      style={{ pointerEvents: "none" }}
+    <div
+      data-testid="orbit-theme"
+      data-orbit-accent={palette.accent}
+      data-orbit-bright={palette.bright}
+      data-orbit-dim={palette.dim}
+      data-orbit-ink-soft={palette.inkSoft}
+      className="h-full w-full"
     >
-      <Suspense fallback={null}>
-        <ambientLight intensity={0.6} />
-        <pointLight position={[5, 5, 5]} intensity={1.2} color={ACCENT} />
-        <DistortedSphere />
-        <ParticleField />
-        <CameraRig />
-      </Suspense>
-    </Canvas>
+      <Canvas
+        camera={{ position: [0, 0, 6], fov: 45 }}
+        dpr={[1, 1.8]}
+        gl={{ antialias: true, alpha: true }}
+        frameloop={reducedMotion ? "demand" : "always"}
+        style={{ pointerEvents: "none" }}
+      >
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.6} color={palette.dim} />
+          <pointLight position={[5, 5, 5]} intensity={1.2} color={palette.bright} />
+          <DistortedSphere palette={palette} />
+          <ParticleField color={palette.accent} />
+          <CameraRig />
+        </Suspense>
+      </Canvas>
+    </div>
   );
 }

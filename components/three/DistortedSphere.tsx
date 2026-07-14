@@ -1,30 +1,40 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { simplexNoise } from "./noise.glsl";
-import { ACCENT, ACCENT_BRIGHT } from "@/lib/theme";
+import { DEFAULT_THEME_PALETTE, type LiveThemePalette } from "@/lib/theme";
 
 /**
  * A wobbling icosahedron driven by a custom GLSL shader.
  * Vertex shader displaces along the normal using flowing simplex noise;
  * fragment shader paints a fresnel-lit accent gradient.
  */
-export default function DistortedSphere() {
+export default function DistortedSphere({ palette }: { palette: LiveThemePalette }) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const meshRef = useRef<THREE.Mesh>(null);
+  const invalidate = useThree((state) => state.invalidate);
 
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uDistort: { value: 0.42 },
-      uColorA: { value: new THREE.Color(ACCENT) },
-      uColorB: { value: new THREE.Color("#1b1f3a") },
-      uAccent: { value: new THREE.Color(ACCENT_BRIGHT) },
+      uColorA: { value: new THREE.Color(DEFAULT_THEME_PALETTE.accent) },
+      uColorB: { value: new THREE.Color(DEFAULT_THEME_PALETTE.inkSoft) },
+      uAccent: { value: new THREE.Color(DEFAULT_THEME_PALETTE.bright) },
     }),
     []
   );
+
+  useEffect(() => {
+    const material = matRef.current;
+    if (!material) return;
+    material.uniforms.uColorA.value.set(palette.accent);
+    material.uniforms.uColorB.value.set(palette.inkSoft);
+    material.uniforms.uAccent.value.set(palette.bright);
+    invalidate();
+  }, [invalidate, palette]);
 
   const vertex = /* glsl */ `
     uniform float uTime;

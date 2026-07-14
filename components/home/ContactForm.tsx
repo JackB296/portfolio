@@ -44,7 +44,7 @@ export default function ContactForm() {
         </span>
         <h3 className="mt-5 text-xl font-semibold text-white">Message sent</h3>
         <p className="mt-2 text-sm text-white/60">
-          Thanks for reaching out — I&apos;ll get back to you soon.
+          Thanks for reaching out. I&apos;ll get back to you soon.
         </p>
         <button
           onClick={() => setStatus("idle")}

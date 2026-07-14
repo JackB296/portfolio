@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { navLinks, profile } from "@/lib/data";
 import { GitHubIcon, LinkedInIcon } from "../ui/icons";
+import GradeSwitcher from "./GradeSwitcher";
+import Monogram from "../ui/Monogram";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -33,10 +35,8 @@ export default function Navbar() {
       }`}
     >
       <nav className="container-x flex h-16 items-center justify-between">
-        <a href="#top" className="group flex items-center gap-2.5" aria-label="Home">
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-accent/40 bg-accent/10 font-mono text-sm font-bold text-accent transition-colors group-hover:bg-accent/20">
-            JB
-          </span>
+        <a href="#top" className="group flex items-center gap-3" aria-label="Home">
+          <Monogram />
           <span className="hidden font-mono text-sm tracking-wide text-white/80 sm:inline">
             {profile.firstName}
             <span className="text-accent">.</span>
@@ -57,6 +57,7 @@ export default function Navbar() {
             </li>
           ))}
           <li className="ml-2 flex items-center gap-1 border-l border-white/10 pl-3">
+            <GradeSwitcher />
             <a
               href={profile.github}
               target="_blank"
@@ -141,9 +142,6 @@ export default function Navbar() {
                   className="flex items-center justify-between border-b border-white/[0.07] py-4 text-3xl font-light tracking-tight text-white/85 transition-colors hover:text-accent"
                 >
                   {link.label}
-                  <span className="font-mono text-xs text-white/25">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
                 </motion.a>
               ))}
             </nav>
@@ -155,6 +153,7 @@ export default function Navbar() {
               className="relative flex items-center justify-between gap-4 px-8 pb-10"
             >
               <div className="flex items-center gap-3">
+                <GradeSwitcher />
                 <a
                   href={profile.github}
                   target="_blank"

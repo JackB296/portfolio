@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { profile } from "@/lib/data";
 import { GitHubIcon, LinkedInIcon } from "../ui/icons";
+import Monogram from "../ui/Monogram";
 
 const socials = [
   { label: "GitHub", href: profile.github, Icon: GitHubIcon },
@@ -14,14 +15,12 @@ export default function Footer() {
     <footer className="border-t border-white/[0.06] py-12">
       <div className="container-x flex flex-col items-center justify-between gap-8 sm:flex-row">
         <div className="flex flex-col items-center gap-1 sm:items-start">
-          <a href="#top" className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent/40 bg-accent/10 font-mono text-sm font-bold text-accent">
-              JB
-            </span>
+          <a href="#top" className="flex items-center gap-3">
+            <Monogram />
             <span className="font-mono text-sm text-white/70">{profile.name}</span>
           </a>
           <p className="mt-2 text-xs text-white/55">
-            Designed & built by {profile.firstName}. Next.js · React Three Fiber · GLSL.
+            Designed &amp; built by {profile.firstName}.
           </p>
         </div>
 

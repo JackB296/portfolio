@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-import { ACCENT, ACCENT_BRIGHT, ACCENT_DIM } from "./lib/theme";
 
 const config: Config = {
   content: [
@@ -9,16 +8,18 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // All colors resolve through CSS custom properties on <html> so the
+      // film-grade switcher can retheme the whole site at runtime.
       colors: {
         ink: {
-          DEFAULT: "#05060a",
-          soft: "#0a0c14",
-          card: "#0e1018",
+          DEFAULT: "rgb(var(--ink-rgb) / <alpha-value>)",
+          soft: "rgb(var(--ink-soft-rgb) / <alpha-value>)",
+          card: "rgb(var(--ink-card-rgb) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: ACCENT,
-          bright: ACCENT_BRIGHT,
-          dim: ACCENT_DIM,
+          DEFAULT: "rgb(var(--accent-rgb) / <alpha-value>)",
+          bright: "rgb(var(--accent-bright-rgb) / <alpha-value>)",
+          dim: "rgb(var(--accent-dim-rgb) / <alpha-value>)",
         },
       },
       fontFamily: {

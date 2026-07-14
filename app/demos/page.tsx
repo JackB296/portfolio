@@ -5,7 +5,7 @@ import { profile } from "@/lib/data";
 import BackLink from "@/components/ui/BackLink";
 
 export const metadata: Metadata = {
-  title: `Playground — ${profile.name}`,
+  title: `Playground · ${profile.name}`,
   description:
     "A playground of interactive demos: neuroevolution, a raycasting engine, cloth physics, the Mandelbrot set, Conway's Game of Life, a perceptron, and more.",
 };

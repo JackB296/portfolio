@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ACCENT } from "@/lib/theme";
 
 // Conway's Game of Life, faithful to the original life.py: toroidal wrap,
 // random 20% seed, and age based coloring (newborn, young, old).
@@ -80,7 +79,7 @@ export default function GameOfLife() {
           const idx = y * cols + x;
           if (!grid[idx]) continue;
           const a = age[idx];
-          ctx.fillStyle = a === 1 ? "#34d399" : a < 5 ? ACCENT : "#f472b6";
+          ctx.fillStyle = a === 1 ? "#34d399" : a < 5 ? "#38bdf8" : "#f472b6";
           ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
         }
       }

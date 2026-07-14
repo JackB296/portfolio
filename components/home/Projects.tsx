@@ -38,11 +38,6 @@ export default function Projects() {
         <div className="mb-14 flex flex-wrap items-end justify-between gap-4">
           <div>
             <Reveal>
-              <p className="section-label">
-                <span className="h-px w-8 bg-accent" /> Work
-              </p>
-            </Reveal>
-            <Reveal>
               <h2 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
                 Projects &amp; case studies.
               </h2>

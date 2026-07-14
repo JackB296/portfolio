@@ -1,23 +1,33 @@
 "use client";
 
-import { useRef, MouseEvent } from "react";
+import { useRef, useState, MouseEvent } from "react";
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import type { Project } from "@/lib/data";
 import { GitHubIcon, ArrowRightIcon } from "../ui/icons";
 import Img from "../ui/Img";
-import { accentAlpha } from "@/lib/theme";
+import LifeHero from "./LifeHero";
+import { MiniRaycaster, MiniCloth, MiniFlappy } from "./previews";
+
+const PREVIEWS = {
+  life: LifeHero,
+  raycaster: MiniRaycaster,
+  cloth: MiniCloth,
+  flappy: MiniFlappy,
+} as const;
 
 export default function ProjectCard({ project }: { project: Project }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
   const rx = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
   const ry = useSpring(useMotionValue(0), { stiffness: 150, damping: 18 });
   const glowX = useMotionValue(50);
   const glowY = useMotionValue(50);
-  const glow = useMotionTemplate`radial-gradient(420px circle at ${glowX}% ${glowY}%, ${accentAlpha(0.12)}, transparent 60%)`;
+  const glow = useMotionTemplate`radial-gradient(420px circle at ${glowX}% ${glowY}%, rgb(var(--accent-rgb) / 0.12), transparent 60%)`;
 
   const onMove = (e: MouseEvent) => {
     const el = ref.current;
     if (!el) return;
+    if (!hovered) setHovered(true);
     const r = el.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width;
     const py = (e.clientY - r.top) / r.height;
@@ -30,6 +40,7 @@ export default function ProjectCard({ project }: { project: Project }) {
   const onLeave = () => {
     rx.set(0);
     ry.set(0);
+    setHovered(false);
   };
 
   // The whole card links to its primary destination (live demo > case study > GitHub).
@@ -37,7 +48,7 @@ export default function ProjectCard({ project }: { project: Project }) {
   const primaryHref =
     project.live ?? (project.caseStudy ? `/work/${project.caseStudy}` : project.github);
   const primaryExternal = !project.live && !project.caseStudy && !!project.github;
-  const primaryLabel = `${project.name} — ${
+  const primaryLabel = `${project.name} · ${
     project.live ? "open live demo" : project.caseStudy ? "read case study" : "view on GitHub"
   }`;
 
@@ -55,6 +66,16 @@ export default function ProjectCard({ project }: { project: Project }) {
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{ background: glow }}
       />
+
+      {/* Live demo preview: a mini version of the project runs behind the copy. */}
+      {project.preview && hovered && (
+        <div className="pointer-events-none absolute inset-0 opacity-25 transition-opacity duration-500">
+          {(() => {
+            const Preview = PREVIEWS[project.preview];
+            return <Preview />;
+          })()}
+        </div>
+      )}
 
       {/* Stretched link — makes the entire card clickable to its primary destination. */}
       {primaryHref && (

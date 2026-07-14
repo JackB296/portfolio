@@ -15,7 +15,10 @@ export type CaseStudy = {
   problem: string[];
   approach: { title: string; body: string }[];
   stack: { group: string; items: string[] }[];
-  outcomes: { metric: string; label: string }[];
+  /** Numeric, real metrics only. Non-numeric wins belong in `highlights`. */
+  outcomes?: { metric: string; label: string }[];
+  /** Plain-language results for wins that aren't honest as a KPI tile. */
+  highlights?: string[];
   image?: { src: string; alt: string; width: number; height: number };
   featured?: boolean;
 };
@@ -25,6 +28,7 @@ export const professionalCaseStudySlugs = [
   "voyage-foods-dashboard",
   "lcs-big-team",
   "jakapa-canvas-integration",
+  "aef-access-migration",
 ];
 
 export const caseStudies: CaseStudy[] = [
@@ -70,7 +74,9 @@ export const caseStudies: CaseStudy[] = [
       { metric: "4", label: "systems unified into one view" },
       { metric: "200+", label: "Ignition tags visualized" },
       { metric: "10+", label: "production machines monitored" },
-      { metric: "SQLite→PG", label: "tag history re-platformed" },
+    ],
+    highlights: [
+      "Tag history re-platformed from SQLite to PostgreSQL without losing data.",
     ],
     image: {
       src: "/voyage-dashboard-overview.svg",
@@ -87,7 +93,7 @@ export const caseStudies: CaseStudy[] = [
       "A full-stack Edlink integration linking an Angular ed-tech platform to Canvas: single sign-on, automatic account creation, and login-triggered roster sync mirrored into PostgreSQL.",
     headline: "Wiring an ed-tech platform into Canvas LMS with Edlink",
     role: "Full Stack Developer",
-    period: "May 2023 — Jun 2025",
+    period: "May 2023 - Jun 2025",
     location: "Remote",
     accentLabel: "Web · Integrations",
     tags: ["Angular", "Node.js", "Edlink API", "Canvas LMS", "PostgreSQL", "OAuth2"],
@@ -117,11 +123,11 @@ export const caseStudies: CaseStudy[] = [
       { group: "Data", items: ["PostgreSQL"] },
       { group: "Integrations", items: ["Edlink API", "Canvas LMS"] },
     ],
-    outcomes: [
-      { metric: "SSO", label: "single sign-on from Canvas" },
-      { metric: "JIT", label: "account created on first login" },
-      { metric: "Auto", label: "student enrollment & roster sync" },
-      { metric: "Idempotent", label: "re-sync never duplicates" },
+    highlights: [
+      "Students sign in once from Canvas; no second account or password.",
+      "Accounts are created automatically on first login.",
+      "Rosters mirror into PostgreSQL on every login.",
+      "Idempotent upserts: a re-sync never duplicates a student.",
     ],
     image: {
       src: "/jakapa-architecture.svg",
@@ -131,6 +137,54 @@ export const caseStudies: CaseStudy[] = [
     },
   },
   {
+    slug: "aef-access-migration",
+    company: "American Equity Funding, Inc.",
+    cardName: "Solo Database Administration",
+    cardBlurb:
+      "Fourteen months as a financial company's only technical person: managing its investor and financial records, migrating legacy Microsoft Access workflows to PostgreSQL, and building Java tools so non-technical staff could work with the data safely.",
+    headline: "Running a company's data as its only technical person",
+    role: "Database Administrator",
+    period: "Aug 2023 to Oct 2024",
+    location: "Remote",
+    accentLabel: "Data · Ownership",
+    tags: ["Java", "PostgreSQL", "MS Access", "Data Migration"],
+    summary:
+      "American Equity Funding is a small financial company, and for fourteen months I was its entire technical staff. Every database question, migration, backup, and report ran through me. I managed the firm's investor and financial records, moved its legacy Microsoft Access workflows to PostgreSQL, and wrote Java tools so the rest of the team could work with the data safely.",
+    problem: [
+      "The company's investor and financial records lived in aging Microsoft Access files: fragile, easy to overwrite, and hard to secure. There was no engineering team behind them. When I joined, I became the engineering team.",
+      "That meant no senior developer to review my work and nobody to escalate to. Integrity, security, and reporting accuracy for sensitive financial data were my responsibility alone, while the rest of the staff needed to read and update records every day without breaking anything.",
+    ],
+    approach: [
+      {
+        title: "Own the data end to end",
+        body: "I handled the day-to-day administration myself: keeping investor and financial data consistent across multiple databases, answering the staff's data requests, and making sure the numbers in every report could be trusted.",
+      },
+      {
+        title: "Migrate off Access, onto PostgreSQL",
+        body: "I planned and ran the migration from legacy Microsoft Access workflows to PostgreSQL on my own, in stages, keeping the business running on live data the whole time.",
+      },
+      {
+        title: "Build tools the staff could use safely",
+        body: "I wrote Java tools that let non-technical employees query and update records without touching raw tables, so routine changes stopped depending on me and stopped risking the data.",
+      },
+      {
+        title: "Work without a review loop",
+        body: "With nobody to check my work, I built my own discipline: backups before every change, testing against copies of the data, and explaining decisions in plain language to the company's owners so they always knew what was happening and why.",
+      },
+    ],
+    stack: [
+      { group: "Tech", items: ["Java", "PostgreSQL", "MS Access (legacy)"] },
+      { group: "Responsibilities", items: ["Data Integrity", "Security", "Reporting Accuracy"] },
+      { group: "Ways of working", items: ["Sole Technical Owner", "Remote", "Direct to Stakeholders"] },
+    ],
+    outcomes: [
+      { metric: "Solo", label: "the company's only technical person" },
+      { metric: "14 mo", label: "owning investor data end to end" },
+      { metric: "Access→PG", label: "migration planned and run alone" },
+      { metric: "Self-serve", label: "Java tools for non-technical staff" },
+    ],
+  },
+  {
     slug: "8-bit-computer",
     company: "Engineering Pathway Capstone",
     cardName: "8-Bit Programmable Computer",
@@ -138,7 +192,7 @@ export const caseStudies: CaseStudy[] = [
       "A physical 8-bit computer built by hand from logic gates on breadboards, an ALU, registers, RAM, a clock, and a decimal display running assembly programs with add/subtract, load, store, and jump instructions.",
     headline: "Building an 8-bit computer from logic gates, by hand",
     role: "Senior Capstone Project",
-    period: "2022 — 2023",
+    period: "2022 - 2023",
     location: "High School Engineering Pathway",
     accentLabel: "Hardware · Digital Logic",
     tags: ["Digital Logic", "EEPROMs", "Assembly", "Breadboards", "Computer Architecture"],
@@ -168,11 +222,11 @@ export const caseStudies: CaseStudy[] = [
       { group: "Software", items: ["Assembly", "Binary Arithmetic"] },
       { group: "Build", items: ["Breadboards", "LEDs", "7-seg Display"] },
     ],
-    outcomes: [
-      { metric: "8-bit", label: "add & subtract arithmetic" },
-      { metric: "Decimal", label: "7-segment numeric display" },
-      { metric: "Load/Store/Jump", label: "expanded instruction set" },
-      { metric: "Assembly", label: "wrote & ran real programs" },
+    highlights: [
+      "Runs real assembly programs: add, subtract, load, store, and jump.",
+      "8-bit ALU with add and subtract arithmetic.",
+      "Decimal output on a 7-segment display.",
+      "Built from discrete logic gates, EEPROMs, and RAM on breadboards.",
     ],
     image: {
       src: "/8bit-computer.webp",
@@ -194,7 +248,7 @@ export const caseStudies: CaseStudy[] = [
     accentLabel: "Teamwork · Full-Stack",
     tags: ["Angular", "C# / .NET", "SQL", "Agile", "Code Review"],
     summary:
-      "This was my first time working inside a large codebase I did not write, alongside a team of more than 50 engineers. Over the co-op I resolved 30 plus production tickets spanning bug fixes, feature work, and database updates, and the biggest thing I took away was not a framework. It was how a real engineering team operates.",
+      "This was my first time working inside a large codebase I did not write, alongside a team of more than 50 engineers. Over the co-op I resolved 30 plus production tickets spanning bug fixes, feature work, and database updates, and the biggest thing I took away was how a real engineering team operates.",
     problem: [
       "Coming in, I had built plenty of my own projects, but I had never opened a codebase this large or worked on a team this size. The real challenge was getting productive in a system I did not design, on a team with its own rhythm and standards.",
       "I needed to learn how to find my way around unfamiliar code, write changes other engineers would approve, and contribute steadily inside an Agile process without slowing anyone down.",
@@ -225,9 +279,11 @@ export const caseStudies: CaseStudy[] = [
     ],
     outcomes: [
       { metric: "30+", label: "production tickets resolved" },
-      { metric: "50+", label: "engineer team" },
-      { metric: "Full-stack", label: "Angular, .NET, and SQL" },
-      { metric: "First time", label: "in a codebase this large" },
+      { metric: "50+", label: "engineers on the team" },
+    ],
+    highlights: [
+      "Shipped full-stack changes across Angular, .NET, and SQL.",
+      "First time contributing to a codebase of this size.",
     ],
   },
 ];
@@ -241,4 +297,5 @@ export const caseStudyByCompany: Record<string, string> = {
   "Voyage Foods": "voyage-foods-dashboard",
   "London Computer Systems": "lcs-big-team",
   JAKAPA: "jakapa-canvas-integration",
+  "American Equity Funding, Inc.": "aef-access-migration",
 };

@@ -15,12 +15,6 @@ export default function About() {
   return (
     <section id="about" className="relative scroll-mt-20 py-28 sm:py-36">
       <div className="container-x">
-        <Reveal>
-          <p className="section-label">
-            <span className="h-px w-8 bg-accent" /> About
-          </p>
-        </Reveal>
-
         <div className="grid gap-14 lg:grid-cols-[1.5fr_1fr]">
           <div>
             <Reveal>

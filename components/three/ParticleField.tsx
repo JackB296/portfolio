@@ -1,18 +1,25 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { simplexNoise } from "./noise.glsl";
-import { ACCENT } from "@/lib/theme";
+import { DEFAULT_THEME_PALETTE } from "@/lib/theme";
 
 /**
  * A drifting field of GPU-animated points. The vertex shader nudges each
  * particle along a flowing noise field so the whole cloud breathes.
  */
-export default function ParticleField({ count = 1400 }: { count?: number }) {
+export default function ParticleField({
+  count = 1400,
+  color,
+}: {
+  count?: number;
+  color: string;
+}) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const pointsRef = useRef<THREE.Points>(null);
+  const invalidate = useThree((state) => state.invalidate);
 
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
@@ -37,10 +44,17 @@ export default function ParticleField({ count = 1400 }: { count?: number }) {
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uColor: { value: new THREE.Color(ACCENT) },
+      uColor: { value: new THREE.Color(DEFAULT_THEME_PALETTE.accent) },
     }),
     []
   );
+
+  useEffect(() => {
+    const material = matRef.current;
+    if (!material) return;
+    material.uniforms.uColor.value.set(color);
+    invalidate();
+  }, [color, invalidate]);
 
   const vertex = /* glsl */ `
     uniform float uTime;

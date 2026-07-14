@@ -5,7 +5,7 @@ import ResumeViewer from "@/components/resume/ResumeViewer";
 import BackLink from "@/components/ui/BackLink";
 
 export const metadata: Metadata = {
-  title: `Resume — ${profile.name}`,
+  title: `Resume · ${profile.name}`,
   description: `Resume of ${profile.name}, ${profile.title}.`,
 };
 

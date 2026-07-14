@@ -3,6 +3,9 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 
+export const SCROLL_LOCK_EVENT = "portfolio:scroll-lock";
+export const SCROLL_UNLOCK_EVENT = "portfolio:scroll-unlock";
+
 export default function SmoothScroll() {
   useEffect(() => {
     // Respect reduced-motion preference
@@ -17,6 +20,10 @@ export default function SmoothScroll() {
       smoothWheel: true,
       touchMultiplier: 1.5,
     });
+    const stop = () => lenis.stop();
+    const start = () => lenis.start();
+    window.addEventListener(SCROLL_LOCK_EVENT, stop);
+    window.addEventListener(SCROLL_UNLOCK_EVENT, start);
 
     // Intercept in-page anchor clicks for smooth scroll
     const onClick = (e: MouseEvent) => {
@@ -43,6 +50,8 @@ export default function SmoothScroll() {
 
     return () => {
       document.removeEventListener("click", onClick);
+      window.removeEventListener(SCROLL_LOCK_EVENT, stop);
+      window.removeEventListener(SCROLL_UNLOCK_EVENT, start);
       cancelAnimationFrame(rafId);
       lenis.destroy();
     };

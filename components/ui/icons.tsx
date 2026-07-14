@@ -17,6 +17,16 @@ export function LinkedInIcon({ className = "h-4 w-4" }: IconProps) {
   );
 }
 
+export function TheaterIcon({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <path d="M20.2 9H3.8v9.2a1.6 1.6 0 0 0 1.6 1.6h13.2a1.6 1.6 0 0 0 1.6-1.6V9z" strokeLinejoin="round" />
+      <path d="M3.9 8.9 3.4 6.6a1.6 1.6 0 0 1 1.2-1.9l12.9-2.9a1.6 1.6 0 0 1 1.9 1.2l.5 2.3L3.9 8.9z" strokeLinejoin="round" />
+      <path d="m7.6 8.1 2.6-3.4M12.3 7 14.9 3.6M17 5.9l2.4-3.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ArrowRightIcon({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>

@@ -4,7 +4,7 @@ import { profile } from "@/lib/data";
 import DemoShell from "@/components/demos/DemoShell";
 
 export const metadata: Metadata = {
-  title: `Perceptron Classifier — ${profile.name}`,
+  title: `Perceptron Classifier · ${profile.name}`,
   description:
     "An interactive single-perceptron classifier learning a linear boundary, live in the browser.",
 };

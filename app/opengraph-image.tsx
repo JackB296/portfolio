@@ -1,8 +1,8 @@
 import { ImageResponse } from "next/og";
-import { ACCENT, ACCENT_BRIGHT, accentAlpha } from "@/lib/theme";
+import { ACCENT, ACCENT_BRIGHT } from "@/lib/theme";
 
 export const runtime = "edge";
-export const alt = "Jackson Bialecki — Full Stack Engineer";
+export const alt = "Jackson Bialecki · Full Stack Engineer";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -17,40 +17,32 @@ export default function OG() {
           flexDirection: "column",
           justifyContent: "space-between",
           background: "#05060a",
-          backgroundImage: `radial-gradient(900px circle at 80% 10%, ${accentAlpha(0.25)}, transparent 55%)`,
+          backgroundImage: `radial-gradient(900px circle at 80% 10%, rgba(52,211,153,0.18), transparent 55%)`,
           padding: 72,
           fontFamily: "monospace",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+          {/* Terminal-tag monogram, matching components/ui/Monogram.tsx */}
           <div
             style={{
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              border: `1px solid ${accentAlpha(0.5)}`,
-              background: accentAlpha(0.12),
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
+              gap: 8,
+              borderRadius: 14,
+              border: `2px solid rgba(52,211,153,0.5)`,
+              background: "rgba(52,211,153,0.1)",
+              padding: "14px 22px",
               color: ACCENT,
-              fontSize: 26,
+              fontSize: 40,
               fontWeight: 700,
             }}
           >
-            JB
+            jb
+            <div style={{ width: 20, height: 36, background: ACCENT, display: "flex" }} />
           </div>
-          <div
-            style={{
-              color: "#34d399",
-              fontSize: 22,
-              border: "1px solid rgba(52,211,153,0.3)",
-              background: "rgba(52,211,153,0.1)",
-              padding: "8px 18px",
-              borderRadius: 999,
-            }}
-          >
-            Available for co-op — Spring 2027
+          <div style={{ color: "rgba(231,233,243,0.65)", fontSize: 24 }}>
+            Available for co-op: Spring 2027
           </div>
         </div>
 
@@ -59,7 +51,7 @@ export default function OG() {
             Jackson Bialecki
           </div>
           <div style={{ color: ACCENT_BRIGHT, fontSize: 34, marginTop: 8 }}>
-            Full Stack Engineer // Web · AI/ML · Industrial Systems
+            Full Stack Engineer // Web · AI / Machine Learning · Industrial Systems
           </div>
         </div>
 
