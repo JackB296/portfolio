@@ -1,0 +1,44 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      # Batch low-risk updates into a single PR to cut review noise.
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    # Hold back framework-coupled major bumps. Each of these is pinned to the
+    # current Next 14 / React 18 stack; taking the major in isolation breaks
+    # `npm install` (peer conflicts) or the build. Upgrade them deliberately as
+    # a set, then lift the matching rule. Minor/patch updates still flow through.
+    ignore:
+      # React 19 breaks @react-three/drei v9 / fiber v8 (peer dep is react ^18).
+      # Keep react and its types pinned together so they never diverge.
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
+      # Next and its lint config move together; eslint-config-next 16 is for Next 16.
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
+      # eslint-config-next 14 requires eslint 8; eslint 9/10 needs flat config.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # TypeScript 6 is a major; adopt it deliberately, not via an auto-PR.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

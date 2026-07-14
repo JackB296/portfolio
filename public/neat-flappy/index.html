@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <script language="javascript" type="text/javascript" src="libraries/p5.js"></script>
+  <script language="javascript" src="libraries/p5.sound.js"></script>
+  <script language="javascript" type="text/javascript" src="game.js"></script>
+  <script language="javascript" type="text/javascript" src="player.js"></script>
+  <script language="javascript" type="text/javascript" src="pipe.js"></script>
+  <script language="javascript" type="text/javascript" src="NEAT.js"></script>
+  <script language="javascript" type="text/javascript" src="neural.js"></script>
+  <title>NEAT Flappy Bird</title>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      background-color: #05060a;
+      color: #e7e9f3;
+      font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+    }
+    .switchModeButton {
+      padding: 9px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #c8ccff;
+      background-color: rgba(124, 132, 255, 0.10);
+      border: 1px solid rgba(124, 132, 255, 0.35);
+      border-radius: 9999px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      outline: none;
+    }
+    .switchModeButton:hover {
+      background-color: #7c84ff;
+      color: #05060a;
+      transform: translateY(-1px);
+    }
+    .switchModeButton:active {
+      transform: translateY(1px);
+    }
+    #canvas {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    /* Scale the p5 canvas down on small screens while keeping its ratio */
+    #canvas canvas {
+      max-width: 92vw;
+      max-height: 68vh;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 20px 60px -20px rgba(124, 132, 255, 0.35);
+    }
+    .hint {
+      margin-top: 12px;
+      font-size: 0.72rem;
+      color: rgba(231, 233, 243, 0.45);
+      text-align: center;
+      padding: 0 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="buttons">
+    <button type="button" class="switchModeButton" onClick="switchMode(); this.blur();">Mode: You / AI</button>
+    <button type="button" class="switchModeButton" onClick="switchDebugMode(); this.blur();">Debug View</button>
+    <button type="button" class="switchModeButton" onClick="toggleMute(); this.blur();">Music</button>
+  </div>
+  <div id="canvas"></div>
+  <p class="hint">Player mode: press <b>Space</b> to flap. Switch to AI mode to watch the NEAT population evolve over generations.</p>
+</body>
+</html>

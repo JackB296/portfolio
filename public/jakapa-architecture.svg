@@ -1,0 +1,112 @@
+<svg viewBox="0 0 1360 676" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="JAKAPA Edlink integration: a student authenticates through Edlink SSO from Canvas, JAKAPA exchanges the code for an Edlink token, fetches the profile, resolves the district to an organization and provisions the account in one transaction, then a login-triggered roster mirror pulls Edlink enrollments and classes and upserts them idempotently into Postgres.">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="arA" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#f59e0b"/></marker>
+    <marker id="arAr" markerWidth="9" markerHeight="9" refX="0.5" refY="3" orient="auto"><path d="M6.5,0 L0,3 L6.5,6 Z" fill="#f59e0b"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1360" height="676" rx="16" fill="#05060a"/>
+  <ellipse cx="640" cy="0" rx="820" ry="270" fill="url(#glow)"/>
+
+  <!-- Title -->
+  <text x="36" y="48" font-size="24" fill="#f2f3f7" font-weight="500">JAKAPA <tspan fill="#f59e0b">×</tspan> Canvas, through Edlink</text>
+  <text x="37" y="71" font-size="12.5" fill="#8b91a6">One OAuth login authenticates the user and provisions their account and roster into Postgres <tspan fill="#5f6577">·</tspan> LMS-agnostic</text>
+
+  <!-- Column headers -->
+  <g font-size="12.5" fill="#7d8397" letter-spacing="1.6" text-anchor="middle">
+    <text x="145" y="118">CANVAS + EDLINK</text>
+    <text x="411" y="118">JAKAPA SPA</text>
+    <text x="677" y="118">JAKAPA BACKEND</text>
+    <text x="943" y="118">POSTGRES</text>
+    <text x="1209" y="118">OUTCOME</text>
+  </g>
+
+  <!-- ============ CONNECTORS (under boxes) ============ -->
+  <!-- Canvas -> Edlink -->
+  <line x1="145" y1="222" x2="145" y2="244" stroke="#f59e0b" stroke-width="2" marker-end="url(#arA)"/>
+  <!-- OAuth redirect dance (SPA <-> Edlink) -->
+  <line x1="304" y1="281" x2="252" y2="281" stroke="#f59e0b" stroke-width="2.2" marker-start="url(#arAr)" marker-end="url(#arA)"/>
+  <!-- ?code handler -> backend -->
+  <line x1="516" y1="288" x2="568" y2="206" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <!-- backend -> Edlink REST (through the SPA gap) -->
+  <line x1="568" y1="238" x2="256" y2="238" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <text x="411" y="228" font-size="10.5" fill="#c9820f" text-anchor="middle">Edlink REST</text>
+  <!-- backend -> Postgres -->
+  <line x1="782" y1="224" x2="834" y2="234" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <line x1="782" y1="396" x2="834" y2="318" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <!-- Postgres -> Student -->
+  <line x1="1048" y1="196" x2="1100" y2="190" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+
+  <!-- ============ NODES ============ -->
+  <!-- Canvas + Edlink -->
+  <rect x="40" y="150" width="210" height="72" rx="10" fill="#10131c" stroke="#262a36"/>
+  <text x="54" y="176" font-size="15" fill="#e7e9f3">Canvas LMS</text>
+  <text x="54" y="195" font-size="11.5" fill="#8b91a6">+ any Edlink-connected LMS</text>
+  <text x="54" y="211" font-size="11.5" fill="#8b91a6">student clicks the JAKAPA link</text>
+
+  <rect x="40" y="246" width="210" height="88" rx="10" fill="#171207" stroke="#f59e0b"/>
+  <text x="54" y="272" font-size="15" fill="#fbbf24">Edlink</text>
+  <text x="54" y="291" font-size="11.5" fill="#cfd3e0">SSO (OAuth2 auth-code)</text>
+  <text x="54" y="307" font-size="11.5" fill="#cfd3e0">+ REST data API</text>
+  <text x="54" y="323" font-size="11" fill="#c9820f">LMS-agnostic layer</text>
+
+  <!-- JAKAPA SPA -->
+  <rect x="306" y="150" width="210" height="62" rx="10" fill="#10131c" stroke="#262a36"/>
+  <text x="320" y="174" font-size="15" fill="#e7e9f3">Login page</text>
+  <text x="320" y="192" font-size="11.5" fill="#8b91a6">&#8220;Log in with EdLink&#8221;</text>
+  <text x="320" y="207" font-size="11" fill="#8b91a6">redirect to Edlink SSO</text>
+
+  <rect x="306" y="250" width="210" height="62" rx="10" fill="#10131c" stroke="#262a36"/>
+  <text x="320" y="274" font-size="15" fill="#e7e9f3">?code= handler</text>
+  <text x="320" y="292" font-size="11.5" fill="#8b91a6">app root catches the return</text>
+  <text x="320" y="307" font-size="11" fill="#8b91a6">POST authentication/edlink</text>
+
+  <!-- JAKAPA BACKEND -->
+  <rect x="572" y="150" width="210" height="176" rx="10" fill="#171207" stroke="#f59e0b"/>
+  <text x="586" y="176" font-size="15" fill="#fbbf24">authenticationEdLink</text>
+  <text x="586" y="199" font-size="11" fill="#cfd3e0">exchange code → Edlink token</text>
+  <text x="586" y="217" font-size="11" fill="#cfd3e0">GET /my/profile</text>
+  <text x="586" y="235" font-size="11" fill="#cfd3e0">resolve district → org</text>
+  <text x="586" y="253" font-size="11" fill="#cfd3e0">match SSO id → email → create</text>
+  <text x="586" y="279" font-size="11" fill="#c9820f">account provisioned in one</text>
+  <text x="586" y="295" font-size="11" fill="#c9820f">BEGIN … COMMIT</text>
+
+  <rect x="572" y="342" width="210" height="120" rx="10" fill="#171207" stroke="#f59e0b"/>
+  <text x="586" y="367" font-size="14" fill="#fbbf24">syncUser · roster mirror</text>
+  <text x="586" y="388" font-size="11" fill="#cfd3e0">login-triggered (LMS launch)</text>
+  <text x="586" y="406" font-size="11" fill="#cfd3e0">pull enrollments + classes</text>
+  <text x="586" y="424" font-size="11" fill="#cfd3e0">idempotent upserts</text>
+  <text x="586" y="442" font-size="11" fill="#cfd3e0">teacher → leader</text>
+
+  <rect x="572" y="478" width="210" height="64" rx="10" fill="#10131c" stroke="#262a36"/>
+  <text x="586" y="503" font-size="14" fill="#e7e9f3">generateTokens</text>
+  <text x="586" y="522" font-size="11" fill="#8b91a6">JWTs · access 15m / refresh 1d</text>
+
+  <!-- Postgres -->
+  <rect x="838" y="150" width="210" height="216" rx="10" fill="#0c0f17" stroke="#262a36"/>
+  <text x="852" y="176" font-size="15" fill="#e7e9f3">PostgreSQL</text>
+  <text x="852" y="195" font-size="11.5" fill="#8b91a6">single source of truth</text>
+  <line x1="852" y1="210" x2="1034" y2="210" stroke="#20242f" stroke-width="1"/>
+  <text x="852" y="232" font-size="11.5" fill="#b9bdcc">organizations (districts)</text>
+  <text x="852" y="250" font-size="11.5" fill="#b9bdcc">users · emails (SSO link)</text>
+  <text x="852" y="268" font-size="11.5" fill="#b9bdcc">groups · group_members</text>
+  <text x="852" y="286" font-size="11.5" fill="#b9bdcc">group_roles</text>
+  <text x="852" y="304" font-size="11.5" fill="#6f7688">tokens (refresh)</text>
+
+  <!-- Outcome -->
+  <rect x="1104" y="150" width="210" height="84" rx="10" fill="#10131c" stroke="#262a36"/>
+  <text x="1118" y="178" font-size="15" fill="#e7e9f3">Student in JAKAPA</text>
+  <text x="1118" y="197" font-size="11.5" fill="#8b91a6">authenticated + enrolled</text>
+  <text x="1118" y="215" font-size="11.5" fill="#8b91a6">lands on their dashboard</text>
+
+  <!-- Annotations -->
+  <text x="40" y="575" font-size="12" fill="#f59e0b">① One Edlink OAuth login authenticates the user, provisions the account (transactional), and mirrors the roster with idempotent upserts <tspan fill="#c9820f">· LMS-agnostic.</tspan></text>
+  <text x="40" y="595" font-size="11.5" fill="#7d8397">Roster sync runs inline at each login (keyed to the LMS launch context); teachers are auto-promoted to leaders.</text>
+
+  <!-- Stack band -->
+  <rect x="40" y="612" width="1274" height="46" rx="12" fill="#0a0c13" stroke="#1c2029"/>
+  <text x="56" y="640" font-size="12" fill="#aab0c2"><tspan fill="#7d8397" letter-spacing="1.5">STACK  </tspan>Angular 14 · Node ESM · Express · Edlink OAuth2 + REST (axios) · jsonwebtoken HS256 · pg (parameterized SQL, no ORM) · winston</text>
+</svg>

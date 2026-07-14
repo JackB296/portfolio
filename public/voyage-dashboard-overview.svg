@@ -1,0 +1,80 @@
+<svg viewBox="0 0 1360 460" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="Data-flow diagram: Cin7 Core ERP, SafetyChain QA, and Ignition SCADA tags feed an ingest layer that normalizes them, tag history lands in PostgreSQL after a migration from SQLite, and a React dashboard shows live values and history as plant-floor and management views.">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="arG" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#6b7180"/></marker>
+    <marker id="arA" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#f59e0b"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1360" height="460" rx="16" fill="#05060a"/>
+  <ellipse cx="680" cy="0" rx="820" ry="260" fill="url(#glow)"/>
+
+  <!-- Title -->
+  <text x="36" y="48" font-size="24" fill="#f2f3f7" font-weight="500">Manufacturing ops dashboard</text>
+  <text x="36" y="72" font-size="13" fill="#8b91a6">Four disconnected systems, one plant-floor view</text>
+
+  <!-- Column headers -->
+  <g font-size="12.5" fill="#7d8397" letter-spacing="2" text-anchor="middle">
+    <text x="136" y="114">SOURCES</text>
+    <text x="496" y="114">INGEST</text>
+    <text x="856" y="114">HISTORY</text>
+    <text x="1216" y="114">VIEW</text>
+  </g>
+
+  <!-- ================= CONNECTORS (drawn first, under boxes) ================= -->
+  <!-- Sources -> Normalize -->
+  <line x1="236" y1="173" x2="396" y2="258" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+  <line x1="236" y1="281" x2="396" y2="281" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+  <line x1="236" y1="389" x2="396" y2="304" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+  <!-- Normalize -> PostgreSQL -->
+  <line x1="596" y1="281" x2="756" y2="281" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+  <!-- PostgreSQL -> Dashboard -->
+  <line x1="956" y1="281" x2="1116" y2="281" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <text x="1036" y="273" font-size="10.5" fill="#7d8397" text-anchor="middle">history</text>
+  <!-- Normalize -> Dashboard (live values, routed above) -->
+  <polyline points="496,244 496,172 1216,172 1216,237" fill="none" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <text x="856" y="164" font-size="10.5" fill="#7d8397" text-anchor="middle">live values</text>
+
+  <!-- ================= NODES ================= -->
+  <!-- COL 1: SOURCES -->
+  <g>
+    <rect x="36" y="136" width="200" height="74" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="50" y="164" font-size="15" fill="#e7e9f3">Cin7 Core ERP</text>
+    <text x="50" y="183" font-size="11.5" fill="#8b91a6">orders and inventory</text>
+
+    <rect x="36" y="244" width="200" height="74" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="50" y="272" font-size="15" fill="#e7e9f3">SafetyChain QA</text>
+    <text x="50" y="291" font-size="11.5" fill="#8b91a6">quality checks</text>
+
+    <rect x="36" y="352" width="200" height="74" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="50" y="380" font-size="15" fill="#e7e9f3">Ignition SCADA</text>
+    <text x="50" y="399" font-size="11.5" fill="#8b91a6">200+ OPC-UA tags</text>
+    <text x="50" y="415" font-size="11.5" fill="#8b91a6">10+ machines</text>
+  </g>
+
+  <!-- COL 2: INGEST -->
+  <g>
+    <rect x="396" y="244" width="200" height="74" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="410" y="272" font-size="15" fill="#e7e9f3">Normalize</text>
+    <text x="410" y="291" font-size="11.5" fill="#8b91a6">poll APIs and tag reads</text>
+    <text x="410" y="307" font-size="11.5" fill="#8b91a6">one consistent schema</text>
+  </g>
+
+  <!-- COL 3: HISTORY -->
+  <g>
+    <rect x="756" y="244" width="200" height="74" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="770" y="272" font-size="15" fill="#e7e9f3">PostgreSQL</text>
+    <text x="770" y="291" font-size="11.5" fill="#8b91a6">tag history</text>
+    <text x="770" y="307" font-size="11.5" fill="#8b91a6">migrated from SQLite</text>
+  </g>
+
+  <!-- COL 4: VIEW -->
+  <g>
+    <rect x="1116" y="244" width="200" height="74" rx="10" fill="#171207" stroke="#f59e0b"/>
+    <text x="1130" y="272" font-size="15" fill="#fbbf24">React dashboard</text>
+    <text x="1130" y="291" font-size="11.5" fill="#cfd3e0">live and historical views</text>
+    <text x="1130" y="307" font-size="11.5" fill="#cfd3e0">trends and analysis</text>
+  </g>
+</svg>
