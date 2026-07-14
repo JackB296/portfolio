@@ -15,6 +15,7 @@ const pages = [
   "/work/voyage-foods-dashboard",
   "/work/lcs-big-team",
   "/work/jakapa-canvas-integration",
+  "/work/aef-access-migration",
   "/work/8-bit-computer",
 ];
 

@@ -25,6 +25,7 @@ export const professionalCaseStudySlugs = [
   "voyage-foods-dashboard",
   "lcs-big-team",
   "jakapa-canvas-integration",
+  "aef-access-migration",
 ];
 
 export const caseStudies: CaseStudy[] = [
@@ -129,6 +130,54 @@ export const caseStudies: CaseStudy[] = [
       width: 1360,
       height: 676,
     },
+  },
+  {
+    slug: "aef-access-migration",
+    company: "American Equity Funding, Inc.",
+    cardName: "Solo Database Administration",
+    cardBlurb:
+      "Fourteen months as a financial company's only technical person: managing its investor and financial records, migrating legacy Microsoft Access workflows to PostgreSQL, and building Java tools so non-technical staff could work with the data safely.",
+    headline: "Running a company's data as its only technical person",
+    role: "Database Administrator",
+    period: "Aug 2023 to Oct 2024",
+    location: "Remote",
+    accentLabel: "Data · Ownership",
+    tags: ["Java", "PostgreSQL", "MS Access", "Data Migration"],
+    summary:
+      "American Equity Funding is a small financial company, and for fourteen months I was its entire technical staff. Every database question, migration, backup, and report ran through me. I managed the firm's investor and financial records, moved its legacy Microsoft Access workflows to PostgreSQL, and wrote Java tools so the rest of the team could work with the data safely.",
+    problem: [
+      "The company's investor and financial records lived in aging Microsoft Access files: fragile, easy to overwrite, and hard to secure. There was no engineering team behind them. When I joined, I became the engineering team.",
+      "That meant no senior developer to review my work and nobody to escalate to. Integrity, security, and reporting accuracy for sensitive financial data were my responsibility alone, while the rest of the staff needed to read and update records every day without breaking anything.",
+    ],
+    approach: [
+      {
+        title: "Own the data end to end",
+        body: "I handled the day-to-day administration myself: keeping investor and financial data consistent across multiple databases, answering the staff's data requests, and making sure the numbers in every report could be trusted.",
+      },
+      {
+        title: "Migrate off Access, onto PostgreSQL",
+        body: "I planned and ran the migration from legacy Microsoft Access workflows to PostgreSQL on my own, in stages, keeping the business running on live data the whole time.",
+      },
+      {
+        title: "Build tools the staff could use safely",
+        body: "I wrote Java tools that let non-technical employees query and update records without touching raw tables, so routine changes stopped depending on me and stopped risking the data.",
+      },
+      {
+        title: "Work without a review loop",
+        body: "With nobody to check my work, I built my own discipline: backups before every change, testing against copies of the data, and explaining decisions in plain language to the company's owners so they always knew what was happening and why.",
+      },
+    ],
+    stack: [
+      { group: "Tech", items: ["Java", "PostgreSQL", "MS Access (legacy)"] },
+      { group: "Responsibilities", items: ["Data Integrity", "Security", "Reporting Accuracy"] },
+      { group: "Ways of working", items: ["Sole Technical Owner", "Remote", "Direct to Stakeholders"] },
+    ],
+    outcomes: [
+      { metric: "Solo", label: "the company's only technical person" },
+      { metric: "14 mo", label: "owning investor data end to end" },
+      { metric: "Access→PG", label: "migration planned and run alone" },
+      { metric: "Self-serve", label: "Java tools for non-technical staff" },
+    ],
   },
   {
     slug: "8-bit-computer",
@@ -241,4 +290,5 @@ export const caseStudyByCompany: Record<string, string> = {
   "Voyage Foods": "voyage-foods-dashboard",
   "London Computer Systems": "lcs-big-team",
   JAKAPA: "jakapa-canvas-integration",
+  "American Equity Funding, Inc.": "aef-access-migration",
 };

@@ -27,7 +27,7 @@ The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, seven inte
 - **A hand-written WebGL hero.** A noise-displaced icosahedron and a GPU particle field, both driven by custom GLSL vertex and fragment shaders, under a camera that eases toward the cursor. It's code-split out of the main bundle and capped to the device pixel ratio, so it stays smooth on a phone and collapses to a still frame under reduced-motion.
 - **Seven interactive demos.** Six began as Python projects and were rebuilt in JavaScript and canvas: a raycaster, a Verlet cloth, Conway's Game of Life, the Mandelbrot set, a perceptron, and the pi-from-collisions trick. The Neuroevolution Flappy Bird runs as its original p5.js build, embedded live.
 - **A serverless contact backend.** The form posts to `/api/contact`, which validates the payload, blocks bots with a honeypot, rate-limits by IP, and sends mail through Resend. With no API key set it stays working and shows a friendly "email me directly" message.
-- **Case studies, written up as problem, approach, and outcome.** A manufacturing dashboard at Voyage Foods, a Canvas LMS integration at JAKAPA, shipping on a 50+ engineer team at LCS, plus a hardware write-up of an 8-bit computer I built on breadboards.
+- **Case studies, written up as problem, approach, and outcome.** A manufacturing dashboard at Voyage Foods, a Canvas LMS integration at JAKAPA, shipping on a 50+ engineer team at LCS, a solo database migration at American Equity Funding, plus a hardware write-up of an 8-bit computer I built on breadboards.
 - **Production plumbing.** Vercel CI/CD, a generated Open Graph image, a sitemap, robots rules, JSON-LD structured data, and Playwright smoke tests that load every page in CI so a bad change can't quietly break a route.
 
 ## Interactive demos
@@ -86,7 +86,7 @@ app/
   flappy/                The Neuroevolution Flappy Bird game, embedded live
   raycaster/ cloth/ mandelbrot/ game-of-life/ perceptron/ pi-blocks/
                          One route per demo, each built on components/demos/DemoShell
-  work/[slug]/page.tsx   Case-study pages (Voyage Foods, LCS, JAKAPA, 8-bit computer)
+  work/[slug]/page.tsx   Case-study pages (Voyage Foods, LCS, JAKAPA, AEF, 8-bit computer)
   resume/page.tsx        The PDF résumé, embedded with print and download
   api/contact/route.ts   Serverless contact endpoint (Resend)
   opengraph-image.tsx    Generated 1200×630 social card
