@@ -21,6 +21,11 @@
   /* Film-grade knobs */
   --grain-opacity: 0.035;
   --grade-image-filter: none;
+
+  /* Film-experience material tokens; the active registry entry overrides these. */
+  --film-radius: 10px;
+  --film-letter-spacing: 0em;
+  --film-line-opacity: 0.2;
 }
 
 * {
@@ -103,6 +108,61 @@ html[data-grade-display="mono"] h3 {
   letter-spacing: -0.02em;
 }
 
+/* The cinematic layer never changes document structure. These restrained
+   tokens let the stable interface share the active film's material language. */
+html[data-film-mode] body {
+  transition: background-color 700ms ease;
+}
+
+html[data-film-mode] .glass {
+  border-radius: var(--film-radius);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / var(--film-line-opacity));
+}
+
+/* Casablanca screens as a 35mm print: the canvas layer adds gate flicker and
+   halation, and this fixed vignette supplies the projected-frame edge falloff
+   the screen-blended canvas cannot darken in itself. */
+html[data-film-mode="casablanca"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.4) 100%);
+}
+
+/* Arrival speaks in full circles; give card content extra breathing room so
+   text stays inside the curved corners instead of clipping against them. */
+html[data-film-mode="arrival"] .glass {
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+}
+html[data-film-mode="arrival"] .glass * {
+  text-wrap: pretty;
+}
+
+html[data-film-mode] .section-label {
+  letter-spacing: calc(0.25em + var(--film-letter-spacing));
+}
+
+html[data-film-mode] a,
+html[data-film-mode] button {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-film-motion="precision"] a,
+html[data-film-motion="precision"] button,
+html[data-film-motion="terminal"] a,
+html[data-film-motion="terminal"] button {
+  transition-timing-function: steps(6, end);
+}
+
+html[data-film-motion="snap"] a,
+html[data-film-motion="snap"] button,
+html[data-film-motion="rupture"] a,
+html[data-film-motion="rupture"] button {
+  transition-timing-function: steps(2, end);
+}
+
 /* Grain / noise overlay */
 .noise-overlay {
   position: fixed;
@@ -141,6 +201,47 @@ html[data-grade-display="mono"] h3 {
   color: transparent;
 }
 
+/* Verified photographs and SVG fragments remain atmospheric, inert, and below
+   the portfolio interaction layer. Motion is shared; composition stays in the
+   typed film registry. */
+@keyframes film-asset-breathe {
+  0%, 100% { filter: saturate(0.82) contrast(1.02); transform: scale(1.01); }
+  50% { filter: saturate(1) contrast(1.08); transform: scale(1.035); }
+}
+
+@keyframes film-asset-drift {
+  0%, 100% { transform: translate3d(-1.2vw, 0, 0) rotate(-0.5deg); }
+  50% { transform: translate3d(1.2vw, -1.1vh, 0) rotate(0.5deg); }
+}
+
+@keyframes film-asset-float {
+  0%, 100% { transform: translate3d(0, -1vh, 0) rotate(-0.8deg); }
+  50% { transform: translate3d(-1vw, 1.2vh, 0) rotate(0.8deg); }
+}
+
+@keyframes film-asset-pulse {
+  0%, 100% { transform: scale(0.98); filter: brightness(0.9); }
+  50% { transform: scale(1.04); filter: brightness(1.18); }
+}
+
+@keyframes film-asset-track {
+  0%, 100% { transform: translate3d(-1.5vw, 0, 0); }
+  50% { transform: translate3d(1.5vw, 0, 0); }
+}
+
+.film-asset {
+  display: block;
+  max-width: none;
+  user-select: none;
+  will-change: transform, filter;
+}
+
+.film-asset--breathe { animation: film-asset-breathe 13s ease-in-out infinite; }
+.film-asset--drift { animation: film-asset-drift 17s ease-in-out infinite; }
+.film-asset--float { animation: film-asset-float 22s ease-in-out infinite; }
+.film-asset--pulse { animation: film-asset-pulse 8s ease-in-out infinite; }
+.film-asset--track { animation: film-asset-track 11s ease-in-out infinite; }
+
 /* Honor the OS "Reduce Motion" setting: drop smooth scrolling and neutralize
    CSS animations/transitions. JS-driven motion (Lenis smooth scroll, the WebGL
    hero, and Framer Motion) is gated separately in those components. */
@@ -154,5 +255,11 @@ html[data-grade-display="mono"] h3 {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+
+  .film-asset {
+    animation: none !important;
+    transform: none;
+    will-change: auto;
   }
 }

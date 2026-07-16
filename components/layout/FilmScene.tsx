@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import type { FilmGrade } from "@/lib/grades";
 import PosterArt from "./PosterArt";
@@ -13,94 +11,88 @@ export type TheaterEntry = {
   vibe: string;
   ink: string;
   accent: string;
-  poster?: string;
   grade: FilmGrade | null;
 };
 
 type FilmSceneProps = {
   entry: TheaterEntry;
-  active: boolean;
+  previewed: boolean;
   selected: boolean;
   reduceMotion: boolean;
+  onPreview: (entry: TheaterEntry) => void;
   onSelect: (entry: TheaterEntry) => void;
 };
 
-const FilmScene = forwardRef<HTMLElement, FilmSceneProps>(function FilmScene(
-  { entry, active, selected, reduceMotion, onSelect },
-  ref
-) {
+export default function FilmScene({
+  entry,
+  previewed,
+  selected,
+  reduceMotion,
+  onPreview,
+  onSelect,
+}: FilmSceneProps) {
   return (
-    <section
-      ref={ref}
-      data-film-scene={entry.id}
-      aria-labelledby={`film-${entry.id}`}
-      aria-current={active ? "true" : undefined}
-      className="flex min-h-full snap-start items-center py-6 sm:py-8 lg:py-10"
-    >
-      <motion.div
+    <article data-film-scene={entry.id} className="min-w-0">
+      <motion.button
+        type="button"
+        aria-label={`Use ${entry.film} grade`}
+        aria-pressed={selected}
+        title={`${entry.film} (${entry.year})`}
+        onPointerEnter={() => onPreview(entry)}
+        onFocus={() => onPreview(entry)}
+        onClick={() => onSelect(entry)}
         animate={
           reduceMotion
-            ? { opacity: 1 }
-            : { opacity: active ? 1 : 0.42, y: active ? 0 : 18, scale: active ? 1 : 0.97 }
+            ? false
+            : {
+                y: previewed ? -3 : 0,
+                scale: previewed ? 1.018 : 1,
+              }
         }
-        transition={{ duration: reduceMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="container-x grid w-full items-center gap-5 sm:gap-8 lg:grid-cols-[minmax(240px,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
+        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+        className="group block w-full text-left focus-visible:outline-none"
       >
-        <div className="mx-auto w-full max-w-[190px] sm:max-w-[260px] lg:max-w-[320px]">
-          <div
-            className={`aspect-[2/3] overflow-hidden rounded-md border bg-black/20 shadow-2xl transition-colors duration-500 ${
-              active ? "border-accent/80 shadow-black/50" : "border-white/15 shadow-black/30"
+        <span
+          className={`relative block aspect-[2/3] overflow-hidden rounded-[3px] border bg-black/30 shadow-lg transition-[border-color,box-shadow,opacity] duration-200 ${
+            previewed
+              ? "border-accent shadow-[0_14px_34px_rgba(0,0,0,0.55)]"
+              : "border-white/15 opacity-80 shadow-black/35 group-hover:opacity-100"
+          } ${selected ? "ring-1 ring-inset ring-white/75" : ""}`}
+        >
+          <span className="absolute inset-0 block">
+            <PosterArt
+              id={entry.id}
+              film={entry.film}
+              ink={entry.ink}
+              accent={entry.accent}
+            />
+          </span>
+          <span
+            className={`absolute inset-x-0 bottom-0 flex min-h-[48%] translate-y-2 flex-col justify-end bg-gradient-to-t from-black via-black/80 to-transparent px-2 pb-2 pt-8 text-white transition-[opacity,transform] duration-200 sm:px-1.5 lg:px-2 ${
+              previewed
+                ? "translate-y-0 opacity-100"
+                : "opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
             }`}
           >
-            {entry.poster ? (
-              <Image
-                src={entry.poster}
-                alt={`${entry.film} poster`}
-                width={640}
-                height={960}
-                sizes="(max-width: 1024px) 260px, 320px"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <PosterArt
-                id={entry.id}
-                film={entry.film}
-                year={entry.year}
-                ink={entry.ink}
-                accent={entry.accent}
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="mx-auto w-full max-w-xl text-center lg:mx-0 lg:text-left">
-          <div className="flex items-center justify-center gap-3 font-mono text-xs text-white/45 lg:justify-start">
-            <span>{entry.year}</span>
-            {selected && <span className="text-accent">Selected grade</span>}
-          </div>
-          <h3
-            id={`film-${entry.id}`}
-            className="mt-2 text-3xl font-semibold leading-[0.98] tracking-tight text-white sm:mt-3 sm:text-5xl lg:text-6xl"
-          >
-            {entry.film}
-          </h3>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/65 sm:mt-5 sm:text-lg lg:mx-0">
-            {entry.vibe}
-          </p>
-          <button
-            type="button"
-            aria-label={`Use ${entry.film} grade`}
-            aria-pressed={selected}
-            title={`${entry.film} (${entry.year})`}
-            onClick={() => onSelect(entry)}
-            className="mt-5 inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink sm:mt-7"
-          >
-            {selected ? "Keep this grade" : "Use this grade"}
-          </button>
-        </div>
-      </motion.div>
-    </section>
+            <span className="mb-1 flex items-center justify-between gap-1 font-mono text-[6px] uppercase tracking-[0.12em] text-white/60 sm:text-[5px] lg:text-[6px]">
+              <span>{entry.year}</span>
+              <span aria-hidden="true" className="h-px w-3 bg-accent" />
+            </span>
+            <span className="line-clamp-2 text-[9px] font-semibold uppercase leading-[1.02] tracking-[-0.025em] sm:text-[7px] lg:text-[9px]">
+              {entry.film}
+            </span>
+            <span className="mt-1 line-clamp-2 text-[6px] leading-[1.15] text-white/65 sm:text-[5px] lg:text-[6px]">
+              {entry.vibe}
+            </span>
+          </span>
+          {selected && (
+            <span
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-[3px] bg-accent"
+            />
+          )}
+        </span>
+      </motion.button>
+    </article>
   );
-});
-
-export default FilmScene;
+}

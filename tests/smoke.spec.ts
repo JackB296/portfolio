@@ -107,7 +107,7 @@ test("theater lifecycle preserves the page and restores focus", async ({ page })
   await expect(dialog).not.toBeAttached();
 });
 
-test("theater wheel scrolls the reel without moving the page", async ({ page }) => {
+test("theater keeps the compact catalog contained without moving the page", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.evaluate(() => {
@@ -117,12 +117,14 @@ test("theater wheel scrolls the reel without moving the page", async ({ page }) 
 
   const initialPageScroll = await page.evaluate(() => window.scrollY);
   await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const reel = page.getByRole("dialog", { name: "Film theater" }).locator("main");
-  await expect(reel).toBeVisible();
-  await reel.hover({ position: { x: 80, y: 240 } });
+  const catalog = page
+    .getByRole("dialog", { name: "Film theater" })
+    .locator("[data-theater-catalog]");
+  await expect(catalog).toBeVisible();
+  await expect(catalog.locator("[data-film-scene]")).toHaveCount(17);
+  await catalog.hover({ position: { x: 80, y: 240 } });
   await page.mouse.wheel(0, 560);
 
-  await expect.poll(() => reel.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   expect(await page.evaluate(() => window.scrollY)).toBe(initialPageScroll);
 });
 
@@ -137,8 +139,8 @@ test("theater reel previews without persistence and selects explicitly", async (
   const scenes = dialog.locator("[data-film-scene]");
   await expect(scenes).toHaveCount(17);
 
-  const matrix = scenes.filter({ has: page.getByRole("heading", { name: "The Matrix" }) });
-  await matrix.scrollIntoViewIfNeeded();
+  const matrix = dialog.locator('[data-film-scene="matrix"]');
+  await matrix.getByRole("button", { name: "Use The Matrix grade" }).focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "matrix");
   expect(await page.evaluate(() => localStorage.getItem("film-grade"))).toBeNull();
 
@@ -149,7 +151,6 @@ test("theater reel previews without persistence and selects explicitly", async (
   await trigger.click();
   const reopenedDialog = page.getByRole("dialog", { name: "Film theater" });
   const reopenedMatrix = reopenedDialog.locator('[data-film-scene="matrix"]');
-  await reopenedMatrix.scrollIntoViewIfNeeded();
   await reopenedMatrix.getByRole("button", { name: "Use The Matrix grade" }).click();
 
   await expect(reopenedDialog).not.toBeAttached();
@@ -177,7 +178,10 @@ test("theater honors reduced motion", async ({ page }) => {
 
   const dialog = page.getByRole("dialog", { name: "Film theater" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator("main")).toHaveCSS("scroll-behavior", "auto");
+  await expect(dialog.locator("[data-theater-catalog]")).toHaveCSS(
+    "scroll-behavior",
+    "auto"
+  );
 });
 
 test("Game of Life grade palette follows theater previews", async ({ page }) => {
@@ -192,7 +196,7 @@ test("Game of Life grade palette follows theater previews", async ({ page }) => 
   const trigger = page.locator('button[aria-haspopup="dialog"]').first();
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Film theater" });
-  await dialog.locator('[data-film-scene="casablanca"]').scrollIntoViewIfNeeded();
+  await dialog.locator('[data-film-scene="casablanca"] button').focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "casablanca");
 
   const casablancaPixels = await canvas.evaluate((element: HTMLCanvasElement) => {
@@ -216,7 +220,7 @@ test("Game of Life grade palette follows theater previews", async ({ page }) => 
   expect(casablancaPixels.living).toBeGreaterThan(0);
   expect(casablancaPixels.chromatic).toBe(0);
 
-  await dialog.locator('[data-film-scene="dune"]').scrollIntoViewIfNeeded();
+  await dialog.locator('[data-film-scene="dune"] button').focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "dune");
   const duneWarmPixels = await canvas.evaluate((element: HTMLCanvasElement) => {
     const context = element.getContext("2d");
@@ -372,13 +376,13 @@ test("3D orbit follows theater previews and restores the grade palette", async (
 
   await page.locator('button[aria-haspopup="dialog"]').first().click();
   const dialog = page.getByRole("dialog", { name: "Film theater" });
-  await dialog.locator('[data-film-scene="dune"]').scrollIntoViewIfNeeded();
+  await dialog.locator('[data-film-scene="dune"] button').focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "dune");
   const dunePalette = await currentCssPalette();
   expect(dunePalette).not.toEqual(housePalette);
   await expect.poll(renderedOrbitPalette).toEqual(dunePalette);
 
-  await dialog.locator('[data-film-scene="casablanca"]').scrollIntoViewIfNeeded();
+  await dialog.locator('[data-film-scene="casablanca"] button').focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "casablanca");
   await expect.poll(renderedOrbitPalette).toEqual(await currentCssPalette());
 

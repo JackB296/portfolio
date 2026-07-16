@@ -31,7 +31,6 @@ const ENTRIES: TheaterEntry[] = [
     vibe: grade.vibe,
     ink: grade.ink,
     accent: grade.accent,
-    poster: grade.poster,
     grade,
   })),
 ];

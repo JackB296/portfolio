@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { profile } from "@/lib/data";
 import { GitHubIcon, LinkedInIcon } from "../ui/icons";
-import Monogram from "../ui/Monogram";
+import Whoami from "../ui/Whoami";
 
 const socials = [
   { label: "GitHub", href: profile.github, Icon: GitHubIcon },
@@ -15,9 +15,8 @@ export default function Footer() {
     <footer className="border-t border-white/[0.06] py-12">
       <div className="container-x flex flex-col items-center justify-between gap-8 sm:flex-row">
         <div className="flex flex-col items-center gap-1 sm:items-start">
-          <a href="#top" className="flex items-center gap-3">
-            <Monogram />
-            <span className="font-mono text-sm text-white/70">{profile.name}</span>
+          <a href="#top" className="group flex items-center" aria-label="Home">
+            <Whoami />
           </a>
           <p className="mt-2 text-xs text-white/55">
             Designed &amp; built by {profile.firstName}.
@@ -46,6 +45,7 @@ export default function Footer() {
           <Link href="/demos" className="transition-colors hover:text-accent">Playground</Link>
           <Link href="/resume" className="transition-colors hover:text-accent">Resume</Link>
           <Link href="/privacy" className="transition-colors hover:text-accent">Privacy</Link>
+          <Link href="/film-credits" className="transition-colors hover:text-accent">Film credits</Link>
         </nav>
         <p className="font-mono text-[11px] text-white/55">
           © {new Date().getFullYear()} {profile.name}. All rights reserved.

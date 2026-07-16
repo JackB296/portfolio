@@ -1,14 +1,19 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
-import { useEffect, useRef, useState, type RefObject } from "react";
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import { applyGrade, getGrade, type FilmGrade } from "@/lib/grades";
+import { filmReviews } from "@/lib/filmReviews";
+import { profile } from "@/lib/data";
 import FilmScene, { type TheaterEntry } from "./FilmScene";
+import PosterArt from "./PosterArt";
 import { SCROLL_LOCK_EVENT, SCROLL_UNLOCK_EVENT } from "./SmoothScroll";
 
 type TheaterDialogProps = {
@@ -25,6 +30,12 @@ type TheaterDialogProps = {
 const focusableSelector =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 const toRgb = (triplet: string) => `rgb(${triplet.split(" ").join(", ")})`;
+const matchesSearch = (entry: TheaterEntry, query: string) =>
+  `${entry.film} ${entry.year} ${entry.vibe}`.toLocaleLowerCase().includes(query);
+// The one place the search predicate lives — both the rendered list and the
+// focus-after-typing logic filter through this so they can't diverge.
+const filterEntries = (list: TheaterEntry[], query: string) =>
+  query ? list.filter((entry) => matchesSearch(entry, query)) : list;
 
 export default function TheaterDialog({
   open,
@@ -37,15 +48,26 @@ export default function TheaterDialog({
   onSelect,
 }: TheaterDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const scrollerRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const sceneRefs = useRef(new Map<string, HTMLElement>());
   const committedRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
+  const [queryState, setQueryState] = useState({ session: 0, value: "" });
   const [focus, setFocus] = useState({ session: 0, id: "house" });
-  const focusedId = focus.session === session ? focus.id : initialGradeId ?? "house";
-  const focusedEntry = entries.find((entry) => entry.id === focusedId) ?? entries[0];
+  const query = queryState.session === session ? queryState.value : "";
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const filteredEntries = useMemo(
+    () => filterEntries(entries, normalizedQuery),
+    [entries, normalizedQuery]
+  );
+  const requestedId =
+    focus.session === session ? focus.id : initialGradeId ?? "house";
+  const focusedEntry =
+    filteredEntries.find((entry) => entry.id === requestedId) ??
+    filteredEntries[0] ??
+    entries.find((entry) => entry.id === requestedId) ??
+    entries[0];
+  const focusedReview = focusedEntry ? filmReviews[focusedEntry.id] : undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -53,40 +75,13 @@ export default function TheaterDialog({
 
   useEffect(() => {
     if (!open) return;
-
     committedRef.current = false;
-    const startingId = initialGradeId ?? "house";
-    if (startingId !== "house") {
-      sceneRefs.current.get(startingId)?.scrollIntoView({ block: "start" });
-    }
-  }, [initialGradeId, open, session]);
-
-  useEffect(() => {
-    if (!open) return;
-    applyGrade(focusedEntry.grade);
-  }, [focusedEntry, open]);
-
-  useEffect(() => {
-    if (!open || !scrollerRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (observed) => {
-        const centered = observed
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        const id = (centered?.target as HTMLElement | undefined)?.dataset.filmScene;
-        if (id) setFocus({ session, id });
-      },
-      {
-        root: scrollerRef.current,
-        rootMargin: "-35% 0px -35% 0px",
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-      }
-    );
-
-    sceneRefs.current.forEach((scene) => observer.observe(scene));
-    return () => observer.disconnect();
   }, [open, session]);
+
+  useEffect(() => {
+    if (!open || !focusedEntry) return;
+    applyGrade(focusedEntry.grade, "preview");
+  }, [focusedEntry, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -127,17 +122,29 @@ export default function TheaterDialog({
     return () => {
       window.clearTimeout(focusTimer);
       document.removeEventListener("keydown", onKeyDown);
-      if (!committedRef.current) applyGrade(getGrade(initialGradeId) ?? null);
+      if (!committedRef.current) {
+        applyGrade(getGrade(initialGradeId) ?? null, "restore");
+      }
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overflow = previousBodyOverflow;
-      const previousScrollBehavior = document.documentElement.style.scrollBehavior;
-      document.documentElement.style.scrollBehavior = "auto";
       window.scrollTo(0, scrollPosition);
-      document.documentElement.style.scrollBehavior = previousScrollBehavior;
       window.dispatchEvent(new Event(SCROLL_UNLOCK_EVENT));
       trigger?.focus();
     };
   }, [initialGradeId, onClose, open, triggerRef]);
+
+  const previewEntry = (entry: TheaterEntry) => {
+    setFocus({ session, id: entry.id });
+  };
+
+  const updateQuery = (value: string) => {
+    setQueryState({ session, value });
+    const nextQuery = value.trim().toLocaleLowerCase();
+    const firstMatch = nextQuery
+      ? filterEntries(entries, nextQuery)[0]
+      : entries.find((entry) => entry.id === initialGradeId) ?? entries[0];
+    if (firstMatch) setFocus({ session, id: firstMatch.id });
+  };
 
   const selectEntry = (entry: TheaterEntry) => {
     committedRef.current = true;
@@ -149,54 +156,70 @@ export default function TheaterDialog({
 
   return createPortal(
     <AnimatePresence>
-      {open && (
+      {open && focusedEntry && (
         <motion.div
           data-theater-backdrop
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduceMotion ? 0 : 0.25 }}
+          initial={false}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) onClose();
           }}
-          className="fixed inset-0 z-[70] flex h-[100dvh] w-screen items-center justify-center bg-black/35 p-2 backdrop-blur-[2px] sm:p-4 lg:p-8"
+          className="fixed inset-0 z-[70] flex h-[100dvh] w-screen items-center justify-center bg-black/40 p-2 backdrop-blur-[3px] sm:p-4 lg:p-8"
         >
           <motion.div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Film theater"
-            initial={reduceMotion ? false : { scale: 0.965, y: 12 }}
+            initial={reduceMotion ? false : { scale: 0.975, y: 10 }}
             animate={{
               scale: 1,
               y: 0,
-              backgroundColor: toRgb(focusedEntry.ink),
             }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: 8 }}
-            transition={{ duration: reduceMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-lg border border-white/10 shadow-2xl shadow-black/60 sm:h-[86dvh] sm:w-[90vw] lg:h-[82dvh] lg:w-[84vw] lg:max-w-[1180px]"
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.985, y: 6 }}
+            transition={{
+              duration: reduceMotion ? 0 : 0.38,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            style={{ backgroundColor: toRgb(focusedEntry.ink) }}
+            className="relative flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-lg border border-white/10 shadow-2xl shadow-black/60 sm:h-[86dvh] sm:w-[90vw] lg:h-[72dvh] lg:w-[84vw] lg:max-w-[1180px]"
           >
             <motion.div
               aria-hidden="true"
               animate={{ backgroundColor: toRgb(focusedEntry.accent) }}
-              transition={{ duration: reduceMotion ? 0 : 0.7 }}
-              className="pointer-events-none absolute -right-24 top-1/4 h-72 w-72 rounded-full opacity-15 blur-[120px]"
+              transition={{ duration: reduceMotion ? 0 : 0.55 }}
+              className="pointer-events-none absolute -right-20 top-1/4 h-64 w-64 rounded-full opacity-[0.12] blur-[110px]"
             />
-            <header className="relative z-20 flex-none border-b border-white/10 bg-black/25 backdrop-blur-xl">
-              <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
+
+            <header className="relative z-20 flex-none border-b border-white/10 bg-black/25 px-4 py-3 backdrop-blur-xl sm:px-5">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 sm:grid-cols-[minmax(160px,0.65fr)_minmax(240px,1fr)_auto] sm:gap-x-5">
                 <div className="min-w-0">
-                  <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">
+                  <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">
                     Film theater
                   </h2>
-                  <p className="truncate font-mono text-xs text-white/50">
-                    Previewing <span className="text-accent">{focusedEntry.film}</span>
+                  <p className="truncate font-mono text-[10px] text-white/45 sm:text-xs">
+                    {filteredEntries.length} of {entries.length} covers
                   </p>
                 </div>
+
+                <label className="relative col-span-2 row-start-2 block sm:col-span-1 sm:row-auto">
+                  <span className="sr-only">Search films</span>
+                  <input
+                    type="search"
+                    role="searchbox"
+                    value={query}
+                    onChange={(event) => updateQuery(event.target.value)}
+                    placeholder="Search title, year, or atmosphere"
+                    autoComplete="off"
+                    className="h-10 w-full rounded-md border border-white/15 bg-black/25 px-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-accent focus:ring-1 focus:ring-accent"
+                  />
+                </label>
+
                 <button
                   ref={closeRef}
                   type="button"
                   onClick={onClose}
                   aria-label="Close theater"
+                  title="Close theater"
                   className="flex h-10 w-10 flex-none items-center justify-center rounded-full border border-white/15 text-xl leading-none text-white/70 transition-colors hover:border-accent/50 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   <span aria-hidden="true">×</span>
@@ -204,32 +227,121 @@ export default function TheaterDialog({
               </div>
             </header>
 
-            <main
-              ref={scrollerRef}
-              data-lenis-prevent
-              className={`relative z-10 min-h-0 flex-1 snap-y snap-proximity overflow-y-auto overscroll-contain ${
-                reduceMotion ? "scroll-auto" : "scroll-smooth"
-              }`}
-            >
-              {entries.map((entry) => (
-                <FilmScene
-                  key={entry.id}
-                  ref={(scene) => {
-                    if (scene) sceneRefs.current.set(entry.id, scene);
-                    else sceneRefs.current.delete(entry.id);
-                  }}
-                  entry={entry}
-                  active={entry.id === focusedEntry.id}
-                  selected={(entry.grade?.id ?? null) === activeId}
-                  reduceMotion={Boolean(reduceMotion)}
-                  onSelect={selectEntry}
-                />
-              ))}
+            <main className="relative z-10 flex min-h-0 flex-1 flex-col">
+              <div
+                data-theater-catalog
+                data-lenis-prevent
+                className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-5 sm:py-4 ${
+                  reduceMotion ? "scroll-auto" : "scroll-smooth"
+                }`}
+              >
+                {filteredEntries.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-x-2.5 gap-y-3 sm:grid-cols-6 sm:gap-x-3 lg:grid-cols-9 lg:gap-x-3.5">
+                    {filteredEntries.map((entry) => (
+                      <FilmScene
+                        key={entry.id}
+                        entry={entry}
+                        previewed={entry.id === focusedEntry.id}
+                        selected={(entry.grade?.id ?? null) === activeId}
+                        reduceMotion={Boolean(reduceMotion)}
+                        onPreview={previewEntry}
+                        onSelect={selectEntry}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid h-full min-h-36 place-items-center text-center">
+                    <div>
+                      <p className="text-sm font-medium text-white/75">
+                        No films match that search.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => updateQuery("")}
+                        className="mt-2 text-xs text-accent underline decoration-accent/50 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      >
+                        Clear search
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <section
+                data-theater-detail
+                aria-live="polite"
+                className="flex min-h-[124px] flex-none items-start gap-3 border-t border-white/10 bg-black/30 px-4 py-3 backdrop-blur-xl sm:min-h-[116px] sm:gap-4 sm:px-6"
+              >
+                <div className="relative hidden aspect-[2/3] w-[52px] flex-none overflow-hidden rounded-[3px] border border-white/15 sm:block sm:w-[60px]">
+                  <PosterArt
+                    id={focusedEntry.id}
+                    film={focusedEntry.film}
+                    ink={focusedEntry.ink}
+                    accent={focusedEntry.accent}
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="min-w-0 truncate font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">
+                      {focusedEntry.year}
+                      {(focusedEntry.grade?.id ?? null) === activeId ? " / current grade" : ""}
+                      <span aria-hidden="true"> / </span>
+                      <a
+                        href="/film-credits"
+                        className="text-white/55 underline decoration-white/20 underline-offset-2 transition-colors hover:text-accent focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      >
+                        Media credits
+                      </a>
+                    </p>
+                    {focusedReview && (
+                      <span className="flex flex-none items-center gap-1.5">
+                        <Stars rating={focusedReview.rating} />
+                        <span className="font-mono text-[11px] text-white/55">
+                          {focusedReview.rating.toFixed(1)}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-0.5 truncate text-lg font-semibold tracking-tight text-white sm:text-xl">
+                    {focusedEntry.film}
+                  </h3>
+                  <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
+                    {focusedReview ? focusedReview.body : focusedEntry.vibe}
+                  </p>
+                  {focusedReview && (
+                    <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">
+                      Reviewed by {profile.name}
+                    </p>
+                  )}
+                </div>
+              </section>
             </main>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>,
     document.body
+  );
+}
+
+/** Five stars filled to `rating`/5 in the active accent, with a text fallback
+ * for screen readers. Half and quarter ratings render as a partial fill. */
+function Stars({ rating }: { rating: number }) {
+  const pct = Math.max(0, Math.min(100, (rating / 5) * 100));
+  return (
+    <span className="relative inline-flex text-[13px] leading-none tracking-[0.1em]">
+      <span aria-hidden="true" className="text-white/20">
+        ★★★★★
+      </span>
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 overflow-hidden whitespace-nowrap text-accent"
+        style={{ width: `${pct}%` }}
+      >
+        ★★★★★
+      </span>
+      <span className="sr-only">{`Rated ${rating} out of 5`}</span>
+    </span>
   );
 }

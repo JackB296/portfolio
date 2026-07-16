@@ -5,6 +5,7 @@ import "./globals.css";
 import { profile } from "@/lib/data";
 import { gradeBootScript } from "@/lib/grades";
 import KonamiCode from "@/components/layout/KonamiCode";
+import FilmExperienceRoot from "@/components/film-experience/FilmExperienceRoot";
 
 const sans = Space_Grotesk({
   subsets: ["latin"],
@@ -107,6 +108,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
         {children}
+        <FilmExperienceRoot />
         <KonamiCode />
         <Analytics />
       </body>

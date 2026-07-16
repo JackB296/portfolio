@@ -23,22 +23,19 @@ export default function OG() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-          {/* Terminal-tag monogram, matching components/ui/Monogram.tsx */}
+          {/* whoami mark, matching components/ui/Whoami.tsx (shown resolved) */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              borderRadius: 14,
-              border: `2px solid rgba(52,211,153,0.5)`,
-              background: "rgba(52,211,153,0.1)",
-              padding: "14px 22px",
-              color: ACCENT,
+              gap: 14,
               fontSize: 40,
               fontWeight: 700,
             }}
           >
-            jb
+            <div style={{ color: "rgba(231,233,243,0.4)", display: "flex" }}>$</div>
+            <div style={{ color: "rgba(231,233,243,0.85)", display: "flex" }}>whoami</div>
+            <div style={{ color: ACCENT, display: "flex" }}>jackbialecki</div>
             <div style={{ width: 20, height: 36, background: ACCENT, display: "flex" }} />
           </div>
           <div style={{ color: "rgba(231,233,243,0.65)", fontSize: 24 }}>

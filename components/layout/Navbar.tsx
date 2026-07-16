@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { navLinks, profile } from "@/lib/data";
 import { GitHubIcon, LinkedInIcon } from "../ui/icons";
 import GradeSwitcher from "./GradeSwitcher";
-import Monogram from "../ui/Monogram";
+import Whoami from "../ui/Whoami";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,12 +35,8 @@ export default function Navbar() {
       }`}
     >
       <nav className="container-x flex h-16 items-center justify-between">
-        <a href="#top" className="group flex items-center gap-3" aria-label="Home">
-          <Monogram />
-          <span className="hidden font-mono text-sm tracking-wide text-white/80 sm:inline">
-            {profile.firstName}
-            <span className="text-accent">.</span>
-          </span>
+        <a href="#top" className="group flex items-center" aria-label="Home">
+          <Whoami />
         </a>
 
         {/* Desktop links */}

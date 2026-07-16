@@ -27,24 +27,22 @@ export type FilmGrade = {
   imageFilter?: string;
   /** Heading font treatment. Default keeps Space Grotesk. */
   display?: "serif" | "mono";
-  /**
-   * Optional real poster image (e.g. "/posters/matrix.jpg"). Drop a file
-   * into public/posters/ and set this; the theme modal then shows it instead
-   * of the built-in drawn poster art. Sourcing real posters (and the
-   * copyright call that goes with it) is the site owner's decision.
-   */
-  poster?: string;
 };
 
 export const GRADE_STORAGE_KEY = "film-grade";
 export const GRADE_EVENT = "gradechange";
+export type GradeChangeIntent = "preview" | "commit" | "restore";
+export type GradeChangeDetail = Readonly<{
+  gradeId: string | null;
+  intent: GradeChangeIntent;
+}>;
 
 export const grades: FilmGrade[] = [
   {
     id: "casablanca",
     film: "Casablanca",
     year: 1942,
-    vibe: "Black and white, heavy grain, here's looking at you",
+    vibe: "Silver fog, gate weave, and late departures",
     ink: "10 10 10",
     inkSoft: "15 15 15",
     inkCard: "21 21 21",
@@ -71,21 +69,21 @@ export const grades: FilmGrade[] = [
   },
   {
     id: "blade-runner",
-    film: "Blade Runner",
-    year: 1982,
-    vibe: "Neon dusk over an endless violet city",
+    film: "Blade Runner 2049",
+    year: 2017,
+    vibe: "Ochre haze, cold rain, and monumental city grids",
     ink: "8 6 20",
     inkSoft: "12 9 28",
     inkCard: "16 12 36",
-    accent: "236 72 153",
-    accentBright: "249 168 212",
-    accentDim: "157 23 77",
+    accent: "234 88 12",
+    accentBright: "251 146 60",
+    accentDim: "154 52 18",
   },
   {
     id: "space-odyssey",
     film: "2001: A Space Odyssey",
     year: 1968,
-    vibe: "Monolith black, HAL-9000 red",
+    vibe: "Orbital black, aperture red, and measured alignment",
     ink: "3 3 6",
     inkSoft: "7 7 11",
     inkCard: "11 11 16",
@@ -97,7 +95,7 @@ export const grades: FilmGrade[] = [
     id: "dune",
     film: "Dune",
     year: 2021,
-    vibe: "Spice-drenched sand and desert shadow",
+    vibe: "Wind-carved sand, heat haze, and desert shadow",
     ink: "12 9 5",
     inkSoft: "18 13 8",
     inkCard: "24 18 11",
@@ -110,7 +108,7 @@ export const grades: FilmGrade[] = [
     id: "the-batman",
     film: "The Batman",
     year: 2022,
-    vibe: "Gotham rain, taillight crimson",
+    vibe: "Wet concrete, evidence red, and midnight rain",
     ink: "6 4 5",
     inkSoft: "11 7 8",
     inkCard: "16 10 11",
@@ -122,7 +120,7 @@ export const grades: FilmGrade[] = [
     id: "parasite",
     film: "Parasite",
     year: 2019,
-    vibe: "Cold teal, basements and glass houses",
+    vibe: "Cold glass, concrete steps, and divided light",
     ink: "4 8 8",
     inkSoft: "7 13 13",
     inkCard: "10 18 18",
@@ -134,7 +132,7 @@ export const grades: FilmGrade[] = [
     id: "arrival",
     film: "Arrival",
     year: 2016,
-    vibe: "Mist, slate, and slow gray light",
+    vibe: "Slate mist, ink rings, and suspended light",
     ink: "7 9 12",
     inkSoft: "11 14 18",
     inkCard: "15 19 24",
@@ -147,7 +145,7 @@ export const grades: FilmGrade[] = [
     id: "fury-road",
     film: "Mad Max: Fury Road",
     year: 2015,
-    vibe: "Chrome, rust, and a lovely day",
+    vibe: "Chrome glare, rust, and dust at speed",
     ink: "10 5 3",
     inkSoft: "16 8 4",
     inkCard: "22 11 6",
@@ -159,7 +157,7 @@ export const grades: FilmGrade[] = [
     id: "her",
     film: "Her",
     year: 2013,
-    vibe: "Warm dusk coral, soft and close",
+    vibe: "Warm coral, soft bokeh, and attentive waves",
     ink: "14 8 8",
     inkSoft: "20 12 11",
     inkCard: "26 15 14",
@@ -171,7 +169,7 @@ export const grades: FilmGrade[] = [
     id: "wall-e",
     film: "WALL-E",
     year: 2008,
-    vibe: "Rust-brown Earth, EVE-display cyan",
+    vibe: "Rust-brown dust, cube fields, and scanner cyan",
     ink: "9 9 6",
     inkSoft: "13 13 9",
     inkCard: "18 17 12",
@@ -183,7 +181,7 @@ export const grades: FilmGrade[] = [
     id: "royal-tenenbaums",
     film: "The Royal Tenenbaums",
     year: 2001,
-    vibe: "Mustard corduroy and family portraits",
+    vibe: "Mustard book cloth, wallpaper, and centered frames",
     ink: "10 9 6",
     inkSoft: "15 13 9",
     inkCard: "20 17 12",
@@ -195,7 +193,7 @@ export const grades: FilmGrade[] = [
     id: "fight-club",
     film: "Fight Club",
     year: 1999,
-    vibe: "Sickly green basements, pink soap",
+    vibe: "Damaged film, basement green, and synthetic pink",
     ink: "6 8 6",
     inkSoft: "9 12 9",
     inkCard: "12 16 12",
@@ -208,7 +206,7 @@ export const grades: FilmGrade[] = [
     id: "goodfellas",
     film: "Goodfellas",
     year: 1990,
-    vibe: "Copacabana red over whiskey brown",
+    vibe: "Nightclub red through a velvet service corridor",
     ink: "11 7 6",
     inkSoft: "16 10 9",
     inkCard: "22 14 12",
@@ -221,7 +219,7 @@ export const grades: FilmGrade[] = [
     id: "amadeus",
     film: "Amadeus",
     year: 1984,
-    vibe: "Candlelight gold on burgundy velvet",
+    vibe: "Parchment, candlelight gold, and burgundy velvet",
     ink: "12 7 10",
     inkSoft: "17 10 14",
     inkCard: "23 14 19",
@@ -234,7 +232,7 @@ export const grades: FilmGrade[] = [
     id: "wargames",
     film: "WarGames",
     year: 1983,
-    vibe: "NORAD vector blue. Shall we play a game?",
+    vibe: "Blue vector CRT and recursive simulations",
     ink: "2 4 8",
     inkSoft: "4 8 14",
     inkCard: "6 12 20",
@@ -276,7 +274,10 @@ const ALL_VARS = [
 ];
 
 /** Apply a grade (or null to reset to the default brand) on the client. */
-export function applyGrade(g: FilmGrade | null) {
+export function applyGrade(
+  g: FilmGrade | null,
+  intent: GradeChangeIntent = "commit"
+) {
   const el = document.documentElement;
   if (!g) {
     ALL_VARS.forEach((v) => el.style.removeProperty(v));
@@ -289,7 +290,11 @@ export function applyGrade(g: FilmGrade | null) {
     if (g.display) el.dataset.gradeDisplay = g.display;
     else delete el.dataset.gradeDisplay;
   }
-  window.dispatchEvent(new CustomEvent(GRADE_EVENT));
+  window.dispatchEvent(
+    new CustomEvent<GradeChangeDetail>(GRADE_EVENT, {
+      detail: { gradeId: g?.id ?? null, intent },
+    })
+  );
 }
 
 /**
