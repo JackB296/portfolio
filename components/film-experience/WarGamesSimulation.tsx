@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 type Mark = "X" | "O";
 type Cell = Mark | null;
@@ -73,31 +74,7 @@ export default function WarGamesSimulation({ onClose }: WarGamesSimulationProps)
     return moves === 0 ? "Choose a cell. You are X." : "Draw-seeking simulation in progress.";
   }, [complete, moves, outcome]);
 
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const buttons = Array.from(
-        dialogRef.current?.querySelectorAll<HTMLButtonElement>("button:not(:disabled)") ?? []
-      );
-      const first = buttons[0];
-      const last = buttons.at(-1);
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  useFocusTrap(dialogRef, true, onClose, closeRef);
 
   const choose = (index: number) => {
     if (board[index] || complete) return;

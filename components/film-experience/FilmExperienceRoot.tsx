@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  applyExperienceTokens,
   GRADE_EVENT,
-  getGrade,
   type GradeChangeDetail,
   type GradeChangeIntent,
 } from "@/lib/grades";
-import { filmExperienceById } from "@/lib/filmExperiences";
+import { getFilm, getFilmExperience, HOUSE_ID } from "@/lib/films";
 import ExperienceControls from "./ExperienceControls";
 import AudioDirector, {
-  type AudioDirectorHandle,
+  OFF_AUDIO_STATUS,
   type AudioDirectorStatus,
 } from "./AudioDirector";
 import CinematicLayer, { type VisualStatus } from "./CinematicLayer";
@@ -19,33 +19,9 @@ type ExperienceState = Readonly<{
   activeId: string | null;
   committedId: string | null;
   lastIntent: GradeChangeIntent | "hydrate";
+  /** True when the last commit asked not to auto-arm sound (the leader). */
+  lastSilent: boolean;
 }>;
-
-const FILM_STYLE_VARS = [
-  "--film-radius",
-  "--film-letter-spacing",
-  "--film-line-opacity",
-  "--film-material",
-] as const;
-
-function applyExperienceTokens(id: string | null) {
-  const html = document.documentElement;
-  const experience = id ? filmExperienceById.get(id) : undefined;
-
-  if (!experience) {
-    delete html.dataset.filmMode;
-    delete html.dataset.filmMotion;
-    FILM_STYLE_VARS.forEach((name) => html.style.removeProperty(name));
-    return;
-  }
-
-  html.dataset.filmMode = experience.id;
-  html.dataset.filmMotion = experience.tokens.motion;
-  html.style.setProperty("--film-radius", experience.tokens.radius);
-  html.style.setProperty("--film-letter-spacing", experience.tokens.letterSpacing);
-  html.style.setProperty("--film-line-opacity", String(experience.tokens.lineOpacity));
-  html.style.setProperty("--film-material", `"${experience.tokens.material}"`);
-}
 
 export default function FilmExperienceRoot() {
   const [ready, setReady] = useState(false);
@@ -53,47 +29,27 @@ export default function FilmExperienceRoot() {
     activeId: null,
     committedId: null,
     lastIntent: "hydrate",
+    lastSilent: false,
   });
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const soundEnabledRef = useRef(false);
-  soundEnabledRef.current = soundEnabled;
-  const [audioStatus, setAudioStatus] = useState<AudioDirectorStatus>({
-    state: "off",
-    filmId: null,
-    source: null,
-    musicSource: null,
-    effectSources: [],
-    nodeCount: 0,
-    trackCount: 0,
-  });
-  const audioRef = useRef<AudioDirectorHandle>(null);
-  const enableRequestRef = useRef(0);
+  const [audioStatus, setAudioStatus] = useState<AudioDirectorStatus>(OFF_AUDIO_STATUS);
   const [visualStatus, setVisualStatus] = useState<VisualStatus>({
     state: "off",
     filmId: null,
   });
 
-  const requestSound = useCallback((filmId: string | null) => {
-    const director = audioRef.current;
-    if (!director || !filmId) return;
-    const requestId = ++enableRequestRef.current;
-    void director
-      .enable(filmId)
-      .then((started) => {
-        if (enableRequestRef.current === requestId) setSoundEnabled(started);
-      })
-      .catch(() => {
-        if (enableRequestRef.current === requestId) {
-          director.disable();
-          setSoundEnabled(false);
-        }
-      });
-  }, []);
-
   useEffect(() => {
     const initialId = document.documentElement.dataset.grade ?? null;
-    setState({ activeId: initialId, committedId: initialId, lastIntent: "hydrate" });
+    setState({
+      activeId: initialId,
+      committedId: initialId,
+      lastIntent: "hydrate",
+      lastSilent: false,
+    });
 
+    // Interpret side of the grade-change protocol — see GradeChangeIntent in
+    // lib/grades.ts: previews re-theme, commits persist and arm sound,
+    // restores return to the committed grade.
     const onGradeChange = (event: Event) => {
       const detail = (event as CustomEvent<GradeChangeDetail>).detail;
       const gradeId = detail?.gradeId ?? document.documentElement.dataset.grade ?? null;
@@ -101,7 +57,12 @@ export default function FilmExperienceRoot() {
 
       setState((current) => {
         if (intent === "commit") {
-          return { activeId: gradeId, committedId: gradeId, lastIntent: intent };
+          return {
+            activeId: gradeId,
+            committedId: gradeId,
+            lastIntent: intent,
+            lastSilent: detail?.silent === true,
+          };
         }
         return { ...current, activeId: gradeId, lastIntent: intent };
       });
@@ -115,55 +76,50 @@ export default function FilmExperienceRoot() {
   }, []);
 
   useEffect(() => {
+    // The boot script already applied a persisted film's tokens pre-paint;
+    // skipping the pre-hydration pass keeps this writer from clearing them
+    // for a frame before state catches up. Re-applying the same values on
+    // hydrate is idempotent.
+    if (!ready) return;
     applyExperienceTokens(state.activeId);
     return () => applyExperienceTokens(null);
-  }, [state.activeId]);
+  }, [ready, state.activeId]);
 
+  // Committing a film is a user gesture, so sound defaults on; hydration has
+  // no gesture and would be blocked by autoplay policy. Silent commits (the
+  // feature-presentation leader) opt out: the visitor hasn't asked for audio.
   useEffect(() => {
-    if (!state.committedId) {
-      enableRequestRef.current += 1;
-      audioRef.current?.disable();
-      setSoundEnabled(false);
-      return;
-    }
-    // Committing a film is a user gesture, so sound defaults on; hydration
-    // has no gesture and would be blocked by autoplay policy.
-    if (state.lastIntent !== "commit" || soundEnabledRef.current) return;
-    requestSound(state.committedId);
-  }, [state.committedId, state.lastIntent, requestSound]);
+    if (state.lastIntent === "commit" && state.committedId && !state.lastSilent)
+      setSoundEnabled(true);
+  }, [state.committedId, state.lastIntent, state.lastSilent]);
 
-  const committed = useMemo(
-    () => (state.committedId ? filmExperienceById.get(state.committedId) : undefined),
-    [state.committedId]
-  );
+  const committed = useMemo(() => getFilm(state.committedId), [state.committedId]);
+  // Registry lookups are referentially stable per film, so the controls'
+  // props (and their [experience.id] effects) only churn on real changes.
+  const committedExperience = getFilmExperience(state.committedId);
 
   const handleAudioStatus = useCallback((status: AudioDirectorStatus) => {
     setAudioStatus(status);
+    // Any teardown — House commit, an audio error, a blocked autoplay —
+    // reports "off"; deriving the toggle from it means the button can never
+    // claim sound is on while the director is silent.
+    if (status.state === "off") setSoundEnabled(false);
   }, []);
   const handleVisualStatus = useCallback((status: VisualStatus) => {
     setVisualStatus(status);
   }, []);
 
-  const toggleSound = () => {
-    if (soundEnabled) {
-      enableRequestRef.current += 1;
-      audioRef.current?.disable();
-      setSoundEnabled(false);
-      return;
-    }
-    requestSound(state.committedId);
-  };
+  const toggleSound = () => setSoundEnabled((current) => !current);
 
   return (
     <div
       data-film-experience-root
       data-experience-ready={ready}
-      data-active-film={state.activeId ?? "house"}
-      data-committed-film={state.committedId ?? "house"}
+      data-active-film={state.activeId ?? HOUSE_ID}
+      data-committed-film={state.committedId ?? HOUSE_ID}
       data-grade-intent={state.lastIntent}
       data-audio-state={audioStatus.state}
       data-audio-film={audioStatus.filmId ?? "none"}
-      data-audio-source={audioStatus.source ?? "none"}
       data-audio-music-source={audioStatus.musicSource ?? "none"}
       data-audio-effect-sources={audioStatus.effectSources.join("|") || "none"}
       data-audio-nodes={audioStatus.nodeCount}
@@ -173,19 +129,14 @@ export default function FilmExperienceRoot() {
     >
       <CinematicLayer filmId={state.activeId} onStatus={handleVisualStatus} />
       <AudioDirector
-        ref={audioRef}
         filmId={state.committedId}
         enabled={soundEnabled}
         onStatus={handleAudioStatus}
       />
-      {committed && (
+      {committed && committedExperience && (
         <ExperienceControls
-          filmId={committed.id}
-          film={getGrade(committed.id)?.film ?? committed.label}
-          soundLabel={[
-            committed.audio.music.label,
-            ...committed.audio.effects.map(({ label }) => label),
-          ].join(" · ")}
+          film={committed.film}
+          experience={committedExperience}
           soundEnabled={soundEnabled}
           onToggleSound={toggleSound}
         />

@@ -1,10 +1,13 @@
-import { drawFilmLabel, makeFilmVisual, pageSectionAt, withAlpha } from "../shared";
-
-const markers = ["chapter numbers", "record player", "falcon circuit", "townhouse", "family archive", "storybook bands"] as const;
+import { createSectionTracker, drawFilmLabel, makeStatefulFilmVisual, withAlpha } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"] as const;
 
-export default makeFilmVisual(markers, (frame) => {
+export default makeStatefulFilmVisual(() => {
+  // The section tracker's measurement cache is per activation (see shared.ts).
+  const sections = createSectionTracker();
+
+  const draw = (frame: FilmFrame) => {
   const { context, width, height, time, scroll, accent, accentBright, accentDim } = frame;
   context.save();
 
@@ -37,7 +40,7 @@ export default makeFilmVisual(markers, (frame) => {
   );
 
   // The chapter tracks the page section under the reader in deadpan snaps.
-  const section = pageSectionAt(scroll);
+  const section = sections.sectionAt(scroll);
   const chapter = Math.min(ROMAN.length - 1, section.index);
   context.fillStyle = withAlpha(accentBright, 0.5);
   context.font = "600 22px ui-monospace, SFMono-Regular, Menlo, monospace";
@@ -114,4 +117,7 @@ export default makeFilmVisual(markers, (frame) => {
 
   drawFilmLabel(frame, "THE FAMILY ARCHIVE", center, height * 0.08, 0.48, "center");
   context.restore();
+  };
+
+  return { draw };
 });

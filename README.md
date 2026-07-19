@@ -4,7 +4,7 @@
 
 **Full-stack engineer · Web, AI/ML, and industrial systems**
 
-The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, seven interactive demos you can play in the browser, a serverless contact backend, and write-ups of the software I've shipped on a factory floor and at an ed-tech startup.
+The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, sixteen film modes that restyle the whole site, seven interactive demos you can play in the browser, a guest terminal, and write-ups of the software I've shipped on a factory floor and at an ed-tech startup.
 
 [![Live site](https://img.shields.io/badge/live-jbialecki.com-f59e0b?style=flat-square)](https://jbialecki.com)
 &nbsp;![Next.js 14](https://img.shields.io/badge/Next.js_14-111-fff?style=flat-square&logo=nextdotjs&logoColor=fff)
@@ -24,11 +24,19 @@ The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, seven inte
 
 ## Highlights
 
-- **A hand-written WebGL hero.** A noise-displaced icosahedron and a GPU particle field, both driven by custom GLSL vertex and fragment shaders, under a camera that eases toward the cursor. It's code-split out of the main bundle and capped to the device pixel ratio, so it stays smooth on a phone and collapses to a still frame under reduced-motion.
-- **Seven interactive demos.** Six began as Python projects and were rebuilt in JavaScript and canvas: a raycaster, a Verlet cloth, Conway's Game of Life, the Mandelbrot set, a perceptron, and the pi-from-collisions trick. The Neuroevolution Flappy Bird runs as its original p5.js build, embedded live.
-- **A serverless contact backend.** The form posts to `/api/contact`, which validates the payload, blocks bots with a honeypot, rate-limits by IP, and sends mail through Resend. With no API key set it stays working and shows a friendly "email me directly" message.
+- **A hand-written WebGL hero.** A noise-displaced icosahedron and a GPU particle field, both driven by custom GLSL vertex and fragment shaders, under a camera that eases toward the cursor. It's code-split out of the main bundle and capped to the device pixel ratio, so it stays smooth on a phone and collapses to a still frame under reduced-motion. A corner toggle swaps the whole scene for a live Game of Life.
+- **Sixteen film modes.** Pick a film from the theater wall and the site re-themes to match: a color grade applied before first paint, a score with per-section audio cues, and a visual layer built for that film (WarGames draws a live missile-map simulation). A date-hashed feature presentation screens one film per day for first-time visitors, and every track is attributed on `/film-credits`.
+- **A guest terminal.** `cd`, `ls`, `cat`, and tab completion over a virtual filesystem generated from the same typed registries that render the pages, so the terminal can never drift from the site it navigates. It opens any route and applies any film grade.
+- **Director's commentary.** A toggle that pins a commentary track to each home section: the site explaining how it's engineered, with a link to the exact source file on GitHub.
+- **A playground takeover.** Flip the switch and live simulations run behind the home page itself, Game of Life behind Projects and the cloth sim behind Skills, with a persistent scoreboard.
+- **Seven interactive demos.** Six began as Python projects and were rebuilt in JavaScript and canvas: a raycaster, a Verlet cloth, Conway's Game of Life, the Mandelbrot set, a perceptron, and the pi-from-collisions trick. The Neuroevolution Flappy Bird runs as its original p5.js build, embedded live. All seven share one canvas scaffold that handles DPR sizing, pauses off-screen, and holds a still frame under reduced-motion.
+- **A serverless contact backend.** The form posts to `/api/contact`, which validates the payload, blocks bots with a honeypot, rate-limits by IP through a clock-injectable limiter with bounded memory, and sends mail through Resend. With no API key set it stays working and shows a friendly "email me directly" message.
 - **Case studies, written up as problem, approach, and outcome.** A manufacturing dashboard at Voyage Foods, a Canvas LMS integration at JAKAPA, shipping on a 50+ engineer team at LCS, a solo database migration at American Equity Funding, plus a hardware write-up of an 8-bit computer I built on breadboards.
-- **Production plumbing.** Vercel CI/CD, a generated Open Graph image, a sitemap, robots rules, JSON-LD structured data, and Playwright smoke tests that load every page in CI so a bad change can't quietly break a route.
+- **Production plumbing.** Vercel CI/CD, a generated Open Graph image, a sitemap, robots rules, JSON-LD structured data, and five Playwright suites that run in CI so a bad change can't quietly break a route.
+
+## Film modes
+
+Everything about a film lives on one record in `lib/films/`: its color grade, its audio cues, its visual assets, and its media credits. The compiler enforces that every film id has exactly one record, and the rest of the system derives from there. The grade module turns a record into CSS custom properties and a pre-paint boot script, the audio director schedules its cues as you scroll, the theater wall renders its poster, and the credits page prints its attributions. Swapping a track is a one-file edit.
 
 ## Interactive demos
 
@@ -54,7 +62,7 @@ Each one runs live in the browser, and most link to their source on GitHub from 
 - **Framework:** Next.js 14 (App Router), TypeScript, React 18
 - **3D and graphics:** Three.js, React Three Fiber, drei, custom GLSL shaders, HTML canvas
 - **Motion:** Framer Motion, Lenis smooth scroll
-- **Styling:** Tailwind CSS, a dark theme on a single amber accent (`#f59e0b`)
+- **Styling:** Tailwind CSS, a dark theme on a single amber accent (`#f59e0b`), plus a film grade layer of CSS custom properties
 - **Backend:** Resend, on a serverless Vercel route
 - **Ops:** Vercel hosting and Analytics, Playwright, GitHub Actions CI
 
@@ -65,16 +73,17 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-Node 18.18 or newer (Node 20 recommended). Almost all copy lives in `lib/` (`data.ts` for the profile, experience, and projects; `caseStudies.ts`; `demos.ts`), so most content edits never touch a component.
+Node 18.18 or newer (Node 20 recommended). Almost all copy lives in typed registries (`lib/data.ts` for the profile, experience, and projects; `lib/caseStudies.ts`; `lib/demos.ts`; `lib/films/`), so most content edits never touch a component, and the terminal, credits page, and commentary derive from the same data.
 
 ## Tests
 
 ```bash
+npm run typecheck  # tsc over the app and the test suites
 npm run build      # type-check, lint, and a production build
-npm test           # Playwright smoke tests (run `npx playwright install chromium` once first)
+npm test           # Playwright (run `npx playwright install chromium` once first)
 ```
 
-CI runs the same lint, build, and smoke tests on every push and pull request. The smoke tests open every page, confirm the canvases mount, and check the main navigation.
+CI runs lint, the build, and the full Playwright run on every push and pull request. The smoke suite opens every page, confirms the canvases mount, and checks the main navigation; the other suites drive the film modes through a full pick-preview-commit lifecycle, exercise the guest terminal command by command, hit the contact API directly, and cover the feature presentation, commentary, and playground layers.
 
 <details>
 <summary><b>Project structure</b></summary>
@@ -87,20 +96,33 @@ app/
   raycaster/ cloth/ mandelbrot/ game-of-life/ perceptron/ pi-blocks/
                          One route per demo, each built on components/demos/DemoShell
   work/[slug]/page.tsx   Case-study pages (Voyage Foods, LCS, JAKAPA, AEF, 8-bit computer)
+  film-credits/page.tsx  Sources and licenses for the film-mode media
   resume/page.tsx        The PDF résumé, embedded with print and download
   api/contact/route.ts   Serverless contact endpoint (Resend)
   opengraph-image.tsx    Generated 1200×630 social card
   sitemap.ts robots.ts   SEO surface
 components/
-  home/ layout/ ui/      Page sections and shared primitives
+  home/ layout/ ui/      Page sections and shared primitives (theater dialog,
+                         grade switcher, feature presentation)
   three/                 HeroScene, DistortedSphere, ParticleField, shared GLSL noise
-  demos/                 DemoShell plus one component per demo
+  demos/                 DemoShell, the useDemoCanvas lifecycle hook, shared
+                         chrome, and one component per demo
+  film-experience/       AudioDirector, CinematicLayer, and per-film visual modes
+  terminal/              The guest terminal
+  commentary/            The director's-commentary overlay
+  playground/            The behind-the-page simulation layer
 lib/
   data.ts                Profile, experience, projects, skills (the single source of content)
   caseStudies.ts         Case-study content
-  demos.ts               Registry that drives the playground
+  demos.ts               Registry that drives the playground hub
+  films/                 One record per film; grades, audio, and credits derive from it
+  grades.ts              Applies a film's color grade to <html>, including the pre-paint boot script
+  terminal.ts            The terminal's command engine and virtual filesystem
+  commentary.ts featurePresentation.ts playground.ts
+  rateLimit.ts           Clock-injectable rate limiter behind the contact route
 tests/
-  smoke.spec.ts          Playwright smoke tests
+  smoke.spec.ts film-modes.spec.ts terminal.spec.ts
+  uniqueness-suite.spec.ts contact-api.spec.ts
 ```
 
 </details>

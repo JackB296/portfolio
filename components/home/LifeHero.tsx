@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { GRADE_EVENT } from "@/lib/grades";
+import { ACCENT_RGB } from "@/lib/theme";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const CELL = 16; // CSS px per cell
 const STEP_MS = 150; // generation length
@@ -12,7 +14,7 @@ type CellPalette = readonly [newborn: string, young: string, mature: string, eld
 // The House Grade keeps the original demo's age ramp. Named film grades use
 // their CSS accent tokens so the same living pattern takes on the film's look.
 const HOUSE_PALETTE: CellPalette = [
-  "52, 211, 153",
+  ACCENT_RGB,
   "56, 189, 248",
   "167, 139, 250",
   "244, 114, 182",
@@ -49,14 +51,13 @@ function getCellPalette(): CellPalette {
  */
 export default function LifeHero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let cols = 0;
     let rows = 0;
@@ -238,7 +239,7 @@ export default function LifeHero() {
       window.removeEventListener(GRADE_EVENT, onGradeChange);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, []);
+  }, [reduced]);
 
   return (
     <canvas

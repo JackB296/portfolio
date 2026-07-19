@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { profile } from "@/lib/data";
 import MagneticButton from "../ui/MagneticButton";
 import HeroBackdrop from "./HeroBackdrop";
+import { ArrowRightIcon } from "../ui/icons";
 
 const container = {
   hidden: {},
@@ -39,9 +40,11 @@ export default function Hero() {
           animate="show"
           className="max-w-3xl"
         >
+          {/* Top margin stands in for the removed status pill so the name
+              keeps the lower optical position it had beneath it. */}
           <motion.h1
             variants={item}
-            className="text-[2.7rem] font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+            className="mt-8 text-[2.7rem] font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
           >
             <span className="text-white">{profile.name}</span>
           </motion.h1>
@@ -65,15 +68,7 @@ export default function Hero() {
           <motion.div variants={item} className="mt-9 flex flex-wrap items-center gap-4">
             <MagneticButton href="#projects">
               View Projects
-              <svg
-                className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </MagneticButton>
             <MagneticButton href={profile.resume} variant="ghost">
               Resume

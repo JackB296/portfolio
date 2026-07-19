@@ -1,14 +1,16 @@
 "use client";
 
 import { profile } from "@/lib/data";
+import Glow from "../ui/Glow";
 import Reveal from "../ui/Reveal";
 import ContactForm from "./ContactForm";
 
 export default function Contact() {
+  // Top padding is tighter than the other sections so the heading sits
+  // near the top of the viewport when the nav "Contact" link lands here.
   return (
-    <section id="contact" className="relative scroll-mt-20 py-28 sm:py-36">
-      {/* glow */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[400px] w-[600px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-[120px]" />
+    <section id="contact" className="relative scroll-mt-20 pt-20 pb-28 sm:pt-24 sm:pb-36">
+      <Glow className="top-1/2 h-[400px] w-[600px] -translate-y-1/2 blur-[120px]" />
 
       <div className="container-x">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
@@ -16,18 +18,19 @@ export default function Contact() {
           <div>
             <Reveal>
               <h2 className="max-w-md text-4xl font-semibold tracking-tight sm:text-5xl">
-                Hire me for Spring 2027.
+                Contact.
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-5 max-w-md text-base leading-relaxed text-white/60">
-                I&apos;m looking for a co-op, and I&apos;m always up for a
-                conversation about web, ML, or industrial systems work. Drop me a
-                message and I&apos;ll reply soon.
+                I&apos;m looking for a Spring 2027 co-op, and I&apos;m always up
+                for a conversation about web, ML, or industrial systems work.
+                Drop me a message and I&apos;ll reply soon.
               </p>
             </Reveal>
 
             <Reveal delay={0.16}>
+              {/* Icon glyphs are hand-inlined stroke paths: ui/icons' GitHub/LinkedIn are fill-style and clash with the mail glyph's stroke outline. */}
               <div className="mt-8 space-y-3">
                 <ContactLink
                   href={`mailto:${profile.email}`}

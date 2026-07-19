@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { profile } from "@/lib/data";
 import BackLink from "@/components/ui/BackLink";
+import Glow from "@/components/ui/Glow";
 
 export const metadata: Metadata = {
   title: `Privacy Policy · ${profile.name}`,
@@ -17,7 +18,7 @@ const LAST_UPDATED = "June 19, 2026";
 export default function PrivacyPage() {
   return (
     <main className="relative min-h-screen overflow-hidden py-10">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[400px] w-[700px] max-w-full -translate-x-1/2 rounded-full bg-accent/10 blur-[140px]" />
+      <Glow className="top-0 h-[400px] w-[700px] blur-[140px]" />
 
       <div className="container-x">
         <div className="mb-8 flex items-center justify-between">

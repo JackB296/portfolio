@@ -42,11 +42,13 @@ export default function HeroBackdrop() {
         {backdrop === "life" ? <LifeHero /> : <HeroScene />}
       </div>
 
-      {/* Backdrop switch */}
+      {/* Backdrop switch. Tops the bottom-right pill cluster: the fixed
+          playground and commentary pills sit at bottom-4 and bottom-[3.75rem],
+          so this clears them with the same vertical rhythm. */}
       <div
         role="group"
         aria-label="Hero background"
-        className="absolute bottom-6 right-6 z-20 flex items-center gap-0.5 rounded-full border border-white/10 bg-ink/60 p-1 font-mono text-[11px] backdrop-blur-sm"
+        className="absolute bottom-[6.5rem] right-4 z-20 flex items-center gap-0.5 rounded-full border border-white/10 bg-ink/60 p-1 font-mono text-[11px] backdrop-blur-sm sm:bottom-[7rem] sm:right-5"
       >
         {(
           [

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import BackLink from "@/components/ui/BackLink";
+import Glow from "@/components/ui/Glow";
+import { films } from "@/lib/films";
 import { profile } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -8,40 +10,28 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-type MediaCredit = {
+type CreditRow = {
   film: string;
   title: string;
   creator: string;
   href: string;
 };
 
-const pixabayMusic: readonly MediaCredit[] = [
-  { film: "Casablanca", title: "Vintage Jazz — Coffee Shop Music", creator: "alex-morgan", href: "https://pixabay.com/music/modern-jazz-vintage-jazz-coffee-shop-music-564249/" },
-  { film: "The Matrix", title: "matrix redux", creator: "freesound_community", href: "https://pixabay.com/sound-effects/musical-matrix-redux-78819/" },
-  { film: "Blade Runner 2049", title: "Police Interrogation (ASMR Noir Jazz)", creator: "KonstantinPazuzuStudio", href: "https://pixabay.com/music/crime-scene-police-interrogation-asmr-noir-jazz-520244/" },
-  { film: "Dune", title: "Church choir", creator: "poshpony", href: "https://pixabay.com/music/choir-church-choir-297898/" },
-  { film: "The Batman", title: "Siniestro", creator: "anrocomposer", href: "https://pixabay.com/music/modern-classical-siniestro-119656/" },
-  { film: "Parasite", title: "Minimal Piano Strings", creator: "TheoJT", href: "https://pixabay.com/music/solo-piano-minimal-piano-strings-195554/" },
-  { film: "Arrival", title: "The Futuristic Ambience (Everything Is One)", creator: "AlexGrohl", href: "https://pixabay.com/music/ambient-the-futuristic-ambience-everything-is-one-179395/" },
-  { film: "Mad Max: Fury Road", title: "Dystopian Ambient", creator: "Leberch", href: "https://pixabay.com/music/ambient-dystopian-ambient-520165/" },
-  { film: "Her", title: "Sad Piano", creator: "SoundGalleryByDmitryTaras", href: "https://pixabay.com/music/solo-piano-sad-piano-496878/" },
-  { film: "WALL-E", title: "Space Sleep Drift Atmosphere", creator: "Low_Atmos", href: "https://pixabay.com/music/ambient-space-sleep-drift-atmosphere-514685/" },
-  { film: "Fight Club", title: "Take Shape", creator: "Rockot", href: "https://pixabay.com/music/upbeat-take-shape-breakbeat-action-cinematic-techno-315475/" },
-  { film: "Goodfellas", title: "Bebop Coffee Shop", creator: "alex-morgan", href: "https://pixabay.com/music/traditional-jazz-bebop-coffee-shop-517090/" },
-  { film: "WarGames", title: "Retro Game", creator: "Bransboynd", href: "https://pixabay.com/music/electronic-retro-game-402454/" },
-];
+// Derived from each film's registry record, so a swapped track updates its
+// attribution here in the same edit. Classical/public-domain recordings are
+// credited as prose below instead.
+const pixabayMusic: readonly CreditRow[] = films.flatMap(({ film, credits }) =>
+  credits.pixabayMusic ? [{ film, ...credits.pixabayMusic }] : []
+);
 
-const pixabayEffects: readonly MediaCredit[] = [
-  { film: "The Matrix", title: "Text Digital Interface", creator: "EstudioCoati", href: "https://pixabay.com/sound-effects/film-special-effects-interface-digital-de-texto-text-digital-interface-218128/" },
-  { film: "Mad Max: Fury Road", title: "Car Engine Roaring", creator: "DRAGON-STUDIO", href: "https://pixabay.com/sound-effects/film-special-effects-car-engine-roaring-376881/" },
-  { film: "Fight Club", title: "Punch", creator: "Universfield", href: "https://pixabay.com/sound-effects/punch-140236/" },
-  { film: "Goodfellas", title: "Car Passing Sound", creator: "Soundque", href: "https://pixabay.com/sound-effects/city-car-passing-sound-soundque-field-recording-442774/" },
-];
+const pixabayEffects: readonly CreditRow[] = films.flatMap(({ film, credits }) =>
+  (credits.pixabayEffects ?? []).map((credit) => ({ film, ...credit }))
+);
 
 export default function FilmCreditsPage() {
   return (
     <main className="relative min-h-screen overflow-hidden py-10">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[440px] w-[760px] max-w-full -translate-x-1/2 rounded-full bg-accent/10 blur-[150px]" />
+      <Glow className="top-0 h-[440px] w-[760px] blur-[150px]" />
 
       <div className="container-x">
         <div className="mb-8 flex items-center justify-between">
@@ -64,7 +54,7 @@ export default function FilmCreditsPage() {
           </p>
 
           <div className="mt-10 space-y-10 text-[15px] leading-relaxed text-white/70">
-            <CreditSection title="Licensed classical recordings">
+            <CreditSection title="Classical & vintage recordings">
               <CreditList>
                 <CreditItem label="Amadeus">
                   Mozart&apos;s <em>Requiem: Lacrimosa</em>. The composition is
@@ -91,6 +81,12 @@ export default function FilmCreditsPage() {
                   </CreditLink>{" "}
                   is dedicated to the public domain under CC0 1.0.
                 </CreditItem>
+                <CreditItem label="Casablanca">
+                  A Jelly Roll Morton side from{" "}
+                  <em>Giants of Jazz — 3 LPs (1923–39)</em>, a collection of
+                  historical recordings. The copy hosted here is edited for
+                  level and web delivery.
+                </CreditItem>
               </CreditList>
             </CreditSection>
 
@@ -115,6 +111,17 @@ export default function FilmCreditsPage() {
                 CC0, public-domain, or U.S. government works. Their exact source
                 pages and local edits are retained in the project&apos;s asset
                 ledger.
+              </p>
+            </CreditSection>
+
+            <CreditSection title="Synthesized voice">
+              <p>
+                The 2001: A Space Odyssey mode occasionally whispers HAL 9000&apos;s
+                line &ldquo;I&apos;m sorry, Dave. I&apos;m afraid I can&apos;t do
+                that.&rdquo; as an homage. The audio is generated locally with the
+                macOS &ldquo;Whisper&rdquo; text-to-speech voice — it is not the
+                film&apos;s recording and does not imitate the original actor. The
+                quoted line is used for commentary and criticism.
               </p>
             </CreditSection>
 
@@ -170,7 +177,7 @@ function CreditItem({
   );
 }
 
-function CompactCredits({ entries }: { entries: readonly MediaCredit[] }) {
+function CompactCredits({ entries }: { entries: readonly CreditRow[] }) {
   return (
     <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
       {entries.map(({ film, title, creator, href }) => (

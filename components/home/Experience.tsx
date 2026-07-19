@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { experience } from "@/lib/data";
-import { caseStudyByCompany } from "@/lib/caseStudies";
 import Reveal from "../ui/Reveal";
+import { ArrowRightIcon } from "../ui/icons";
+import PlaygroundLayer from "../playground/PlaygroundLayer";
 
 export default function Experience() {
   return (
     <section id="experience" className="relative scroll-mt-20 py-28 sm:py-36">
-      <div className="container-x">
+      {/* Playground mode: the π-blocks drifting along the section floor. */}
+      <PlaygroundLayer kind="pi-blocks" />
+      <div className="container-x relative z-10">
         <Reveal>
           <h2 className="mb-16 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
             Where I&apos;ve shipped.
@@ -65,15 +68,13 @@ export default function Experience() {
                           </span>
                         ))}
                       </div>
-                      {caseStudyByCompany[job.company] && (
+                      {job.caseStudy && (
                         <Link
-                          href={`/work/${caseStudyByCompany[job.company]}`}
+                          href={`/work/${job.caseStudy}`}
                           className="group/cs inline-flex flex-none items-center gap-1.5 text-xs font-medium text-accent transition-colors hover:text-accent-bright"
                         >
                           Read case study
-                          <svg className="h-3.5 w-3.5 transition-transform group-hover/cs:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+                          <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover/cs:translate-x-0.5" />
                         </Link>
                       )}
                     </div>

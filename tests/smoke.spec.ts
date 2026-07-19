@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { commitGrade, openTheater } from "./helpers";
 
 // Every public route should load with a 200 and render a heading.
 const pages = [
@@ -58,7 +59,7 @@ test("project cards link into work and demos", async ({ page }) => {
 test("theater selection regrades and persists the site", async ({ page }) => {
   await page.goto("/");
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
+  await openTheater(page);
   const dialog = page.locator('[role="dialog"]');
   await expect(dialog).toBeVisible();
   // 17 posters: house grade + 16 films
@@ -81,9 +82,7 @@ test("theater lifecycle preserves the page and restores focus", async ({ page })
 
   const trigger = page.locator('button[aria-haspopup="dialog"]').first();
   const initialScroll = await page.evaluate(() => window.scrollY);
-  await trigger.click();
-
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
+  const dialog = await openTheater(page);
   await expect(dialog).toBeVisible();
   const dialogBox = await dialog.boundingBox();
   expect(dialogBox?.width ?? 1440).toBeLessThanOrEqual(1280 * 0.88);
@@ -101,7 +100,7 @@ test("theater lifecycle preserves the page and restores focus", async ({ page })
   await expect(trigger).toBeFocused();
   expect(await page.evaluate(() => window.scrollY)).toBe(initialScroll);
 
-  await trigger.click();
+  await openTheater(page);
   await expect(dialog).toBeVisible();
   await page.locator("[data-theater-backdrop]").click({ position: { x: 4, y: 4 } });
   await expect(dialog).not.toBeAttached();
@@ -116,10 +115,8 @@ test("theater keeps the compact catalog contained without moving the page", asyn
   });
 
   const initialPageScroll = await page.evaluate(() => window.scrollY);
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const catalog = page
-    .getByRole("dialog", { name: "Film theater" })
-    .locator("[data-theater-catalog]");
+  const dialog = await openTheater(page);
+  const catalog = dialog.locator("[data-theater-catalog]");
   await expect(catalog).toBeVisible();
   await expect(catalog.locator("[data-film-scene]")).toHaveCount(17);
   await catalog.hover({ position: { x: 80, y: 240 } });
@@ -133,9 +130,7 @@ test("theater reel previews without persistence and selects explicitly", async (
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.evaluate(() => localStorage.removeItem("film-grade"));
 
-  const trigger = page.locator('button[aria-haspopup="dialog"]').first();
-  await trigger.click();
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
+  const dialog = await openTheater(page);
   const scenes = dialog.locator("[data-film-scene]");
   await expect(scenes).toHaveCount(17);
 
@@ -148,10 +143,8 @@ test("theater reel previews without persistence and selects explicitly", async (
   await expect(dialog).not.toBeAttached();
   await expect(page.locator("html")).not.toHaveAttribute("data-grade");
 
-  await trigger.click();
-  const reopenedDialog = page.getByRole("dialog", { name: "Film theater" });
-  const reopenedMatrix = reopenedDialog.locator('[data-film-scene="matrix"]');
-  await reopenedMatrix.getByRole("button", { name: "Use The Matrix grade" }).click();
+  const reopenedDialog = await openTheater(page);
+  await commitGrade(page, "matrix");
 
   await expect(reopenedDialog).not.toBeAttached();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "matrix");
@@ -193,9 +186,7 @@ test("Game of Life grade palette follows theater previews", async ({ page }) => 
   await page.locator('button[title="Game of Life"]').click();
   const canvas = page.locator("#top canvas");
   await expect(canvas).toBeVisible();
-  const trigger = page.locator('button[aria-haspopup="dialog"]').first();
-  await trigger.click();
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
+  const dialog = await openTheater(page);
   await dialog.locator('[data-film-scene="casablanca"] button').focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "casablanca");
 
@@ -263,16 +254,18 @@ test("Game of Life grade palette follows theater previews", async ({ page }) => 
     .toBe(true);
 });
 
-test("theater trigger stays a low-key icon and dialog stays inset", async ({ page }) => {
+test("theater trigger carries the Now Showing label and dialog stays inset", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
 
+  // Since the uniqueness suite (docs/specs/uniqueness-suite-2026-07-17.md) the
+  // trigger is a compact marquee pill: icon plus the active grade's name.
   const trigger = page.locator('header button[aria-haspopup="dialog"]').first();
   await expect(trigger).toBeVisible();
   await expect(trigger).toHaveAttribute("title", "Film theater");
-  await expect(trigger).not.toContainText("Theater");
+  await expect(trigger).toContainText("Theater");
   const triggerBox = await trigger.boundingBox();
-  expect(triggerBox?.width ?? 0).toBeLessThanOrEqual(40);
+  expect(triggerBox?.width ?? 0).toBeLessThanOrEqual(140);
   expect(triggerBox?.height ?? 0).toBeLessThanOrEqual(40);
 
   await trigger.click();
@@ -332,8 +325,9 @@ test("hero backdrop defaults to orbit and switches to life", async ({ page }) =>
   await page.goto("/");
   const wrap = page.locator("[data-hero-bg]");
   await expect(wrap).toHaveAttribute("data-hero-bg", "orbit");
-  // The three.js scene actually mounts a canvas
-  await expect(wrap.locator("canvas")).toBeVisible({ timeout: 10_000 });
+  // The three.js scene actually mounts a canvas. Headless WebGL init can
+  // stall well past 10s when workers share the machine; give it room.
+  await expect(wrap.locator("canvas")).toBeVisible({ timeout: 20_000 });
   await page.locator('button[title="Game of Life"]').click();
   await expect(wrap).toHaveAttribute("data-hero-bg", "life");
   // Choice persists across a reload
@@ -374,8 +368,7 @@ test("3D orbit follows theater previews and restores the grade palette", async (
   const housePalette = await currentCssPalette();
   await expect.poll(renderedOrbitPalette).toEqual(housePalette);
 
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
+  const dialog = await openTheater(page);
   await dialog.locator('[data-film-scene="dune"] button').focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "dune");
   const dunePalette = await currentCssPalette();

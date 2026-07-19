@@ -1,23 +1,20 @@
-import { drawFilmLabel, hash, makeFilmVisual, pageSectionAt, withAlpha, wrap } from "../shared";
-
-const markers = [
-  "Copacabana track",
-  "freeze frames",
-  "final-day dates",
-  "neon sign",
-  "pink Cadillac",
-  "1955-1970-1990",
-] as const;
+import { createSectionTracker, drawFilmLabel, hash, makeStatefulFilmVisual, withAlpha, wrap } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
 // One era per page section, hero first — the card reads like the film's
 // location titles: "THE ABOUT SECTION. 1963."
 const SECTION_YEARS = ["1955", "1963", "1970", "1978", "1979", "MAY 11, 1980"] as const;
 
 const FREEZE_SECONDS = 2.8;
-let lastSectionIndex = -1;
-let freezeStartedAt = -Infinity;
 
-export default makeFilmVisual(markers, (frame) => {
+export default makeStatefulFilmVisual(() => {
+  // Freeze-frame machine state is per activation, so re-entering the mode
+  // never resumes a stale section from the previous visit.
+  const sections = createSectionTracker();
+  let lastSectionIndex = -1;
+  let freezeStartedAt = -Infinity;
+
+  const draw = (frame: FilmFrame) => {
   const { context, width, height, time, accentBright } = frame;
   context.save();
 
@@ -164,7 +161,7 @@ export default makeFilmVisual(markers, (frame) => {
 
   // Crossing into a new page section freezes the film on a bright frame
   // with that section's location card, then releases.
-  const section = pageSectionAt(frame.scroll);
+  const section = sections.sectionAt(frame.scroll);
   if (section.index !== lastSectionIndex) {
     if (lastSectionIndex !== -1) freezeStartedAt = time;
     lastSectionIndex = section.index;
@@ -191,4 +188,7 @@ export default makeFilmVisual(markers, (frame) => {
 
   drawFilmLabel(frame, "COPACABANA / CONTINUOUS TRACK", 22, 28, 0.44);
   context.restore();
+  };
+
+  return { draw };
 });

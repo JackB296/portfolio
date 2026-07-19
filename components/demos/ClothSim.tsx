@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { ACCENT_BRIGHT } from "@/lib/theme";
+import useDemoCanvas from "./useDemoCanvas";
+import { DemoButton, DemoCaption, DemoFrame } from "./chrome";
 
 // Faithful to the original cloth.py: a 32x24 grid of point masses linked by
 // sticks, integrated with Verlet, pinned every other node on the top row,
@@ -30,14 +31,12 @@ function intersect(
   return o1 !== o2 && o3 !== o4;
 }
 
+type ClothApi = {
+  reset: () => void;
+};
+
 export default function ClothSim() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const resetRef = useRef<() => void>(() => {});
-
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-
+  const demo = useDemoCanvas<ClothApi>((ctx, canvas, controls) => {
     let W = 640;
     let H = 460;
     let spacing = 18;
@@ -64,18 +63,6 @@ export default function ClothSim() {
       }
     };
 
-    const resize = () => {
-      W = Math.max(1, Math.round(canvas.getBoundingClientRect().width));
-      H = Math.round(W * 0.68);
-      canvas.width = W;
-      canvas.height = H;
-      build();
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-    resetRef.current = build;
-
     // Pointer = the cutting blade.
     let down = false;
     let mx = 0, my = 0, pmx = 0, pmy = 0;
@@ -84,28 +71,9 @@ export default function ClothSim() {
       mx = ((e.clientX - r.left) / r.width) * W;
       my = ((e.clientY - r.top) / r.height) * H;
     };
-    const onDown = (e: PointerEvent) => { down = true; toLocal(e); pmx = mx; pmy = my; };
-    const onMove = (e: PointerEvent) => {
-      pmx = mx; pmy = my;
-      toLocal(e);
-      if (!down) return;
-      for (const s of sticks) {
-        if (!s.active) continue;
-        const pa = particles[s.a], pb = particles[s.b];
-        if (intersect(pmx, pmy, mx, my, pa.x, pa.y, pb.x, pb.y)) s.active = false;
-      }
-    };
-    const onUp = () => (down = false);
-    canvas.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
 
-    let raf = 0;
-    let last = performance.now();
-
-    const frame = (now: number) => {
-      const dt = Math.min(0.02, (now - last) / 1000);
-      last = now;
+    const frame = (dt0: number) => {
+      const dt = Math.min(0.02, dt0);
       const gravity = 981 * (spacing / 25); // scaled from the original (spacing 25)
 
       // Verlet integration
@@ -158,36 +126,51 @@ export default function ClothSim() {
         ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
-
-      raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
 
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      canvas.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+    return {
+      resize(cssWidth, dpr) {
+        W = Math.max(1, Math.round(cssWidth));
+        H = Math.round(W * 0.68);
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        build();
+      },
+      frame,
+      pointer: {
+        // Cutting needs the sim running, so a press is also the
+        // reduced-motion opt-in.
+        down: (e) => { down = true; toLocal(e); pmx = mx; pmy = my; controls.start(); },
+        move: (e) => {
+          pmx = mx; pmy = my;
+          toLocal(e);
+          if (!down) return;
+          for (const s of sticks) {
+            if (!s.active) continue;
+            const pa = particles[s.a], pb = particles[s.b];
+            if (intersect(pmx, pmy, mx, my, pa.x, pa.y, pb.x, pb.y)) s.active = false;
+          }
+        },
+        up: () => { down = false; },
+      },
+      api: {
+        reset: () => { build(); controls.renderOnce(); },
+      },
     };
-  }, []);
+  });
 
   return (
     <div className="w-full">
-      <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-accent/10">
-        <canvas ref={canvasRef} className="block w-full touch-none select-none" />
-      </div>
+      <DemoFrame>
+        <canvas ref={demo.canvasRef} className="block w-full touch-none select-none" />
+      </DemoFrame>
       <div className="mt-4 flex items-center justify-center gap-3">
-        <button
-          onClick={() => resetRef.current()}
-          className="rounded-full border border-white/15 px-5 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-accent/50 hover:text-white"
-        >
-          Reset cloth
-        </button>
+        <DemoButton onClick={() => demo.api.reset()}>Reset cloth</DemoButton>
       </div>
-      <p className="mt-3 text-center font-mono text-xs text-white/60">
+      <DemoCaption>
         Click and drag across the cloth to slice through the threads.
-      </p>
+      </DemoCaption>
     </div>
   );
 }

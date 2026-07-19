@@ -1,6 +1,5 @@
-import { drawFilmLabel, hash, makeFilmVisual, pageSectionAt, withAlpha, wrap } from "../shared";
-
-const markers = ["2022 case", "red string", "cipher", "riddler card", "question marks", "city trace"] as const;
+import { createSectionTracker, drawFilmLabel, hash, makeStatefulFilmVisual, withAlpha, wrap } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
 // Corkboard pins for the evidence map, as viewport ratios.
 const PINS: ReadonlyArray<readonly [number, number]> = [
@@ -30,7 +29,11 @@ const BUILDINGS: ReadonlyArray<readonly [number, number, number]> = Array.from(
   ] as const
 );
 
-export default makeFilmVisual(markers, (frame) => {
+export default makeStatefulFilmVisual(() => {
+  // The section tracker's measurement cache is per activation (see shared.ts).
+  const sections = createSectionTracker();
+
+  const draw = (frame: FilmFrame) => {
   const { context, width, height, time, pointerX, pointerY, accent, accentBright } = frame;
   context.save();
 
@@ -171,7 +174,7 @@ export default makeFilmVisual(markers, (frame) => {
 
   // The evidence string map: pins for the case, red string drawing taut
   // between them; the pin for the section under the reader stays lit.
-  const activePin = pageSectionAt(frame.scroll).index % PINS.length;
+  const activePin = sections.sectionAt(frame.scroll).index % PINS.length;
   const caseProgress = wrap(time * 0.3, STRINGS.length + 2);
   STRINGS.forEach(([from, to], link) => {
     const pull = Math.max(0, Math.min(1, caseProgress - link));
@@ -225,4 +228,7 @@ export default makeFilmVisual(markers, (frame) => {
 
   drawFilmLabel(frame, "CASE 2022 / CIPHER 04", 22, 30, 0.46);
   context.restore();
+  };
+
+  return { draw };
 });

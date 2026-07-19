@@ -1,25 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ACCENT, ACCENT_BRIGHT } from "@/lib/theme";
+import useDemoCanvas from "./useDemoCanvas";
+import { DemoButton, DemoCaption, DemoFrame } from "./chrome";
 
 // The colliding-blocks computer for pi (faithful to my Python pi-blocks sim).
 // A small block, a big block, and a wall. With a mass ratio of 100^(digits-1)
 // the number of perfectly elastic collisions spells out the digits of pi.
 // Implemented event-driven so collisions are exact (no tunneling).
 const DIGIT_OPTIONS = [1, 2, 3] as const;
+const INITIAL_DIGITS = 2;
+
+type PiBlocksApi = {
+  restart: (digits: number) => void;
+};
 
 export default function PiBlocks() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [digits, setDigits] = useState<number>(2);
-  const [collisions, setCollisions] = useState(0);
-  const digitsRef = useRef(digits);
-  const restartRef = useRef<(d: number) => void>(() => {});
-  useEffect(() => { digitsRef.current = digits; }, [digits]);
+  const [digits, setDigits] = useState<number>(INITIAL_DIGITS);
 
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
+  const demo = useDemoCanvas<PiBlocksApi, number>((ctx, canvas, controls) => {
     let W = 1, H = 1;
 
     const S1 = 0.6, S2 = 1.2; // block sizes in world units
@@ -36,10 +36,8 @@ export default function PiBlocks() {
       x1 = 2.2; v1 = 0;
       x2 = 7.5; v2 = -1.2;
       lastT = 0; simT = 0; count = 0; done = false;
-      setCollisions(0);
     };
-    restart(digitsRef.current);
-    restartRef.current = restart;
+    restart(INITIAL_DIGITS);
 
     // Time until the next collision from the current state, or Infinity.
     const nextEvent = () => {
@@ -66,17 +64,7 @@ export default function PiBlocks() {
         v2 = ((2 * m1) / (m1 + m2)) * u1 + ((m2 - m1) / (m1 + m2)) * u2;
       }
       count++;
-      setCollisions(count);
     };
-
-    const resize = () => {
-      W = Math.max(1, Math.round(canvas.getBoundingClientRect().width));
-      H = Math.round(W * 0.5);
-      canvas.width = W; canvas.height = H;
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
 
     const sx = () => (W - 40) / WORLD; // pixels per world unit
     const groundY = () => H - 30;
@@ -109,10 +97,8 @@ export default function PiBlocks() {
       ctx.fillText(m2 >= 1000 ? `${m2.toExponential(0)} kg` : `${m2} kg`, toX(px2), gy - S2 * scale - 6);
     };
 
-    let raf = 0, last = performance.now();
-    const loop = (now: number) => {
-      const realDt = Math.min(0.05, (now - last) / 1000);
-      last = now;
+    const frame = (realDt0: number) => {
+      const realDt = Math.min(0.05, realDt0);
       if (!done) {
         simT += realDt * 1.1; // play speed
         let guard = 0;
@@ -129,27 +115,42 @@ export default function PiBlocks() {
         }
       }
       draw();
-      raf = requestAnimationFrame(loop);
     };
-    raf = requestAnimationFrame(loop);
 
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
-  }, []);
+    return {
+      resize(cssWidth, dpr) {
+        W = Math.max(1, Math.round(cssWidth));
+        H = Math.round(W * 0.5);
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      },
+      frame,
+      draw,
+      hud: () => count,
+      api: {
+        // Replaying is an explicit action, so it doubles as the
+        // reduced-motion opt-in.
+        restart: (d) => { restart(d); controls.start(); },
+      },
+    };
+  }, { initialHud: 0 });
 
   return (
     <div className="w-full">
-      <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-accent/10">
-        <canvas ref={canvasRef} className="block w-full touch-none select-none" />
+      <DemoFrame>
+        <canvas ref={demo.canvasRef} className="block w-full touch-none select-none" />
         <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-ink/70 px-4 py-1.5 font-mono text-sm text-accent backdrop-blur">
-          {collisions} collisions
+          {demo.hud} collisions
         </div>
-      </div>
+      </DemoFrame>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
         <span className="font-mono text-xs text-white/65">Mass ratio:</span>
         {DIGIT_OPTIONS.map((d) => (
           <button
             key={d}
-            onClick={() => { setDigits(d); restartRef.current(d); }}
+            type="button"
+            onClick={() => { setDigits(d); demo.api.restart(d); }}
             className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
               digits === d ? "bg-accent text-ink" : "border border-white/15 text-white/70 hover:text-white"
             }`}
@@ -157,16 +158,11 @@ export default function PiBlocks() {
             100^{d - 1}
           </button>
         ))}
-        <button
-          onClick={() => restartRef.current(digitsRef.current)}
-          className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-white/80 transition-colors hover:border-accent/50 hover:text-white"
-        >
-          Replay
-        </button>
+        <DemoButton onClick={() => demo.api.restart(digits)}>Replay</DemoButton>
       </div>
-      <p className="mt-3 text-center font-mono text-xs text-white/60">
+      <DemoCaption>
         Count the collisions: 3, then 31, then 314. The digits of pi fall out of pure physics.
-      </p>
+      </DemoCaption>
     </div>
   );
 }

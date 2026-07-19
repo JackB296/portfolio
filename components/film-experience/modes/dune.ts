@@ -1,15 +1,6 @@
 import { drawFilmLabel, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
 
-const markers = [
-  "ground pulse",
-  "twin moons",
-  "water allocation",
-  "ornithopter",
-  "spice blow",
-  "spice glints",
-] as const;
-
-export default makeFilmVisual(markers, (frame) => {
+export default makeFilmVisual((frame) => {
   const { context, width, height, time, pointerX, pointerY, scrollVelocity } = frame;
   context.save();
 

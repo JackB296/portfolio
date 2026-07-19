@@ -1,11 +1,9 @@
 import { drawFilmLabel, makeFilmVisual, withAlpha } from "../shared";
 
-const markers = ["B2-B1-G-1", "Morse lamp", "scholar's stone", "weight token", "city lights", "hidden panel"] as const;
-
 // ··· / −−− steady city night; one lamp signals in Morse.
 const MORSE = [1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0] as const;
 
-export default makeFilmVisual(markers, (frame) => {
+export default makeFilmVisual((frame) => {
   const { context, width, height, time, accentBright } = frame;
   context.save();
 

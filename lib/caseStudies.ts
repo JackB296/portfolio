@@ -1,4 +1,4 @@
-export type CaseStudy = {
+type CaseStudy = {
   slug: string;
   company: string;
   /** Short title used on the project/case-study card. */
@@ -40,7 +40,7 @@ export const caseStudies: CaseStudy[] = [
       "A centralized React dashboard unifying Cin7 Core ERP, SafetyChain QA, and 200+ live Ignition SCADA tags into one plant-floor view with a SQLite → PostgreSQL migration powering the history layer.",
     headline: "One dashboard for the plant floor: ERP, QA, and 200+ live SCADA tags",
     role: "Computer Science Engineer Intern",
-    period: "May 2026 to Aug 2026",
+    period: "May 2026 - Aug 2026",
     location: "Mason, OH",
     accentLabel: "Industrial Systems",
     tags: ["React", "PostgreSQL", "Ignition SCADA", "OPC-UA", "Cin7 ERP", "SafetyChain"],
@@ -144,7 +144,7 @@ export const caseStudies: CaseStudy[] = [
       "Fourteen months as a financial company's only technical person: managing its investor and financial records, migrating legacy Microsoft Access workflows to PostgreSQL, and building Java tools so non-technical staff could work with the data safely.",
     headline: "Running a company's data as its only technical person",
     role: "Database Administrator",
-    period: "Aug 2023 to Oct 2024",
+    period: "Aug 2023 - Oct 2024",
     location: "Remote",
     accentLabel: "Data · Ownership",
     tags: ["Java", "PostgreSQL", "MS Access", "Data Migration"],
@@ -243,7 +243,7 @@ export const caseStudies: CaseStudy[] = [
       "My first co-op inside a large, established codebase and a 50 plus engineer team. I resolved 30 plus production tickets across Angular, C#/.NET, and SQL, and learned how real software teams actually work.",
     headline: "What working on a big team taught me",
     role: "Full Stack Developer Co-op",
-    period: "Aug 2025 to Dec 2025",
+    period: "Aug 2025 - Dec 2025",
     location: "Cincinnati, OH",
     accentLabel: "Teamwork · Full-Stack",
     tags: ["Angular", "C# / .NET", "SQL", "Agile", "Code Review"],
@@ -292,10 +292,7 @@ export function getCaseStudy(slug: string) {
   return caseStudies.find((c) => c.slug === slug);
 }
 
-// Map an experience company name to its case study slug (for linking).
-export const caseStudyByCompany: Record<string, string> = {
-  "Voyage Foods": "voyage-foods-dashboard",
-  "London Computer Systems": "lcs-big-team",
-  JAKAPA: "jakapa-canvas-integration",
-  "American Equity Funding, Inc.": "aef-access-migration",
-};
+/** The professional case studies, in display order. */
+export const professionalCaseStudies: CaseStudy[] = professionalCaseStudySlugs
+  .map((slug) => caseStudies.find((c) => c.slug === slug))
+  .filter((c): c is CaseStudy => Boolean(c));

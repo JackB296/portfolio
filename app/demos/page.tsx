@@ -3,6 +3,8 @@ import Link from "next/link";
 import { demos } from "@/lib/demos";
 import { profile } from "@/lib/data";
 import BackLink from "@/components/ui/BackLink";
+import Glow from "@/components/ui/Glow";
+import { ArrowRightIcon } from "@/components/ui/icons";
 
 export const metadata: Metadata = {
   title: `Playground · ${profile.name}`,
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 export default function DemosPage() {
   return (
     <main className="relative min-h-[100svh] overflow-hidden">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-[800px] max-w-full -translate-x-1/2 rounded-full bg-accent/10 blur-[150px]" />
+      <Glow className="top-0 h-[500px] w-[800px] blur-[150px]" />
 
       <div className="container-x py-12">
         <BackLink href="/#projects" label="Back to portfolio" />
@@ -58,9 +60,7 @@ export default function DemosPage() {
               </div>
               <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
                 Open demo
-                <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </span>
             </Link>
           ))}

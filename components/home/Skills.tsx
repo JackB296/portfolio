@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { skillGroups } from "@/lib/data";
 import Reveal from "../ui/Reveal";
+import PlaygroundLayer from "../playground/PlaygroundLayer";
 
 const icons: Record<string, ReactNode> = {
   Languages: (
@@ -43,14 +44,17 @@ const icons: Record<string, ReactNode> = {
 };
 
 export default function Skills() {
-  const marquee = skillGroups.flatMap((g) => g.skills);
-
+  // Bottom padding is tighter than the other sections: the skill cards'
+  // ragged pill rows already trail off into whitespace, so a full py-36
+  // gap to Contact read as a dead zone once the marquee strip was removed.
   return (
-    <section id="skills" className="relative scroll-mt-20 py-28 sm:py-36">
-      <div className="container-x">
+    <section id="skills" className="relative scroll-mt-20 pt-28 pb-20 sm:pt-36 sm:pb-24">
+      {/* Playground mode: a sliceable Verlet cloth behind the skill cards. */}
+      <PlaygroundLayer kind="cloth" />
+      <div className="container-x relative z-10">
         <Reveal>
           <h2 className="mb-14 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            The toolbox.
+            Skills.
           </h2>
         </Reveal>
 
@@ -78,21 +82,6 @@ export default function Skills() {
                 </div>
               </div>
             </Reveal>
-          ))}
-        </div>
-      </div>
-
-      {/* Marquee strip */}
-      <div className="relative mt-16 flex overflow-hidden border-y border-white/[0.06] py-5 [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...marquee, ...marquee].map((s, i) => (
-            <span
-              key={i}
-              className="mx-5 font-mono text-sm text-white/55 transition-colors hover:text-accent"
-            >
-              {s}
-              <span className="ml-10 text-accent/40">/</span>
-            </span>
           ))}
         </div>
       </div>

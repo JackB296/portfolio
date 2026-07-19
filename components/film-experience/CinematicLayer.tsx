@@ -3,9 +3,11 @@
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Img from "@/components/ui/Img";
-import { filmExperienceById } from "@/lib/filmExperiences";
+import { getFilmExperience } from "@/lib/films";
 import type { FilmVisualModule } from "@/lib/filmExperienceTypes";
-import { cssRgb } from "./shared";
+import { getLiveThemePalette } from "@/lib/theme";
+import { useReducedMotion } from "@/lib/useReducedMotion";
+import { musicLevels } from "./shared";
 
 export type VisualStatus = Readonly<{
   state: "off" | "loading" | "running" | "static" | "error";
@@ -25,22 +27,16 @@ type LoadedVisual = {
 export default function CinematicLayer({ filmId, onStatus }: CinematicLayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loaded, setLoaded] = useState<LoadedVisual | null>(null);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const reduceMotion = useReducedMotion();
   const statusRef = useRef(onStatus);
-  statusRef.current = onStatus;
+  useEffect(() => {
+    statusRef.current = onStatus;
+  }, [onStatus]);
 
   const report = useCallback(
     (status: VisualStatus) => statusRef.current(status),
     []
   );
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduceMotion(media.matches);
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,15 +46,18 @@ export default function CinematicLayer({ filmId, onStatus }: CinematicLayerProps
       return;
     }
 
-    const definition = filmExperienceById.get(filmId);
-    if (!definition) {
+    const experience = getFilmExperience(filmId);
+    if (!experience) {
       setLoaded(null);
       report({ state: "error", filmId });
       return;
     }
 
+    // Clear the previous film immediately so data-renderer reads "loading"
+    // during the chunk fetch instead of the stale film id.
+    setLoaded(null);
     report({ state: "loading", filmId });
-    void definition
+    void experience
       .loadVisuals()
       .then((module) => {
         if (!cancelled) setLoaded({ filmId, module: module.default });
@@ -84,12 +83,14 @@ export default function CinematicLayer({ filmId, onStatus }: CinematicLayerProps
       report({ state: "error", filmId });
       return;
     }
+    const theme = getLiveThemePalette();
     const palette = {
-      accent: cssRgb("--accent-rgb", "52 211 153"),
-      accentBright: cssRgb("--accent-bright-rgb", "110 231 183"),
-      accentDim: cssRgb("--accent-dim-rgb", "5 150 105"),
+      accent: theme.accent,
+      accentBright: theme.bright,
+      accentDim: theme.dim,
     };
 
+    const instance = loaded.module.create();
     let animationFrame = 0;
     let previousFrame = performance.now();
     let previousScroll = window.scrollY;
@@ -128,7 +129,7 @@ export default function CinematicLayer({ filmId, onStatus }: CinematicLayerProps
       const dpr = canvas.width / Math.max(width, 1);
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
       context.clearRect(0, 0, width, height);
-      loaded.module.draw({
+      instance.draw({
         context,
         width,
         height,
@@ -139,6 +140,7 @@ export default function CinematicLayer({ filmId, onStatus }: CinematicLayerProps
         scroll: window.scrollY,
         scrollVelocity,
         staticFrame,
+        musicLevels,
         ...palette,
       });
       canvas.dataset.staticFrame = String(staticFrame);
@@ -188,11 +190,14 @@ export default function CinematicLayer({ filmId, onStatus }: CinematicLayerProps
       document.removeEventListener("visibilitychange", onVisibilityChange);
       context.setTransform(1, 0, 0, 1, 0, 0);
       context.clearRect(0, 0, canvas.width, canvas.height);
+      instance.dispose?.();
     };
   }, [filmId, loaded, reduceMotion, report]);
 
   if (!filmId) return null;
-  const definition = filmExperienceById.get(filmId);
+  // The resolved view: visualAssets is always an array, so the render below
+  // only guards the unknown-id case (experience === undefined).
+  const experience = getFilmExperience(filmId);
 
   return (
     <>
@@ -200,13 +205,12 @@ export default function CinematicLayer({ filmId, onStatus }: CinematicLayerProps
         ref={canvasRef}
         data-cinematic-layer
         data-renderer={loaded?.filmId ?? "loading"}
-        data-authored={String(Boolean(loaded?.module.authored))}
-        data-visual-references={loaded?.module.markers?.join("|") ?? ""}
+        data-visual-references={experience?.markers.join("|") ?? ""}
         data-static-frame="false"
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-30 h-screen w-screen opacity-55 mix-blend-screen"
       />
-      {definition?.visualAssets.map((asset) => {
+      {experience?.visualAssets.map((asset) => {
         const style: CSSProperties = {
           left: asset.left,
           top: asset.top,

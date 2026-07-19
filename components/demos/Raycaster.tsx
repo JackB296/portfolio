@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ACCENT_BRIGHT, accentAlpha } from "@/lib/theme";
+import useDemoCanvas from "./useDemoCanvas";
+import { DemoButton, DemoFrame } from "./chrome";
 
 // The exact map from the original engine.py (# = wall, . = floor).
 const MAP = [
@@ -33,18 +35,14 @@ const isWall = (cx: number, cy: number) => {
   return MAP[Math.floor(cy)][Math.floor(cx)] === "#";
 };
 
+type RaycasterApi = {
+  begin: () => void;
+};
+
 export default function Raycaster() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [started, setStarted] = useState(false);
-  const startedRef = useRef(false);
-  useEffect(() => {
-    startedRef.current = started;
-  }, [started]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-
+  const demo = useDemoCanvas<RaycasterApi>((ctx, canvas, controls) => {
     // Player in cell-space coordinates.
     let px = 2.5;
     let py = 2.5;
@@ -54,57 +52,40 @@ export default function Raycaster() {
     let W = 612;
     let H = 288;
 
-    const resize = () => {
-      const cssW = Math.max(1, canvas.getBoundingClientRect().width);
-      tile = Math.max(6, Math.floor(cssW / (2 * COLS)));
-      W = 2 * COLS * tile;
-      H = ROWS * tile;
-      canvas.width = W;
-      canvas.height = H;
+    // Dismiss the overlay and make sure the loop runs; calling start() is
+    // the explicit opt-in that also works under prefers-reduced-motion.
+    let begun = false;
+    const begin = () => {
+      if (begun) return;
+      begun = true;
+      setStarted(true);
+      controls.start();
     };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
 
     const keys = new Set<string>();
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      if (startedRef.current && ["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k))
+      if (begun && ["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k))
         e.preventDefault();
       keys.add(k);
     };
     const onKeyUp = (e: KeyboardEvent) => keys.delete(e.key.toLowerCase());
+    // An unfocused window never sees the keyup, so drop any held keys.
+    const onBlur = () => keys.clear();
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
 
     // Drag to turn (bonus over the original).
     let dragging = false;
     let lastX = 0;
-    const onDown = (e: PointerEvent) => {
-      dragging = true;
-      lastX = e.clientX;
-      if (!startedRef.current) setStarted(true);
-    };
-    const onMove = (e: PointerEvent) => {
-      if (!dragging) return;
-      dir += (e.clientX - lastX) * 0.005;
-      lastX = e.clientX;
-    };
-    const onUp = () => (dragging = false);
-    canvas.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
 
-    let raf = 0;
-    let last = performance.now();
-
-    const frame = (now: number) => {
-      const dt = Math.min(2, (now - last) / 16.67); // frames elapsed (~1 at 60fps)
-      last = now;
+    const frame = (dt: number) => {
+      const frames = Math.min(2, dt * 60); // frames elapsed (~1 at 60fps)
 
       // --- Movement: W/S forward/back, A/D turn (faithful to engine.py) ---
-      const speed = 0.045 * dt;
-      const turn = TURN * dt;
+      const speed = 0.045 * frames;
+      const turn = TURN * frames;
       let move = 0;
       if (keys.has("w") || keys.has("arrowup")) move += 1;
       if (keys.has("s") || keys.has("arrowdown")) move -= 1;
@@ -184,26 +165,41 @@ export default function Raycaster() {
       // Divider between the 2D and 3D panes.
       ctx.fillStyle = "rgba(255,255,255,0.08)";
       ctx.fillRect(W / 2 - 1, 0, 2, H);
-
-      raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
 
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      canvas.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+    return {
+      // 1x on purpose: the pixelated look is intentional.
+      resize(cssWidth) {
+        const cssW = Math.max(1, cssWidth);
+        tile = Math.max(6, Math.floor(cssW / (2 * COLS)));
+        W = 2 * COLS * tile;
+        H = ROWS * tile;
+        canvas.width = W;
+        canvas.height = H;
+      },
+      frame,
+      pointer: {
+        down: (e) => { dragging = true; lastX = e.clientX; begin(); },
+        move: (e) => {
+          if (!dragging) return;
+          dir += (e.clientX - lastX) * 0.005;
+          lastX = e.clientX;
+        },
+        up: () => { dragging = false; },
+      },
+      cleanup: () => {
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("keyup", onKeyUp);
+        window.removeEventListener("blur", onBlur);
+      },
+      api: { begin },
     };
-  }, []);
+  });
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-accent/10">
+    <DemoFrame>
       <canvas
-        ref={canvasRef}
+        ref={demo.canvasRef}
         className="block w-full touch-none select-none"
         style={{ imageRendering: "pixelated", aspectRatio: `${2 * COLS} / ${ROWS}` }}
       />
@@ -216,9 +212,14 @@ export default function Raycaster() {
             <b className="text-white">W/S</b> move · <b className="text-white">A/D</b> turn ·{" "}
             <b className="text-white">drag</b> to look. Left pane = 2D map &amp; rays, right = the 3D view.
           </p>
-          <p className="mt-4 text-xs text-white/65">Click to start</p>
+          <DemoButton
+            className="pointer-events-auto mt-4"
+            onClick={() => demo.api.begin()}
+          >
+            Click to start
+          </DemoButton>
         </div>
       )}
-    </div>
+    </DemoFrame>
   );
 }

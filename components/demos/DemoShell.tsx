@@ -1,37 +1,41 @@
 import Link from "next/link";
 import { ReactNode } from "react";
+import { getDemo } from "@/lib/demos";
 import { nextForDemo } from "@/lib/projectNav";
 import BackLink from "../ui/BackLink";
+import Glow from "../ui/Glow";
+import Pill from "../ui/Pill";
 import { GitHubIcon, ArrowRightIcon } from "../ui/icons";
 
+// Layout shared by every demo page. The heading, tags, accent label, and
+// GitHub link resolve from the demo registry (lib/demos.ts) by slug so page
+// copy can't drift from it; pages supply only the long-form description,
+// the bullets, and the demo itself.
 type Props = {
   slug: string;
-  accentLabel: string;
-  title: string;
-  titleAccent: string;
-  description: string;
+  description: ReactNode;
   bullets: [string, string][];
-  tags: string[];
-  github?: string;
+  /** For fixed-width demos (e.g. the flappy iframe): the grid sizes the demo
+      column to its content instead of the default fluid 560px track, and the
+      column gets this class. */
+  demoColumnClassName?: string;
   children: ReactNode;
 };
 
 export default function DemoShell({
   slug,
-  accentLabel,
-  title,
-  titleAccent,
   description,
   bullets,
-  tags,
-  github,
+  demoColumnClassName,
   children,
 }: Props) {
+  const demo = getDemo(slug);
+  if (!demo) throw new Error(`DemoShell: no demo registered for slug "${slug}"`);
   const next = nextForDemo(slug);
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-[700px] max-w-full -translate-x-1/2 rounded-full bg-accent/10 blur-[140px]" />
+      <Glow className="top-0 h-[500px] w-[700px] blur-[140px]" />
 
       <div className="container-x py-12">
         <div className="flex items-center justify-between">
@@ -44,13 +48,17 @@ export default function DemoShell({
           </Link>
         </div>
 
-        <div className="mt-10 grid items-start gap-12 lg:grid-cols-[1fr_minmax(0,560px)]">
+        <div
+          className={`mt-10 grid items-start gap-12 ${
+            demoColumnClassName ? "lg:grid-cols-[1fr_auto]" : "lg:grid-cols-[1fr_minmax(0,560px)]"
+          }`}
+        >
           <div className="max-w-xl lg:sticky lg:top-12">
             <span className="font-mono text-xs uppercase tracking-[0.25em] text-accent">
-              {accentLabel}
+              {demo.accentLabel} · Live Demo
             </span>
             <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-              {title} <span className="gradient-accent">{titleAccent}</span>
+              {demo.title} <span className="gradient-accent">{demo.titleAccent}</span>
             </h1>
             <p className="mt-5 text-base leading-relaxed text-white/65">
               {description}
@@ -66,7 +74,7 @@ export default function DemoShell({
               ))}
             </ul>
             <div className="mt-6 flex flex-wrap gap-2">
-              {tags.map((t) => (
+              {demo.tags.map((t) => (
                 <span
                   key={t}
                   className="rounded-md border border-white/[0.08] bg-white/[0.02] px-3 py-1 font-mono text-[11px] text-white/60"
@@ -75,20 +83,22 @@ export default function DemoShell({
                 </span>
               ))}
             </div>
-            {github && (
-              <a
-                href={github}
+            {demo.github && (
+              <Pill
+                href={demo.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-7 inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm text-white/85 transition-colors hover:border-accent/50 hover:text-white"
+                variant="outline"
+                size="sm"
+                className="mt-7 inline-flex items-center gap-2"
               >
                 <GitHubIcon />
                 View source on GitHub
-              </a>
+              </Pill>
             )}
           </div>
 
-          <div className="w-full">{children}</div>
+          <div className={demoColumnClassName ?? "w-full"}>{children}</div>
         </div>
 
         {next && (
