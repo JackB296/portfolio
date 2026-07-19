@@ -6,6 +6,7 @@ import * as THREE from "three";
 import DistortedSphere from "./DistortedSphere";
 import ParticleField from "./ParticleField";
 import { GRADE_EVENT } from "@/lib/grades";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import {
   DEFAULT_THEME_PALETTE,
   getLiveThemePalette,
@@ -39,14 +40,7 @@ export default function HeroScene() {
   // When the visitor asks their OS for reduced motion, stop the continuous
   // render loop ("demand" only paints on mount/resize) so the sphere and
   // particles settle into a static frame instead of perpetually animating.
-  const [reducedMotion, setReducedMotion] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mq.matches);
-    const onChange = () => setReducedMotion(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+  const reducedMotion = useReducedMotion();
 
   // Insurance: nudge react-use-measure after mount so the canvas never starts
   // collapsed if the initial ResizeObserver callback is delayed.

@@ -1,12 +1,12 @@
-import { drawFilmLabel, hash, makeFilmVisual, withAlpha } from "../shared";
+import { drawFilmLabel, hash, makeStatefulFilmVisual, withAlpha } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
-const markers = ["1983", "22 percent", "8080", "125 dots", "tic-tac-toe", "JXN-83"] as const;
+export default makeStatefulFilmVisual(() => {
+  // Joshua types from the moment the mode activates, not page load.
+  let lastFrameAt = -Infinity;
+  let typingStartedAt = 0;
 
-// Joshua types from the moment the mode activates, not page load.
-let lastFrameAt = -Infinity;
-let typingStartedAt = 0;
-
-export default makeFilmVisual(markers, (frame) => {
+  const draw = (frame: FilmFrame) => {
   const { context, width, height, time, accentBright } = frame;
   if (time - lastFrameAt > 1) typingStartedAt = time;
   lastFrameAt = time;
@@ -182,4 +182,7 @@ export default makeFilmVisual(markers, (frame) => {
   drawFilmLabel(frame, "WOPR / SIMULATION 22%", width - 22, 28, 0.44, "right");
   drawFilmLabel(frame, "TIC-TAC-TOE", boardX + cell * 1.5, boardY - 10, 0.44, "center");
   context.restore();
+  };
+
+  return { draw };
 });

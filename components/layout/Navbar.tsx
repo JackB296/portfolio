@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { navLinks, profile } from "@/lib/data";
+import { TERMINAL_OPEN_EVENT } from "@/lib/terminal";
 import { GitHubIcon, LinkedInIcon } from "../ui/icons";
 import GradeSwitcher from "./GradeSwitcher";
+import { SCROLL_LOCK_EVENT, SCROLL_UNLOCK_EVENT } from "./SmoothScroll";
 import Whoami from "../ui/Whoami";
 
 export default function Navbar() {
@@ -18,10 +20,16 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // While the mobile menu is open, freeze native scroll AND tell Lenis to
+  // stop driving it (same pairing as TheaterDialog) — otherwise its touch
+  // smoothing keeps scrolling the page behind the overlay.
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    if (!open) return;
+    window.dispatchEvent(new Event(SCROLL_LOCK_EVENT));
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
+      window.dispatchEvent(new Event(SCROLL_UNLOCK_EVENT));
     };
   }, [open]);
 
@@ -54,6 +62,15 @@ export default function Navbar() {
           ))}
           <li className="ml-2 flex items-center gap-1 border-l border-white/10 pl-3">
             <GradeSwitcher />
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(TERMINAL_OPEN_EVENT))}
+              aria-label="Open guest terminal"
+              title="Guest terminal (`)"
+              className="flex h-9 w-9 items-center justify-center rounded-full font-mono text-[13px] text-white/60 transition-colors hover:bg-white/[0.06] hover:text-accent"
+            >
+              &gt;_
+            </button>
             <a
               href={profile.github}
               target="_blank"
@@ -72,6 +89,7 @@ export default function Navbar() {
             >
               <LinkedInIcon className="h-[18px] w-[18px]" />
             </a>
+            {/* Accent-tinted pill (here and in the mobile menu below): a deliberate third dialect, intentionally not ui/Pill. */}
             <a
               href={profile.resume}
               className="ml-1 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-ink"
@@ -149,6 +167,17 @@ export default function Navbar() {
               className="relative flex items-center justify-between gap-4 px-8 pb-10"
             >
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    window.dispatchEvent(new Event(TERMINAL_OPEN_EVENT));
+                  }}
+                  aria-label="Open guest terminal"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 font-mono text-sm text-white/70 transition-colors hover:border-accent/50 hover:text-accent"
+                >
+                  &gt;_
+                </button>
                 <GradeSwitcher />
                 <a
                   href={profile.github}

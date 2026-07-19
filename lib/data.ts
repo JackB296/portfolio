@@ -1,3 +1,6 @@
+import { demoHref, demos, type DemoPreview } from "./demos";
+import { getCaseStudy } from "./caseStudies";
+
 export const profile = {
   name: "Jackson Bialecki",
   firstName: "Jackson",
@@ -20,60 +23,64 @@ export const profile = {
   resumePdf: "/Bialecki_Jackson_Resume2026.pdf",
 };
 
-export type Experience = {
+type Experience = {
   role: string;
   company: string;
   location: string;
   period: string;
   points: string[];
   tags: string[];
+  /** /work slug of the case study covering this job. */
+  caseStudy: string;
+};
+
+// Each job's role/company/location/period comes from its case study record
+// (lib/caseStudies.ts), so the home timeline and the /work page can't drift.
+const job = (
+  caseStudySlug: string,
+  details: Pick<Experience, "points" | "tags">
+): Experience => {
+  const study = getCaseStudy(caseStudySlug);
+  if (!study) throw new Error(`No case study for slug: ${caseStudySlug}`);
+  return {
+    role: study.role,
+    company: study.company,
+    location: study.location,
+    period: study.period,
+    caseStudy: caseStudySlug,
+    ...details,
+  };
 };
 
 export const experience: Experience[] = [
-  {
-    role: "Computer Science Engineer Intern",
-    company: "Voyage Foods",
-    location: "Mason, OH",
-    period: "May 2026 - Aug 2026",
+  job("voyage-foods-dashboard", {
     points: [
       "Built and expanded a production manufacturing dashboard integrating Cin7 Core ERP, SafetyChain QA, Ignition SCADA, and PostgreSQL data into one centralized React interface.",
       "Migrated PLC tag storage from SQLite to PostgreSQL and visualized 200+ Ignition tags across 10+ production machines for analysis, graphing, and plant-floor performance monitoring.",
     ],
     tags: ["React", "PostgreSQL", "Ignition SCADA", "Cin7 ERP"],
-  },
-  {
-    role: "Full Stack Developer Co-op",
-    company: "London Computer Systems",
-    location: "Cincinnati, OH",
-    period: "Aug 2025 - Dec 2025",
+  }),
+  job("lcs-big-team", {
     points: [
       "Resolved 30+ production tickets involving bug fixes, feature enhancements, and database updates across Angular front ends, C#/.NET APIs, and SQL-backed systems.",
       "Collaborated with a 50+ engineer team through code reviews, sprint planning, peer debugging, and production issue investigation in an Agile environment.",
     ],
     tags: ["Angular", "C# / .NET", "SQL", "Agile"],
-  },
-  {
-    role: "Full Stack Developer",
-    company: "JAKAPA",
-    location: "Remote",
-    period: "May 2023 - Jun 2025",
+  }),
+  job("jakapa-canvas-integration", {
     points: [
       "Built a full-stack Edlink API integration linking JAKAPA's Angular platform to Canvas LMS, automating single sign-on, first-login account creation, and class enrollment from Canvas rosters.",
       "Engineered Node.js services that mirror Canvas rostering into PostgreSQL on login, with idempotent upserts so re-syncing never duplicates a student.",
     ],
     tags: ["Angular", "Node.js", "Edlink API", "PostgreSQL"],
-  },
-  {
-    role: "Database Administrator",
-    company: "American Equity Funding, Inc.",
-    location: "Remote",
-    period: "Aug 2023 - Oct 2024",
+  }),
+  job("aef-access-migration", {
     points: [
       "Managed investor and financial data across multiple databases while maintaining data integrity, security, and reporting accuracy.",
       "Migrated legacy Microsoft Access workflows to PostgreSQL and built Java tools that let non-technical staff safely query and update records.",
     ],
     tags: ["PostgreSQL", "Java", "MS Access", "Data Migration"],
-  },
+  }),
 ];
 
 export type Project = {
@@ -88,8 +95,27 @@ export type Project = {
   featured?: boolean;
   image?: string;
   /** Live canvas preview rendered behind the card on hover. */
-  preview?: "life" | "raycaster" | "cloth" | "flappy";
+  preview?: DemoPreview;
 };
+
+// The live-demo cards are derived from the demo registry (lib/demos.ts), so
+// names, tools, and GitHub links can't drift from the demo pages.
+const demoProjects: Project[] = demos.flatMap((d) =>
+  d.home
+    ? [
+        {
+          name: `${d.title} ${d.titleAccent}`,
+          blurb: d.home.blurb,
+          tools: d.home.tools ?? d.tags,
+          github: d.github,
+          live: demoHref(d.slug),
+          liveLabel: d.home.liveLabel,
+          accentLabel: d.accentLabel,
+          preview: d.home.preview,
+        },
+      ]
+    : []
+);
 
 // "Projects" = projects (live demos, hardware, side projects).
 // Professional work lives in lib/caseStudies.ts and renders as its own group.
@@ -104,53 +130,10 @@ export const projects: Project[] = [
     featured: true,
     image: "/8bit-computer.webp",
   },
-  {
-    name: "Neuroevolution Flappy Bird",
-    blurb:
-      "An AI-driven Flappy Bird where a population of neural-network birds evolves through neuroevolution, getting better over generations until it clears the pipes on its own. Play it or watch the AI learn right here.",
-    tools: ["JavaScript", "p5.js", "Neuroevolution", "Genetic Algorithm"],
-    github: "https://github.com/JackB296/neuroevolution-flappy-bird",
-    live: "/flappy",
-    liveLabel: "Play the live demo",
-    accentLabel: "AI / ML",
-    preview: "flappy",
-  },
-  {
-    name: "Raycasting Engine",
-    blurb:
-      "A from-scratch pseudo-3D renderer that marches rays through a 2D grid, Wolfenstein-style, and draws the 2D map and its rays beside the rendered 3D view. A JS port of my Python engine, running live in your browser.",
-    tools: ["Python", "JavaScript", "Canvas", "Raycasting"],
-    github: "https://github.com/JackB296/raycasting-engine",
-    live: "/raycaster",
-    liveLabel: "Walk through it",
-    accentLabel: "Graphics",
-    preview: "raycaster",
-  },
-  {
-    name: "Cloth Simulation",
-    blurb:
-      "A real-time cloth of point masses linked by sticks, solved with Verlet integration. Drag your mouse across it to slice through the threads. Another JS port of my original Python simulation.",
-    tools: ["Python", "JavaScript", "Canvas", "Verlet", "Physics"],
-    github: "https://github.com/JackB296/Cloth-Simulation",
-    live: "/cloth",
-    liveLabel: "Play with it",
-    accentLabel: "Physics",
-    preview: "cloth",
-  },
-  {
-    name: "Conway's Game of Life",
-    blurb:
-      "The classic cellular automaton with age-colored cells. Four tiny rules give rise to gliders, oscillators, and whole ecosystems. Draw your own cells and watch the patterns breathe. A JS port of my Python version.",
-    tools: ["Python", "JavaScript", "Canvas", "Cellular Automata"],
-    github: "https://github.com/JackB296/life-sim",
-    live: "/game-of-life",
-    liveLabel: "Play with it",
-    accentLabel: "Simulation",
-    preview: "life",
-  },
+  ...demoProjects,
 ];
 
-export type SkillGroup = {
+type SkillGroup = {
   title: string;
   skills: string[];
 };

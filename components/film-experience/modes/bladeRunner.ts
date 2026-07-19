@@ -1,14 +1,5 @@
 import { drawFilmLabel, drawSoftVignette, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
 
-const markers = [
-  "2017 archive",
-  "memory index",
-  "neon rain",
-  "spinner traffic",
-  "hologram ad",
-  "baseline test",
-] as const;
-
 // Fixed neon palette — this mode deliberately departs from the single-accent
 // rule so the cyberpunk signage reads as colorful. The cinematic layer is
 // screen-blended, so everything here is drawn as light, never dark fills.
@@ -24,7 +15,7 @@ const NEON: readonly Rgb[] = [
 const neon = (c: Rgb, a: number) => `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
 const pick = (seed: number) => NEON[Math.floor(hash(seed, 7) * NEON.length)];
 
-export default makeFilmVisual(markers, (frame) => {
+export default makeFilmVisual((frame) => {
   const { context, width, height, time, accentBright } = frame;
   context.save();
 

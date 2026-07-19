@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { projects, profile, type Project } from "@/lib/data";
-import { caseStudies, professionalCaseStudySlugs } from "@/lib/caseStudies";
+import { professionalCaseStudies } from "@/lib/caseStudies";
 import Reveal from "../ui/Reveal";
 import ProjectCard from "./ProjectCard";
+import { ArrowRightIcon, ArrowUpRightIcon } from "../ui/icons";
+import PlaygroundLayer from "../playground/PlaygroundLayer";
 
 // Adapt the professional case studies into the card shape ProjectCard renders.
-const caseStudyCards: Project[] = professionalCaseStudySlugs
-  .map((slug) => caseStudies.find((c) => c.slug === slug))
-  .filter((c): c is NonNullable<typeof c> => Boolean(c))
-  .map((c) => ({
+const caseStudyCards: Project[] = professionalCaseStudies.map((c) => ({
     name: c.cardName,
     blurb: c.cardBlurb,
     tools: c.tags.slice(0, 4),
@@ -34,7 +33,9 @@ function Grid({ items }: { items: Project[] }) {
 export default function Projects() {
   return (
     <section id="projects" className="relative scroll-mt-20 py-28 sm:py-36">
-      <div className="container-x">
+      {/* Playground mode: a paintable Game of Life behind the cards. */}
+      <PlaygroundLayer kind="life" />
+      <div className="container-x relative z-10">
         <div className="mb-14 flex flex-wrap items-end justify-between gap-4">
           <div>
             <Reveal>
@@ -50,9 +51,7 @@ export default function Projects() {
                 className="group inline-flex items-center gap-2 font-mono text-sm text-accent transition-colors hover:text-accent-bright"
               >
                 Open the playground
-                <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
                 href={profile.github}
@@ -61,9 +60,7 @@ export default function Projects() {
                 className="group inline-flex items-center gap-2 font-mono text-sm text-white/60 transition-colors hover:text-accent"
               >
                 All repos on GitHub
-                <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M7 17L17 7M7 7h10v10" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <ArrowUpRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </a>
             </div>
           </Reveal>

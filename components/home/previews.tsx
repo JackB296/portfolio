@@ -7,51 +7,87 @@
 // prefers-reduced-motion each draws a single static frame.
 
 import { useEffect, useRef } from "react";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
-type DrawFn = (
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  t: number
-) => void;
+/** Draw one frame; `t` is seconds since mount. */
+type MiniFrame = (ctx: CanvasRenderingContext2D, t: number) => void;
 
-/** Shared canvas scaffold: DPR sizing, rAF loop, reduced-motion still frame. */
-function useMiniCanvas(draw: DrawFn) {
+/** Build a preview's frame function for a canvas of `w`×`h` CSS pixels.
+    Per-mount sim state (cloth points, birds) lives in the returned closure,
+    and a size change re-runs the factory, so a frame can never draw with
+    geometry from a stale size. */
+type MiniCreate = (w: number, h: number) => MiniFrame;
+
+/** Shared canvas scaffold: DPR sizing, rAF loop, re-init on size change,
+    pause while the document is hidden, reduced-motion still frame. */
+function useMiniCanvas(create: MiniCreate) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
     let raf = 0;
+    let frame: MiniFrame;
     const start = performance.now();
-    const frame = (now: number) => {
-      draw(ctx, w, h, (now - start) / 1000);
-      raf = requestAnimationFrame(frame);
+
+    const loop = (now: number) => {
+      frame(ctx, (now - start) / 1000);
+      raf = requestAnimationFrame(loop);
+    };
+    const run = () => {
+      if (!raf && !reduced && !document.hidden) raf = requestAnimationFrame(loop);
+    };
+    const pause = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
     };
 
-    if (reduced) {
-      draw(ctx, w, h, 1.5);
-    } else {
-      raf = requestAnimationFrame(frame);
-    }
-    return () => cancelAnimationFrame(raf);
-  }, [draw]);
+    // Size the backing store to the current CSS box and rebuild the sim.
+    // Under reduced motion this also repaints the single still frame.
+    const init = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      frame = create(w, h);
+      if (reduced) frame(ctx, 1.5);
+    };
+
+    init();
+    run();
+
+    const onVisibility = () => (document.hidden ? pause() : run());
+    document.addEventListener("visibilitychange", onVisibility);
+
+    let lastW = canvas.clientWidth;
+    let lastH = canvas.clientHeight;
+    const ro = new ResizeObserver(() => {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (w === lastW && h === lastH) return;
+      lastW = w;
+      lastH = h;
+      init();
+    });
+    ro.observe(canvas);
+
+    return () => {
+      ro.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+      pause();
+    };
+  }, [create, reduced]);
 
   return ref;
 }
 
-function MiniCanvas({ draw }: { draw: DrawFn }) {
-  const ref = useMiniCanvas(draw);
+function MiniCanvas({ create }: { create: MiniCreate }) {
+  const ref = useMiniCanvas(create);
   return <canvas ref={ref} aria-hidden="true" className="h-full w-full" />;
 }
 
@@ -68,7 +104,7 @@ const MAP = [
   "########",
 ];
 
-const drawRaycaster: DrawFn = (ctx, w, h, t) => {
+const createRaycaster: MiniCreate = (w, h) => (ctx, t) => {
   ctx.clearRect(0, 0, w, h);
   const px = 3.5 + Math.sin(t * 0.21) * 1.1;
   const py = 3.5 + Math.cos(t * 0.17) * 1.1;
@@ -99,157 +135,143 @@ const drawRaycaster: DrawFn = (ctx, w, h, t) => {
 };
 
 export function MiniRaycaster() {
-  return <MiniCanvas draw={drawRaycaster} />;
+  return <MiniCanvas create={createRaycaster} />;
 }
 
 /* -------------------------------- Cloth -------------------------------- */
 
-type ClothState = {
-  pts: { x: number; y: number; px: number; py: number; pin: boolean }[];
-  cols: number;
-  rows: number;
-  gap: number;
-};
-const clothStates = new WeakMap<CanvasRenderingContext2D, ClothState>();
+type ClothPoint = { x: number; y: number; px: number; py: number; pin: boolean };
 
-const drawCloth: DrawFn = (ctx, w, h, t) => {
-  let s = clothStates.get(ctx);
-  if (!s) {
-    const cols = 18;
-    const rows = 11;
-    const gap = w / (cols - 1);
-    const pts = [];
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        pts.push({ x: x * gap, y: y * gap * 0.8 + 6, px: x * gap, py: y * gap * 0.8 + 6, pin: y === 0 });
-      }
+const createCloth: MiniCreate = (w, h) => {
+  // The point grid is sized to `w`, so it lives in this per-size closure.
+  const cols = 18;
+  const rows = 11;
+  const gap = w / (cols - 1);
+  const pts: ClothPoint[] = [];
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      pts.push({ x: x * gap, y: y * gap * 0.8 + 6, px: x * gap, py: y * gap * 0.8 + 6, pin: y === 0 });
     }
-    s = { pts, cols, rows, gap };
-    clothStates.set(ctx, s);
   }
-  const { pts, cols, rows, gap } = s;
 
-  for (const p of pts) {
-    if (p.pin) continue;
-    const vx = (p.x - p.px) * 0.985;
-    const vy = (p.y - p.py) * 0.985;
-    p.px = p.x;
-    p.py = p.y;
-    p.x += vx + Math.sin(t * 1.4 + p.y * 0.06) * 0.06;
-    p.y += vy + 0.11;
-  }
-  for (let iter = 0; iter < 2; iter++) {
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const i = y * cols + x;
-        for (const [nx, ny] of [
-          [x + 1, y],
-          [x, y + 1],
-        ]) {
-          if (nx >= cols || ny >= rows) continue;
-          const j = ny * cols + nx;
-          const rest = nx !== x ? gap : gap * 0.8;
-          const a = pts[i];
-          const b = pts[j];
-          const ddx = b.x - a.x;
-          const ddy = b.y - a.y;
-          const d = Math.hypot(ddx, ddy) || 0.001;
-          const diff = ((d - rest) / d) * 0.5;
-          if (!a.pin) {
-            a.x += ddx * diff;
-            a.y += ddy * diff;
-          }
-          if (!b.pin) {
-            b.x -= ddx * diff;
-            b.y -= ddy * diff;
+  return (ctx, t) => {
+    for (const p of pts) {
+      if (p.pin) continue;
+      const vx = (p.x - p.px) * 0.985;
+      const vy = (p.y - p.py) * 0.985;
+      p.px = p.x;
+      p.py = p.y;
+      p.x += vx + Math.sin(t * 1.4 + p.y * 0.06) * 0.06;
+      p.y += vy + 0.11;
+    }
+    for (let iter = 0; iter < 2; iter++) {
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const i = y * cols + x;
+          for (const [nx, ny] of [
+            [x + 1, y],
+            [x, y + 1],
+          ]) {
+            if (nx >= cols || ny >= rows) continue;
+            const j = ny * cols + nx;
+            const rest = nx !== x ? gap : gap * 0.8;
+            const a = pts[i];
+            const b = pts[j];
+            const ddx = b.x - a.x;
+            const ddy = b.y - a.y;
+            const d = Math.hypot(ddx, ddy) || 0.001;
+            const diff = ((d - rest) / d) * 0.5;
+            if (!a.pin) {
+              a.x += ddx * diff;
+              a.y += ddy * diff;
+            }
+            if (!b.pin) {
+              b.x -= ddx * diff;
+              b.y -= ddy * diff;
+            }
           }
         }
       }
     }
-  }
-  ctx.clearRect(0, 0, w, h);
-  ctx.strokeStyle = "rgba(191, 219, 254, 0.6)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const p = pts[y * cols + x];
-      if (x < cols - 1) {
-        const q = pts[y * cols + x + 1];
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(q.x, q.y);
-      }
-      if (y < rows - 1) {
-        const q = pts[(y + 1) * cols + x];
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(q.x, q.y);
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(191, 219, 254, 0.6)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const p = pts[y * cols + x];
+        if (x < cols - 1) {
+          const q = pts[y * cols + x + 1];
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+        }
+        if (y < rows - 1) {
+          const q = pts[(y + 1) * cols + x];
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+        }
       }
     }
-  }
-  ctx.stroke();
+    ctx.stroke();
+  };
 };
 
 export function MiniCloth() {
-  return <MiniCanvas draw={drawCloth} />;
+  return <MiniCanvas create={createCloth} />;
 }
 
 /* -------------------------------- Flappy ------------------------------- */
 
-type FlappyState = { birds: { y: number; vy: number; phase: number }[] };
-const flappyStates = new WeakMap<CanvasRenderingContext2D, FlappyState>();
+const createFlappy: MiniCreate = (w, h) => {
+  // Flock state is seeded from `h`, so it lives in this per-size closure.
+  const birds = Array.from({ length: 5 }, (_, i) => ({
+    y: h * 0.3 + i * 9,
+    vy: 0,
+    phase: i * 1.7,
+  }));
 
-const drawFlappy: DrawFn = (ctx, w, h, t) => {
-  let s = flappyStates.get(ctx);
-  if (!s) {
-    s = {
-      birds: Array.from({ length: 5 }, (_, i) => ({
-        y: h * 0.3 + i * 9,
-        vy: 0,
-        phase: i * 1.7,
-      })),
-    };
-    flappyStates.set(ctx, s);
-  }
-  ctx.clearRect(0, 0, w, h);
+  return (ctx, t) => {
+    ctx.clearRect(0, 0, w, h);
 
-  // Two scrolling pipe pairs; the gap drifts so the flock has to work.
-  // Flappy's real palette: green pipes, yellow bird.
-  const speed = 60;
-  const pipeW = 16;
-  const spacing = w / 2 + 40;
-  ctx.fillStyle = "rgba(34, 197, 94, 0.8)";
-  const gaps: { x: number; center: number }[] = [];
-  for (let k = 0; k < 3; k++) {
-    const x = spacing - ((t * speed + k * spacing) % (spacing * 2)) + w - spacing / 2;
-    if (x < -pipeW || x > w) continue;
-    const center = h / 2 + Math.sin(t * 0.4 + k * 2.1) * h * 0.18;
-    const half = h * 0.17;
-    ctx.fillRect(x, 0, pipeW, center - half);
-    ctx.fillRect(x, center + half, pipeW, h - center - half);
-    gaps.push({ x, center });
-  }
+    // Two scrolling pipe pairs; the gap drifts so the flock has to work.
+    // Flappy's real palette: green pipes, yellow bird.
+    const speed = 60;
+    const pipeW = 16;
+    const spacing = w / 2 + 40;
+    ctx.fillStyle = "rgba(34, 197, 94, 0.8)";
+    const gaps: { x: number; center: number }[] = [];
+    for (let k = 0; k < 3; k++) {
+      const x = spacing - ((t * speed + k * spacing) % (spacing * 2)) + w - spacing / 2;
+      if (x < -pipeW || x > w) continue;
+      const center = h / 2 + Math.sin(t * 0.4 + k * 2.1) * h * 0.18;
+      const half = h * 0.17;
+      ctx.fillRect(x, 0, pipeW, center - half);
+      ctx.fillRect(x, center + half, pipeW, h - center - half);
+      gaps.push({ x, center });
+    }
 
-  // Birds seek the nearest gap ahead: flap when below its center.
-  for (const bird of s.birds) {
-    const target = gaps.find((g) => g.x > w * 0.18) ?? { center: h / 2 };
-    bird.vy += 0.14;
-    if (bird.y > target.center + 12 + Math.sin(bird.phase) * 8) bird.vy = -2.4;
-    bird.y += bird.vy;
-    bird.y = Math.max(6, Math.min(h - 6, bird.y));
-    const wing = Math.sin(t * 14 + bird.phase) * 3;
-    ctx.fillStyle = "rgba(253, 224, 71, 0.95)";
-    ctx.beginPath();
-    ctx.arc(w * 0.22, bird.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(253, 224, 71, 0.75)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(w * 0.22 - 4, bird.y);
-    ctx.lineTo(w * 0.22 - 9, bird.y - wing);
-    ctx.stroke();
-  }
+    // Birds seek the nearest gap ahead: flap when below its center.
+    for (const bird of birds) {
+      const target = gaps.find((g) => g.x > w * 0.18) ?? { center: h / 2 };
+      bird.vy += 0.14;
+      if (bird.y > target.center + 12 + Math.sin(bird.phase) * 8) bird.vy = -2.4;
+      bird.y += bird.vy;
+      bird.y = Math.max(6, Math.min(h - 6, bird.y));
+      const wing = Math.sin(t * 14 + bird.phase) * 3;
+      ctx.fillStyle = "rgba(253, 224, 71, 0.95)";
+      ctx.beginPath();
+      ctx.arc(w * 0.22, bird.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(253, 224, 71, 0.75)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.22 - 4, bird.y);
+      ctx.lineTo(w * 0.22 - 9, bird.y - wing);
+      ctx.stroke();
+    }
+  };
 };
 
 export function MiniFlappy() {
-  return <MiniCanvas draw={drawFlappy} />;
+  return <MiniCanvas create={createFlappy} />;
 }

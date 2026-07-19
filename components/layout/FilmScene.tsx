@@ -1,18 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { FilmGrade } from "@/lib/grades";
+import type { TheaterEntry } from "./theaterEntries";
 import PosterArt from "./PosterArt";
-
-export type TheaterEntry = {
-  id: string;
-  film: string;
-  year: string;
-  vibe: string;
-  ink: string;
-  accent: string;
-  grade: FilmGrade | null;
-};
 
 type FilmSceneProps = {
   entry: TheaterEntry;

@@ -1,35 +1,40 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { profile } from "@/lib/data";
+import { createRateLimiter } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 // Basic in-memory rate limit (per warm serverless instance) to deter spam.
-const hits = new Map<string, { count: number; ts: number }>();
-const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 5;
+const limiter = createRateLimiter({
+  windowMs: 60_000,
+  max: 5,
+  maxEntries: 1_000,
+});
 
-function rateLimited(ip: string) {
-  const now = Date.now();
-  const entry = hits.get(ip);
-  if (!entry || now - entry.ts > WINDOW_MS) {
-    hits.set(ip, { count: 1, ts: now });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > MAX_PER_WINDOW;
-}
+// Refuse bodies this large before parsing; the biggest legitimate submission
+// (name + email + 5000-char message as JSON) sits comfortably under it.
+const MAX_BODY_BYTES = 32_768;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
   try {
+    // x-forwarded-for is trustworthy on Vercel (the platform sets it) but
+    // spoofable when self-hosted without a trusted proxy in front.
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    if (rateLimited(ip)) {
+    if (!limiter.allow(ip)) {
       return NextResponse.json(
         { error: "Too many messages. Please try again in a minute." },
         { status: 429 }
+      );
+    }
+
+    if (Number(req.headers.get("content-length")) > MAX_BODY_BYTES) {
+      return NextResponse.json(
+        { error: "That message is too large to send." },
+        { status: 413 }
       );
     }
 
@@ -123,5 +128,6 @@ function escapeHtml(s: string) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

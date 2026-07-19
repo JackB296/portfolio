@@ -1,32 +1,23 @@
 "use client";
 
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import { filmExperienceById } from "@/lib/filmExperiences";
-import type { AudioCueDefinition } from "@/lib/filmExperienceTypes";
+import { getFilmExperience, type ResolvedAudioCue } from "@/lib/films";
 import { setMusicAnalyser } from "./shared";
 
 export type AudioDirectorStatus = Readonly<{
   state: "off" | "running" | "suspended";
   filmId: string | null;
-  source: string | null;
   musicSource: string | null;
   effectSources: readonly string[];
   nodeCount: number;
   trackCount: number;
 }>;
 
-export type AudioDirectorHandle = {
-  enable: (filmId: string | null) => Promise<boolean>;
-  disable: () => void;
-};
-
+// The whole interface is the props: filmId names the mix, enabled arms it,
+// and every answer ("did it start", "is it suspended") flows back through
+// onStatus. There is deliberately no imperative handle — one channel means
+// one generation counter guards the async races.
 type AudioDirectorProps = {
   filmId: string | null;
   enabled: boolean;
@@ -35,7 +26,7 @@ type AudioDirectorProps = {
 
 type SampleTrack = {
   filmId: string;
-  cue: AudioCueDefinition;
+  cue: ResolvedAudioCue;
   buffer: AudioBuffer;
   bus: GainNode;
   filter: BiquadFilterNode;
@@ -96,14 +87,13 @@ function triggerEvent(track: SampleTrack, context: AudioContext) {
   const source = createSource(track);
   source.start(0, offset, duration);
   track.triggerIndex += 1;
-  track.nextTriggerAt =
-    context.currentTime + (track.cue.triggerCooldownMs ?? 1_200) / 1_000;
+  track.nextTriggerAt = context.currentTime + track.cue.triggerCooldownMs / 1_000;
 }
 
 function createTrack(
   context: AudioContext,
   filmId: string,
-  cue: AudioCueDefinition,
+  cue: ResolvedAudioCue,
   buffer: AudioBuffer
 ) {
   const bus = context.createGain();
@@ -131,7 +121,17 @@ function createTrack(
   } else {
     const source = createSource(track);
     source.loop = true;
-    source.start();
+    // A cue's startAt skips the recording's intro: begin there and loop back
+    // to the same point, clamped so a short buffer still plays something.
+    const startAt = Math.min(
+      cue.startAt ?? 0,
+      Math.max(buffer.duration - 0.1, 0)
+    );
+    if (startAt > 0) {
+      source.loopStart = startAt;
+      source.loopEnd = buffer.duration;
+    }
+    source.start(0, startAt);
     track.primarySource = source;
   }
 
@@ -155,7 +155,7 @@ function respondToScroll(track: SampleTrack, context: AudioContext, delta: numbe
 
   if (track.cue.mode === "event") {
     if (
-      velocity >= (track.cue.triggerThreshold ?? 0.3) &&
+      velocity >= track.cue.triggerThreshold &&
       context.currentTime >= track.nextTriggerAt
     ) {
       triggerEvent(track, context);
@@ -181,28 +181,27 @@ function respondToScroll(track: SampleTrack, context: AudioContext, delta: numbe
   );
 
   const playbackRate = track.primarySource?.playbackRate;
-  if (playbackRate && track.cue.scrollRate > 0) {
+  const scrollRate = track.cue.scrollRate;
+  if (playbackRate && scrollRate > 0) {
     scheduleReturn(
       playbackRate,
       now,
-      1 + response * track.cue.scrollRate,
+      1 + response * scrollRate,
       1
     );
   }
 }
 
-const offStatus: AudioDirectorStatus = {
+export const OFF_AUDIO_STATUS: AudioDirectorStatus = {
   state: "off",
   filmId: null,
-  source: null,
   musicSource: null,
   effectSources: [],
   nodeCount: 0,
   trackCount: 0,
 };
 
-const AudioDirector = forwardRef<AudioDirectorHandle, AudioDirectorProps>(
-  function AudioDirector({ filmId, enabled, onStatus }, ref) {
+export default function AudioDirector({ filmId, enabled, onStatus }: AudioDirectorProps) {
     const { scrollY } = useScroll();
     const contextRef = useRef<AudioContext | null>(null);
     const masterRef = useRef<GainNode | null>(null);
@@ -213,7 +212,9 @@ const AudioDirector = forwardRef<AudioDirectorHandle, AudioDirectorProps>(
     const bufferCacheRef = useRef(new Map<string, Promise<AudioBuffer>>());
     const generationRef = useRef(0);
     const statusCallbackRef = useRef(onStatus);
-    statusCallbackRef.current = onStatus;
+    useEffect(() => {
+      statusCallbackRef.current = onStatus;
+    }, [onStatus]);
 
     const report = useCallback(
       (status: AudioDirectorStatus) => statusCallbackRef.current(status),
@@ -226,7 +227,6 @@ const AudioDirector = forwardRef<AudioDirectorHandle, AudioDirectorProps>(
         report({
           state,
           filmId: current?.filmId ?? null,
-          source: current?.musicSource ?? null,
           musicSource: current?.musicSource ?? null,
           effectSources: current?.effectSources ?? [],
           nodeCount: [...tracksRef.current].reduce(
@@ -265,145 +265,147 @@ const AudioDirector = forwardRef<AudioDirectorHandle, AudioDirectorProps>(
       const context = contextRef.current;
       contextRef.current = null;
       if (context && context.state !== "closed") void context.close();
-      report(offStatus);
+      report(OFF_AUDIO_STATUS);
     }, [report]);
 
     const startFilm = useCallback(
       async (nextFilmId: string | null) => {
         const generation = generationRef.current + 1;
         generationRef.current = generation;
-        const definition = nextFilmId
-          ? filmExperienceById.get(nextFilmId)
-          : undefined;
-        if (!definition || !nextFilmId) {
+        const experience = getFilmExperience(nextFilmId);
+        if (!experience || !nextFilmId) {
           stopEverything();
           return false;
         }
 
-        let context = contextRef.current;
-        let master = masterRef.current;
-        if (!context || context.state === "closed" || !master) {
-          context = new AudioContext();
-          master = context.createGain();
-          master.gain.value = 0.72;
-          master.connect(context.destination);
-          contextRef.current = context;
-          masterRef.current = master;
-          // A passive tap for the canvas layer: modes read band levels from
-          // this analyser so visuals can follow the music (see shared.ts).
-          const analyser = context.createAnalyser();
-          analyser.fftSize = 256;
-          analyser.smoothingTimeConstant = 0.82;
-          analyserRef.current = analyser;
-          setMusicAnalyser(analyser);
-        }
+        try {
+          let context = contextRef.current;
+          let master = masterRef.current;
+          if (!context || context.state === "closed" || !master) {
+            context = new AudioContext();
+            master = context.createGain();
+            master.gain.value = 0.72;
+            master.connect(context.destination);
+            contextRef.current = context;
+            masterRef.current = master;
+            // A passive tap for the canvas layer: modes read band levels from
+            // this analyser so visuals can follow the music (see shared.ts).
+            const analyser = context.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.82;
+            analyserRef.current = analyser;
+            setMusicAnalyser(analyser);
+          }
 
-        if (context.state === "suspended") await context.resume();
-        if (generation !== generationRef.current || contextRef.current !== context) {
-          return false;
-        }
-        if (currentRef.current?.filmId === nextFilmId) {
-          reportCurrent("running");
-          return true;
-        }
+          if (context.state === "suspended") await context.resume();
+          if (generation !== generationRef.current || contextRef.current !== context) {
+            return false;
+          }
+          if (currentRef.current?.filmId === nextFilmId) {
+            reportCurrent("running");
+            return true;
+          }
 
-        const cues = [definition.audio.music, ...definition.audio.effects];
-        const loadBuffer = (audioCue: AudioCueDefinition) => {
-          let promise = bufferCacheRef.current.get(audioCue.src);
-          if (!promise) {
-            // Revalidate rather than force-cache: film-mode recordings are
-            // swapped in place at stable URLs, so an aggressive cache would
-            // keep replaying stale audio after a track is replaced.
-            promise = fetch(audioCue.src, { cache: "no-cache" })
-              .then((response) => {
-                if (!response.ok) {
-                  throw new Error(`Audio request failed: ${response.status}`);
+          const cues = [experience.audio.music, ...experience.audio.effects];
+          const loadBuffer = (audioCue: ResolvedAudioCue) => {
+            let promise = bufferCacheRef.current.get(audioCue.src);
+            if (!promise) {
+              // Revalidate rather than force-cache: film-mode recordings are
+              // swapped in place at stable URLs, so an aggressive cache would
+              // keep replaying stale audio after a track is replaced.
+              promise = fetch(audioCue.src, { cache: "no-cache" })
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error(`Audio request failed: ${response.status}`);
+                  }
+                  return response.arrayBuffer();
+                })
+                .then((data) => context.decodeAudioData(data));
+              bufferCacheRef.current.set(audioCue.src, promise);
+              void promise.catch(() => {
+                if (bufferCacheRef.current.get(audioCue.src) === promise) {
+                  bufferCacheRef.current.delete(audioCue.src);
                 }
-                return response.arrayBuffer();
-              })
-              .then((data) => context.decodeAudioData(data));
-            bufferCacheRef.current.set(audioCue.src, promise);
-            void promise.catch(() => {
-              if (bufferCacheRef.current.get(audioCue.src) === promise) {
-                bufferCacheRef.current.delete(audioCue.src);
-              }
-            });
+              });
+            }
+            return promise;
+          };
+          const buffers = await Promise.all(cues.map(loadBuffer));
+          if (
+            generation !== generationRef.current ||
+            contextRef.current !== context ||
+            context.state === "closed"
+          ) {
+            return false;
           }
-          return promise;
-        };
-        const buffers = await Promise.all(cues.map(loadBuffer));
-        if (
-          generation !== generationRef.current ||
-          contextRef.current !== context ||
-          context.state === "closed"
-        ) {
-          return false;
-        }
 
-        timersRef.current.forEach((timer) => window.clearTimeout(timer));
-        timersRef.current.clear();
-        const previous = currentRef.current;
-        tracksRef.current.forEach((track) => {
-          if (!previous?.tracks.includes(track)) {
-            stopTrack(track);
-            tracksRef.current.delete(track);
-          }
-        });
-
-        const now = context.currentTime;
-        const nextTracks = cues.map((audioCue, index) => {
-          const track = createTrack(context, nextFilmId, audioCue, buffers[index]);
-          track.bus.connect(master);
-          if (audioCue.mode === "music" && analyserRef.current) {
-            track.bus.connect(analyserRef.current);
-          }
-          const fadeIn = audioCue.mode === "event" ? 0.08 : 0.8;
-          track.bus.gain.setValueAtTime(0, now);
-          track.bus.gain.linearRampToValueAtTime(audioCue.volume, now + fadeIn);
-          tracksRef.current.add(track);
-          return track;
-        });
-        const next: SampleMix = {
-          filmId: nextFilmId,
-          musicSource: definition.audio.music.src,
-          effectSources: definition.audio.effects.map(({ src }) => src),
-          tracks: nextTracks,
-        };
-        currentRef.current = next;
-
-        if (previous) {
-          previous.tracks.forEach((track) => {
-            track.bus.gain.cancelScheduledValues(now);
-            track.bus.gain.setValueAtTime(track.bus.gain.value, now);
-            track.bus.gain.linearRampToValueAtTime(0, now + 0.65);
-          });
-          const timer = window.setTimeout(() => {
-            previous.tracks.forEach((track) => {
+          timersRef.current.forEach((timer) => window.clearTimeout(timer));
+          timersRef.current.clear();
+          const previous = currentRef.current;
+          tracksRef.current.forEach((track) => {
+            if (!previous?.tracks.includes(track)) {
               stopTrack(track);
               tracksRef.current.delete(track);
-            });
-            timersRef.current.delete(timer);
-            reportCurrent(
-              contextRef.current?.state === "suspended" ? "suspended" : "running"
-            );
-          }, 750);
-          timersRef.current.add(timer);
-        }
+            }
+          });
 
-        reportCurrent("running");
-        return true;
+          const now = context.currentTime;
+          const nextTracks = cues.map((audioCue, index) => {
+            const track = createTrack(context, nextFilmId, audioCue, buffers[index]);
+            track.bus.connect(master);
+            if (audioCue.mode === "music" && analyserRef.current) {
+              track.bus.connect(analyserRef.current);
+            }
+            const fadeIn = audioCue.mode === "event" ? 0.08 : 0.8;
+            track.bus.gain.setValueAtTime(0, now);
+            track.bus.gain.linearRampToValueAtTime(audioCue.volume, now + fadeIn);
+            tracksRef.current.add(track);
+            return track;
+          });
+          const next: SampleMix = {
+            filmId: nextFilmId,
+            musicSource: experience.audio.music.src,
+            effectSources: experience.audio.effects.map(({ src }) => src),
+            tracks: nextTracks,
+          };
+          currentRef.current = next;
+
+          if (previous) {
+            previous.tracks.forEach((track) => {
+              track.bus.gain.cancelScheduledValues(now);
+              track.bus.gain.setValueAtTime(track.bus.gain.value, now);
+              track.bus.gain.linearRampToValueAtTime(0, now + 0.65);
+            });
+            const timer = window.setTimeout(() => {
+              previous.tracks.forEach((track) => {
+                stopTrack(track);
+                tracksRef.current.delete(track);
+              });
+              timersRef.current.delete(timer);
+              reportCurrent(
+                contextRef.current?.state === "suspended" ? "suspended" : "running"
+              );
+            }, 750);
+            timersRef.current.add(timer);
+          }
+
+          reportCurrent("running");
+          return true;
+        } catch {
+          // Only the live generation may tear down: a stale rejection (film
+          // A's buffer fetch failing after film B superseded it) must not
+          // close the shared context out from under B.
+          if (generation === generationRef.current) stopEverything();
+          return false;
+        }
       },
       [reportCurrent, stopEverything]
     );
 
-    useImperativeHandle(
-      ref,
-      () => ({ enable: startFilm, disable: stopEverything }),
-      [startFilm, stopEverything]
-    );
-
     useEffect(() => {
-      if (enabled && filmId) void startFilm(filmId).catch(stopEverything);
+      // startFilm handles its own failures; a rejection can never escape it.
+      if (enabled && filmId) void startFilm(filmId);
+      else stopEverything();
     }, [enabled, filmId, startFilm, stopEverything]);
 
     useEffect(() => {
@@ -417,7 +419,10 @@ const AudioDirector = forwardRef<AudioDirectorHandle, AudioDirectorProps>(
             .then(() => {
               if (contextRef.current === context) reportCurrent("suspended");
             })
-            .catch(stopEverything);
+            .catch(() => {
+              // A stale context's failure is not the live mix's problem.
+              if (contextRef.current === context) stopEverything();
+            });
           return;
         }
 
@@ -426,7 +431,9 @@ const AudioDirector = forwardRef<AudioDirectorHandle, AudioDirectorProps>(
           .then(() => {
             if (contextRef.current === context) reportCurrent("running");
           })
-          .catch(stopEverything);
+          .catch(() => {
+            if (contextRef.current === context) stopEverything();
+          });
       };
 
       document.addEventListener("visibilitychange", onVisibilityChange);
@@ -436,7 +443,4 @@ const AudioDirector = forwardRef<AudioDirectorHandle, AudioDirectorProps>(
     useEffect(() => stopEverything, [stopEverything]);
 
     return null;
-  }
-);
-
-export default AudioDirector;
+}

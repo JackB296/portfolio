@@ -1,27 +1,5 @@
 import Img from "@/components/ui/Img";
-
-// Films with a real theatrical one-sheet in /public/posters/original. The file
-// path is derived from the id (below) so the id and its poster can't drift;
-// House Grade — and any future grade without a scan — falls through to the
-// generated cover.
-const FILMS_WITH_ORIGINAL_POSTER = new Set([
-  "casablanca",
-  "matrix",
-  "blade-runner",
-  "space-odyssey",
-  "dune",
-  "the-batman",
-  "parasite",
-  "arrival",
-  "fury-road",
-  "her",
-  "wall-e",
-  "royal-tenenbaums",
-  "fight-club",
-  "goodfellas",
-  "amadeus",
-  "wargames",
-]);
+import { asFilmId } from "@/lib/films";
 
 function HouseGradePoster({ ink, accent }: { ink: string; accent: string }) {
   const background = `rgb(${ink})`;
@@ -74,9 +52,11 @@ export default function PosterArt({
   ink: string;
   accent: string;
 }) {
-  const poster = FILMS_WITH_ORIGINAL_POSTER.has(id)
-    ? `/posters/original/${id}.webp`
-    : null;
+  // Every registered film has a theatrical one-sheet in
+  // /public/posters/original; the path derives from the id so the poster
+  // can't drift. House Grade — and anything unregistered — falls through to
+  // the generated cover.
+  const poster = asFilmId(id) ? `/posters/original/${id}.webp` : null;
 
   if (!poster) {
     return <HouseGradePoster ink={ink} accent={accent} />;

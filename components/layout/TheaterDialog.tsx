@@ -10,16 +10,17 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { applyGrade, getGrade, type FilmGrade } from "@/lib/grades";
-import { filmReviews } from "@/lib/filmReviews";
+import { HOUSE_ID } from "@/lib/films";
 import { profile } from "@/lib/data";
-import FilmScene, { type TheaterEntry } from "./FilmScene";
+import { useFocusTrap } from "@/lib/useFocusTrap";
+import FilmScene from "./FilmScene";
+import type { TheaterEntry } from "./theaterEntries";
 import PosterArt from "./PosterArt";
 import { SCROLL_LOCK_EVENT, SCROLL_UNLOCK_EVENT } from "./SmoothScroll";
 
 type TheaterDialogProps = {
   open: boolean;
-  session: number;
-  entries: TheaterEntry[];
+  entries: readonly TheaterEntry[];
   activeId: string | null;
   initialGradeId: string | null;
   triggerRef: RefObject<HTMLButtonElement>;
@@ -27,19 +28,16 @@ type TheaterDialogProps = {
   onSelect: (grade: FilmGrade | null) => void;
 };
 
-const focusableSelector =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 const toRgb = (triplet: string) => `rgb(${triplet.split(" ").join(", ")})`;
 const matchesSearch = (entry: TheaterEntry, query: string) =>
   `${entry.film} ${entry.year} ${entry.vibe}`.toLocaleLowerCase().includes(query);
 // The one place the search predicate lives — both the rendered list and the
 // focus-after-typing logic filter through this so they can't diverge.
-const filterEntries = (list: TheaterEntry[], query: string) =>
+const filterEntries = (list: readonly TheaterEntry[], query: string) =>
   query ? list.filter((entry) => matchesSearch(entry, query)) : list;
 
 export default function TheaterDialog({
   open,
-  session,
   entries,
   activeId,
   initialGradeId,
@@ -52,22 +50,22 @@ export default function TheaterDialog({
   const committedRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const [mounted, setMounted] = useState(false);
-  const [queryState, setQueryState] = useState({ session: 0, value: "" });
-  const [focus, setFocus] = useState({ session: 0, id: "house" });
-  const query = queryState.session === session ? queryState.value : "";
+  const [query, setQuery] = useState("");
+  // null = nothing previewed yet this visit, so focus follows the grade that
+  // was active when the theater opened.
+  const [focusId, setFocusId] = useState<string | null>(null);
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const filteredEntries = useMemo(
     () => filterEntries(entries, normalizedQuery),
     [entries, normalizedQuery]
   );
-  const requestedId =
-    focus.session === session ? focus.id : initialGradeId ?? "house";
+  const requestedId = focusId ?? initialGradeId ?? HOUSE_ID;
   const focusedEntry =
     filteredEntries.find((entry) => entry.id === requestedId) ??
     filteredEntries[0] ??
     entries.find((entry) => entry.id === requestedId) ??
     entries[0];
-  const focusedReview = focusedEntry ? filmReviews[focusedEntry.id] : undefined;
+  const focusedReview = focusedEntry?.review;
 
   useEffect(() => {
     setMounted(true);
@@ -76,12 +74,24 @@ export default function TheaterDialog({
   useEffect(() => {
     if (!open) return;
     committedRef.current = false;
-  }, [open, session]);
+  }, [open]);
+
+  // Closing ends the visit: clear the search and focus so reopening starts
+  // with an empty query focused on the then-current grade.
+  useEffect(() => {
+    if (open) return;
+    setQuery("");
+    setFocusId(null);
+  }, [open]);
 
   useEffect(() => {
     if (!open || !focusedEntry) return;
+    // Grade-change protocol (see GradeChangeIntent in lib/grades.ts):
+    // browsing the wall previews; it never persists or arms sound.
     applyGrade(focusedEntry.grade, "preview");
   }, [focusedEntry, open]);
+
+  useFocusTrap(dialogRef, open, onClose, closeRef);
 
   useEffect(() => {
     if (!open) return;
@@ -94,35 +104,10 @@ export default function TheaterDialog({
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
-    const focusTimer = window.setTimeout(() => closeRef.current?.focus(), 0);
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab" || !dialogRef.current) return;
-
-      const focusable = Array.from(
-        dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector)
-      );
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
     return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener("keydown", onKeyDown);
       if (!committedRef.current) {
+        // Grade-change protocol (see GradeChangeIntent in lib/grades.ts):
+        // closing without a commit restores the committed grade.
         applyGrade(getGrade(initialGradeId) ?? null, "restore");
       }
       document.documentElement.style.overflow = previousHtmlOverflow;
@@ -131,19 +116,19 @@ export default function TheaterDialog({
       window.dispatchEvent(new Event(SCROLL_UNLOCK_EVENT));
       trigger?.focus();
     };
-  }, [initialGradeId, onClose, open, triggerRef]);
+  }, [initialGradeId, open, triggerRef]);
 
   const previewEntry = (entry: TheaterEntry) => {
-    setFocus({ session, id: entry.id });
+    setFocusId(entry.id);
   };
 
   const updateQuery = (value: string) => {
-    setQueryState({ session, value });
+    setQuery(value);
     const nextQuery = value.trim().toLocaleLowerCase();
     const firstMatch = nextQuery
       ? filterEntries(entries, nextQuery)[0]
       : entries.find((entry) => entry.id === initialGradeId) ?? entries[0];
-    if (firstMatch) setFocus({ session, id: firstMatch.id });
+    if (firstMatch) setFocusId(firstMatch.id);
   };
 
   const selectEntry = (entry: TheaterEntry) => {
@@ -181,7 +166,7 @@ export default function TheaterDialog({
               ease: [0.22, 1, 0.36, 1],
             }}
             style={{ backgroundColor: toRgb(focusedEntry.ink) }}
-            className="relative flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-lg border border-white/10 shadow-2xl shadow-black/60 sm:h-[86dvh] sm:w-[90vw] lg:h-[72dvh] lg:w-[84vw] lg:max-w-[1180px]"
+            className="relative flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-lg border border-white/10 shadow-2xl shadow-black/60 sm:h-[86dvh] sm:w-[90vw] lg:h-[78dvh] lg:w-[84vw] lg:max-w-[1180px]"
           >
             <motion.div
               aria-hidden="true"

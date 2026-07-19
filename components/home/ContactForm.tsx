@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import Pill from "../ui/Pill";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -117,10 +118,10 @@ export default function ContactForm() {
         .
       </p>
 
-      <button
+      <Pill
         type="submit"
         disabled={status === "sending"}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-sm font-medium text-ink transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 sm:w-auto"
       >
         {status === "sending" ? (
           <>
@@ -138,7 +139,7 @@ export default function ContactForm() {
             </svg>
           </>
         )}
-      </button>
+      </Pill>
 
       <style jsx>{`
         :global(.input) {

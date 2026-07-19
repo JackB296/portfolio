@@ -1,24 +1,23 @@
-import { drawFilmLabel, makeFilmVisual, withAlpha, wrap } from "../shared";
+import { drawFilmLabel, makeStatefulFilmVisual, withAlpha, wrap } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
-const markers = ["2013", "OS calibration", "earpiece", "warm waveform", "OS boot", "letter cursor"] as const;
+export default makeStatefulFilmVisual(() => {
+  // The boot engages by itself on the first drawn frame after activation —
+  // committing the film is the invitation. A gap in draw calls means the tab
+  // was hidden, which re-plays the boot on return; reduced-motion static
+  // frames render the settled post-boot room instead of a half-drawn install.
+  let lastFrameAt = -Infinity;
+  let bootPhase: "engaging" | "done" = "engaging";
+  let engageStartedAt = 0;
 
-// The boot idles as an invitation and only engages on a real click (the
-// canvas is pointer-events: none, so clicks are read from the window and
-// hit-tested against the iris). A gap in draw calls means the mode was just
-// (re)activated, which re-arms the sequence.
-let lastFrameAt = -Infinity;
-let bootPhase: "idle" | "engaging" | "done" = "idle";
-let engageStartedAt = 0;
-let pendingClick: { x: number; y: number } | null = null;
-if (typeof window !== "undefined") {
-  window.addEventListener("pointerdown", (event) => {
-    pendingClick = { x: event.clientX, y: event.clientY };
-  });
-}
-
-export default makeFilmVisual(markers, (frame) => {
+  const draw = (frame: FilmFrame) => {
   const { context, width, height, time, pointerX, pointerY, accentBright } = frame;
-  if (time - lastFrameAt > 1) bootPhase = "idle";
+  if (frame.staticFrame) {
+    bootPhase = "done";
+  } else if (time - lastFrameAt > 1) {
+    bootPhase = "engaging";
+    engageStartedAt = time;
+  }
   lastFrameAt = time;
   context.save();
 
@@ -60,45 +59,12 @@ export default makeFilmVisual(markers, (frame) => {
     context.stroke();
   }
 
-  // OS1: an iris waits below the hero copy. Click it and the install floods
-  // the whole screen, counts up, then hands the room back to the voice.
+  // OS1: the install floods the whole screen from below the hero copy,
+  // counts up, then hands the room back to the voice.
   const bootX = width / 2;
   const bootY = height * 0.78;
-  const click = pendingClick;
-  pendingClick = null;
-  if (
-    bootPhase === "idle" &&
-    !frame.staticFrame &&
-    click &&
-    Math.hypot(click.x - bootX, click.y - bootY) < 96
-  ) {
-    bootPhase = "engaging";
-    engageStartedAt = time;
-  }
 
-  if (bootPhase === "idle") {
-    const breathe = 1 + Math.sin(time * 1.1) * 0.06;
-    const iris = 34 * breathe;
-    for (let ring = 0; ring < 5; ring += 1) {
-      const spin = time * (0.6 + ring * 0.13) + ring * 2;
-      context.strokeStyle = withAlpha(accentBright, 0.55 - ring * 0.08);
-      context.lineWidth = 1.6;
-      context.beginPath();
-      context.arc(bootX, bootY, iris * (0.5 + ring * 0.16), spin, spin + Math.PI * 1.2);
-      context.stroke();
-    }
-    context.lineWidth = 1;
-    const core = context.createRadialGradient(bootX, bootY, 0, bootX, bootY, 20);
-    core.addColorStop(0, withAlpha(accentBright, 0.7));
-    core.addColorStop(1, withAlpha(accentBright, 0));
-    context.fillStyle = core;
-    context.fillRect(bootX - 20, bootY - 20, 40, 40);
-    context.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
-    context.textAlign = "center";
-    context.fillStyle = withAlpha(accentBright, 0.4 + 0.2 * Math.sin(time * 1.4));
-    context.fillText("OS ONE — CLICK TO INITIALIZE", bootX, bootY + iris + 28);
-    context.textAlign = "left";
-  } else if (bootPhase === "engaging") {
+  if (bootPhase === "engaging") {
     const progress = Math.min(1, (time - engageStartedAt) / 2.8);
     if (progress >= 1) bootPhase = "done";
     const grow = Math.min(1, progress / 0.55);
@@ -134,4 +100,7 @@ export default makeFilmVisual(markers, (frame) => {
 
   drawFilmLabel(frame, "OS CALIBRATION / 2013", 22, 30, 0.47);
   context.restore();
+  };
+
+  return { draw };
 });

@@ -5,6 +5,10 @@ import "./globals.css";
 import { profile } from "@/lib/data";
 import { gradeBootScript } from "@/lib/grades";
 import KonamiCode from "@/components/layout/KonamiCode";
+import FeaturePresentation from "@/components/layout/FeaturePresentation";
+import CommentaryRoot from "@/components/commentary/CommentaryRoot";
+import GuestTerminal from "@/components/terminal/GuestTerminal";
+import PlaygroundToggle from "@/components/playground/PlaygroundToggle";
 import FilmExperienceRoot from "@/components/film-experience/FilmExperienceRoot";
 
 const sans = Space_Grotesk({
@@ -67,6 +71,10 @@ export const viewport: Viewport = {
 };
 
 // Person structured data — helps search engines connect "Jack/Jackson Bialecki" to this site.
+// profile.location is "City, State"; split it so the address stays wired to lib/data.
+const [addressLocality, addressRegion] = profile.location
+  .split(",")
+  .map((part) => part.trim());
 const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -76,7 +84,7 @@ const personJsonLd = {
   email: `mailto:${profile.email}`,
   url: siteUrl,
   image: `${siteUrl}/opengraph-image`,
-  address: { "@type": "PostalAddress", addressLocality: "Cincinnati", addressRegion: "OH", addressCountry: "US" },
+  address: { "@type": "PostalAddress", addressLocality, addressRegion, addressCountry: "US" },
   alumniOf: { "@type": "CollegeOrUniversity", name: "University of Cincinnati" },
   knowsAbout: [
     "Full-Stack Web Development",
@@ -109,6 +117,10 @@ export default function RootLayout({
         />
         {children}
         <FilmExperienceRoot />
+        <FeaturePresentation />
+        <CommentaryRoot />
+        <GuestTerminal />
+        <PlaygroundToggle />
         <KonamiCode />
         <Analytics />
       </body>

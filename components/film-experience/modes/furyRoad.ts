@@ -1,8 +1,6 @@
 import { drawFilmLabel, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
 
-const markers = ["eight-cylinder gauge", "compass", "pole-cats", "chrome sheen", "gear train", "witness me"] as const;
-
-export default makeFilmVisual(markers, (frame) => {
+export default makeFilmVisual((frame) => {
   const { context, width, height, time, scrollVelocity, accent, accentBright, accentDim } = frame;
   context.save();
 

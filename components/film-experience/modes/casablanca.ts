@@ -1,25 +1,7 @@
-import { drawFilmLabel, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
+import { drawFilmLabel, hash, makeStatefulFilmVisual, withAlpha, wrap } from "../shared";
 import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
-const markers = [
-  "19:42 departures",
-  "split-flap board",
-  "searchlight tower",
-  "champagne toast",
-  "Lisbon route",
-  "tarmac couple",
-] as const;
-
 const PLANE_SRC = "/posters/open/casablanca-plane.webp";
-let plane: HTMLImageElement | null = null;
-
-function planeImage() {
-  if (!plane && typeof Image !== "undefined") {
-    plane = new Image();
-    plane.src = PLANE_SRC;
-  }
-  return plane;
-}
 
 // Parametric flight path: a long left-to-right crossing with two layered
 // sine weaves so the aircraft drifts up/down and side-to-side in speed.
@@ -36,9 +18,8 @@ export function planePosition(rawTime: number, width: number, height: number) {
   return { x, y };
 }
 
-function drawPlane(frame: FilmFrame) {
+function drawPlane(frame: FilmFrame, image: HTMLImageElement | null) {
   const { context, width, height, time, accentBright } = frame;
-  const image = planeImage();
   if (!image || !image.complete || image.naturalWidth === 0) return;
 
   const planeWidth = Math.min(width * 0.15, 200);
@@ -116,7 +97,7 @@ function drawFigure(
   context.restore();
 }
 
-const drawScene = (frame: FilmFrame) => {
+const drawScene = (frame: FilmFrame, plane: HTMLImageElement | null) => {
   const { context, width, height, time, accent, accentBright } = frame;
   context.save();
 
@@ -152,9 +133,11 @@ const drawScene = (frame: FilmFrame) => {
   context.closePath();
   context.fill();
 
-  drawPlane(frame);
+  drawPlane(frame, plane);
 
-  const coupleX = width * 0.15;
+  // Far left on purpose: the pair stands clear of the hero's View Projects
+  // button (whose left edge sits around 13% of the viewport width).
+  const coupleX = width * 0.07;
   const coupleY = height * 0.87;
   const coupleScale = Math.min(width, height) / 900 + 0.42;
   drawFigure(
@@ -270,56 +253,105 @@ const drawScene = (frame: FilmFrame) => {
 // and a projector light leak breathing in the top corner. The edge vignette
 // lives in globals.css (html[data-film-mode="casablanca"] body::after) since
 // the screen-blended canvas cannot darken the page.
-let printFrame: HTMLCanvasElement | null = null;
+export default makeStatefulFilmVisual(() => {
+  // Per-activation state: the aircraft plate and both offscreen canvases are
+  // created when the mode goes live and released on dispose, so leaving
+  // Casablanca frees its full-viewport bitmaps.
+  let plane: HTMLImageElement | null = null;
+  let printFrame: HTMLCanvasElement | null = null;
+  let haloFrame: HTMLCanvasElement | null = null;
 
-export default makeFilmVisual(markers, (frame) => {
-  const { context, width, height, dpr, time } = frame;
-  if (!printFrame && typeof document !== "undefined") {
-    printFrame = document.createElement("canvas");
-  }
-  const off = printFrame?.getContext("2d");
-  if (!printFrame || !off) {
-    drawScene(frame);
-    return;
-  }
+  const planeImage = () => {
+    if (!plane && typeof Image !== "undefined") {
+      plane = new Image();
+      plane.src = PLANE_SRC;
+    }
+    return plane;
+  };
 
-  const frameWidth = Math.max(1, Math.round(width * dpr));
-  const frameHeight = Math.max(1, Math.round(height * dpr));
-  if (printFrame.width !== frameWidth || printFrame.height !== frameHeight) {
-    printFrame.width = frameWidth;
-    printFrame.height = frameHeight;
-  }
-  off.setTransform(dpr, 0, 0, dpr, 0, 0);
-  off.clearRect(0, 0, width, height);
-  drawScene({ ...frame, context: off });
+  const draw = (frame: FilmFrame) => {
+    const { context, width, height, dpr, time } = frame;
+    if (!printFrame && typeof document !== "undefined") {
+      printFrame = document.createElement("canvas");
+      haloFrame = document.createElement("canvas");
+    }
+    const off = printFrame?.getContext("2d");
+    const halo = haloFrame?.getContext("2d");
+    if (!printFrame || !off) {
+      drawScene(frame, planeImage());
+      return;
+    }
 
-  // Gate flicker: mostly steady, shivering slightly, with occasional dips.
-  const beat = Math.floor(time * 8);
-  const dip = hash(beat, 53) > 0.92 ? 0.82 : 1;
-  const flicker = frame.staticFrame ? 1 : dip * (0.94 + Math.sin(time * 29) * 0.06);
+    const frameWidth = Math.max(1, Math.round(width * dpr));
+    const frameHeight = Math.max(1, Math.round(height * dpr));
+    if (printFrame.width !== frameWidth || printFrame.height !== frameHeight) {
+      printFrame.width = frameWidth;
+      printFrame.height = frameHeight;
+    }
+    off.setTransform(dpr, 0, 0, dpr, 0, 0);
+    off.clearRect(0, 0, width, height);
+    drawScene({ ...frame, context: off }, planeImage());
 
-  context.save();
-  context.setTransform(1, 0, 0, 1, 0, 0);
-  context.globalAlpha = flicker;
-  context.drawImage(printFrame, 0, 0);
-  // Halation: bright areas bloom past their edges like projected film.
-  context.globalCompositeOperation = "lighter";
-  context.globalAlpha = 0.32 * flicker;
-  context.filter = "blur(12px)";
-  context.drawImage(printFrame, 0, 0);
-  context.filter = "none";
-  context.restore();
+    // Gate flicker: mostly steady, shivering slightly, with occasional dips.
+    const beat = Math.floor(time * 8);
+    const dip = hash(beat, 53) > 0.92 ? 0.82 : 1;
+    const flicker = frame.staticFrame ? 1 : dip * (0.94 + Math.sin(time * 29) * 0.06);
 
-  const leak = context.createRadialGradient(
-    width * 0.92, height * 0.05, 0,
-    width * 0.92, height * 0.05, width * 0.5
-  );
-  const leakStrength = 0.05 + 0.03 * Math.sin(time * 0.13);
-  leak.addColorStop(0, withAlpha(frame.accentBright, leakStrength));
-  leak.addColorStop(1, withAlpha(frame.accentBright, 0));
-  context.save();
-  context.globalCompositeOperation = "lighter";
-  context.fillStyle = leak;
-  context.fillRect(0, 0, width, height);
-  context.restore();
+    context.save();
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.globalAlpha = flicker;
+    context.drawImage(printFrame, 0, 0);
+    // Halation: bright areas bloom past their edges like projected film. The
+    // bloom pass runs at quarter resolution — a quarter-res blur(3px) scaled
+    // back up reads the same as a full-res blur(12px) at a fraction of the
+    // per-frame cost.
+    context.globalCompositeOperation = "lighter";
+    context.globalAlpha = 0.32 * flicker;
+    if (haloFrame && halo) {
+      const haloWidth = Math.max(1, Math.round(frameWidth / 4));
+      const haloHeight = Math.max(1, Math.round(frameHeight / 4));
+      if (haloFrame.width !== haloWidth || haloFrame.height !== haloHeight) {
+        haloFrame.width = haloWidth;
+        haloFrame.height = haloHeight;
+      }
+      halo.clearRect(0, 0, haloWidth, haloHeight);
+      // The blur applies while downscaling, so it lives in quarter-res
+      // space; drawing the halo back at full size makes it read as ~12px.
+      halo.filter = "blur(3px)";
+      halo.drawImage(printFrame, 0, 0, haloWidth, haloHeight);
+      halo.filter = "none";
+      context.drawImage(haloFrame, 0, 0, frameWidth, frameHeight);
+    } else {
+      context.filter = "blur(12px)";
+      context.drawImage(printFrame, 0, 0);
+      context.filter = "none";
+    }
+    context.restore();
+
+    const leak = context.createRadialGradient(
+      width * 0.92, height * 0.05, 0,
+      width * 0.92, height * 0.05, width * 0.5
+    );
+    const leakStrength = 0.05 + 0.03 * Math.sin(time * 0.13);
+    leak.addColorStop(0, withAlpha(frame.accentBright, leakStrength));
+    leak.addColorStop(1, withAlpha(frame.accentBright, 0));
+    context.save();
+    context.globalCompositeOperation = "lighter";
+    context.fillStyle = leak;
+    context.fillRect(0, 0, width, height);
+    context.restore();
+  };
+
+  return {
+    draw,
+    dispose() {
+      // Zeroing the dimensions releases the backing bitmaps immediately
+      // instead of waiting for GC.
+      if (printFrame) printFrame.width = printFrame.height = 0;
+      if (haloFrame) haloFrame.width = haloFrame.height = 0;
+      printFrame = null;
+      haloFrame = null;
+      plane = null;
+    },
+  };
 });

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { profile } from "@/lib/data";
 import ResumeViewer from "@/components/resume/ResumeViewer";
 import BackLink from "@/components/ui/BackLink";
+import Glow from "@/components/ui/Glow";
 
 export const metadata: Metadata = {
   title: `Resume · ${profile.name}`,
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function ResumePage() {
   return (
     <main className="relative min-h-screen overflow-hidden py-10">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[400px] w-[700px] max-w-full -translate-x-1/2 rounded-full bg-accent/10 blur-[140px]" />
+      <Glow className="top-0 h-[400px] w-[700px] blur-[140px]" />
 
       <div className="container-x">
         <div className="mb-8 flex items-center justify-between">

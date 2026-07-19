@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 // whoami home mark: a shell prompt `$ whoami` idling with a block cursor.
 // Hovering runs the command — the output types itself in — and leaving
@@ -13,7 +14,7 @@ const STEP_MS = 70;
 export default function Whoami({ className = "" }: { className?: string }) {
   const [typed, setTyped] = useState("");
   const timers = useRef<number[]>([]);
-  const reduced = useRef(false);
+  const reduced = useReducedMotion();
 
   const clearTimers = useCallback(() => {
     timers.current.forEach((t) => window.clearTimeout(t));
@@ -22,7 +23,7 @@ export default function Whoami({ className = "" }: { className?: string }) {
 
   const run = useCallback(() => {
     clearTimers();
-    if (reduced.current) {
+    if (reduced) {
       setTyped(OUTPUT);
       return;
     }
@@ -32,17 +33,14 @@ export default function Whoami({ className = "" }: { className?: string }) {
         window.setTimeout(() => setTyped(OUTPUT.slice(0, i)), i * STEP_MS),
       );
     }
-  }, [clearTimers]);
+  }, [clearTimers, reduced]);
 
   const hide = useCallback(() => {
     clearTimers();
     setTyped("");
   }, [clearTimers]);
 
-  useEffect(() => {
-    reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    return clearTimers;
-  }, [clearTimers]);
+  useEffect(() => clearTimers, [clearTimers]);
 
   return (
     <span

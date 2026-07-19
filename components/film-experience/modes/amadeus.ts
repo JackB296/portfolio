@@ -1,16 +1,16 @@
-import { drawFilmLabel, hash, makeFilmVisual, musicLevels, withAlpha, wrap } from "../shared";
+import { drawFilmLabel, hash, makeStatefulFilmVisual, withAlpha, wrap } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
-const markers = ["1787", "1984", "movement count", "player keys", "requiem", "candle count"] as const;
+export default makeStatefulFilmVisual(() => {
+  // The pianoforte presses scattered keys on the recording's attacks — like a
+  // player, not a spectrum analyzer. Presses are short holds on random keys.
+  const whitePressUntil = new Array<number>(14).fill(0);
+  const blackPressUntil = new Array<number>(13).fill(0);
+  let previousLevels = new Array<number>(14).fill(0);
+  let pressCounter = 0;
+  let lastPressTick = -1;
 
-// The pianoforte presses scattered keys on the recording's attacks — like a
-// player, not a spectrum analyzer. Presses are short holds on random keys.
-const whitePressUntil = new Array<number>(14).fill(0);
-const blackPressUntil = new Array<number>(13).fill(0);
-let previousLevels = new Array<number>(14).fill(0);
-let pressCounter = 0;
-let lastPressTick = -1;
-
-export default makeFilmVisual(markers, (frame) => {
+  const draw = (frame: FilmFrame) => {
   const { context, width, height, time, pointerX, pointerY, accentBright, accentDim } = frame;
   context.save();
 
@@ -93,7 +93,7 @@ export default makeFilmVisual(markers, (frame) => {
   const keyWidth = 16;
   const keyboardLeft = width - 14 * keyWidth - 26;
   const keyboardTop = height - 108;
-  const levels = frame.staticFrame ? [] : musicLevels(14);
+  const levels = frame.staticFrame ? [] : frame.musicLevels(14);
   const loudness = levels.reduce((sum, level) => sum + level, 0) / 14;
 
   const pressRandomKey = (strength: number) => {
@@ -152,4 +152,7 @@ export default makeFilmVisual(markers, (frame) => {
   drawFilmLabel(frame, "MOVEMENT COUNT / 04", 22, 30, 0.47);
   drawFilmLabel(frame, "MANUSCRIPT 1787 / STAGE 1984", width - 22, 30, 0.42, "right");
   context.restore();
+  };
+
+  return { draw };
 });

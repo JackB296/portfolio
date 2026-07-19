@@ -1,7 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { grades } from "../lib/grades";
-import { filmExperiences } from "../lib/filmExperiences";
+import { filmExperiences } from "../lib/films";
 import { planePosition } from "../components/film-experience/modes/casablanca";
+import {
+  commitGrade,
+  dispatchGrade,
+  openTheater,
+  visiblePixelCount,
+} from "./helpers";
 
 test("film experience registry contract covers every named grade", () => {
   const gradeIds = grades.map((grade) => grade.id).sort();
@@ -12,7 +18,7 @@ test("film experience registry contract covers every named grade", () => {
 
   for (const experience of filmExperiences) {
     expect(experience.signature.length).toBeGreaterThan(8);
-    expect(experience.references.length).toBeGreaterThanOrEqual(5);
+    expect(experience.markers.length).toBeGreaterThanOrEqual(5);
     expect(experience.audio.music.mode).toBe("music");
     for (const cue of [experience.audio.music, ...experience.audio.effects]) {
       expect(cue.label.length).toBeGreaterThan(3);
@@ -51,10 +57,12 @@ test("film experience registry contract covers every named grade", () => {
     "fury-road",
     "goodfellas",
     "matrix",
+    "space-odyssey",
     "wargames",
   ]);
   expect(filmExperiences.find(({ id }) => id === "matrix")?.audio.effects[0].label).toMatch(/data|number/i);
   expect(filmExperiences.find(({ id }) => id === "wargames")?.audio.effects[0].label).toMatch(/whisper/i);
+  expect(filmExperiences.find(({ id }) => id === "space-odyssey")?.audio.effects[0].label).toMatch(/hal/i);
 
   // Revved down 2026-07-16: the engine still reacts to scroll, but no longer
   // swells on every gesture.
@@ -92,7 +100,7 @@ test("every film music and effect cue is a decodable local recording", async ({ 
     );
   }, cues);
 
-  expect(decoded).toHaveLength(24);
+  expect(decoded).toHaveLength(25);
   for (const recording of decoded) {
     expect(recording.ok, recording.src).toBe(true);
     expect(recording.contentType, recording.src).toContain("audio/mpeg");
@@ -107,9 +115,8 @@ test("theater cover wall searches, previews, and exposes distinct materials", as
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
 
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
+  const dialog = await openTheater(page);
   const search = dialog.getByRole("searchbox", { name: "Search films" });
   const catalog = dialog.locator("[data-theater-catalog]");
   const originalPosters = catalog.locator("img[data-original-poster]");
@@ -197,14 +204,13 @@ test("theater emits preview, commit, and restore intent", async ({ page }) => {
     });
   });
 
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
+  const dialog = await openTheater(page);
   const dune = dialog.locator('[data-film-scene="dune"]');
   await dune.getByRole("button", { name: "Use Dune grade" }).focus();
   await expect(page.locator("html")).toHaveAttribute("data-grade", "dune");
   await dune.getByRole("button", { name: "Use Dune grade" }).click();
 
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
+  await openTheater(page);
   await dialog
     .locator('[data-film-scene="matrix"]')
     .getByRole("button", { name: "Use The Matrix grade" })
@@ -225,18 +231,15 @@ test("global film lifecycle keeps compact controls across routes and House tears
   await page.goto("/");
   await expect(page.getByRole("group", { name: "Cinematic mode controls" })).toHaveCount(0);
 
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
-  const dune = dialog.locator('[data-film-scene="dune"]');
-  await dune.getByRole("button", { name: "Use Dune grade" }).focus();
-  await dune.getByRole("button", { name: "Use Dune grade" }).click();
+  await openTheater(page);
+  await commitGrade(page, "dune");
 
   await expect(page.locator("html")).toHaveAttribute("data-film-mode", "dune");
   const controls = page.getByRole("group", { name: "Cinematic mode controls" });
   await expect(controls).toBeVisible();
   await expect(controls.getByText("Dune")).toBeAttached();
   // Committing a film is a user gesture, so sound defaults on.
-  await expect(controls.getByRole("button", { name: "Turn sound off" })).toHaveAttribute(
+  await expect(controls.getByRole("button", { name: "sound on" })).toHaveAttribute(
     "aria-pressed",
     "true",
     { timeout: 15_000 }
@@ -248,12 +251,8 @@ test("global film lifecycle keeps compact controls across routes and House tears
   await expect(page.getByRole("group", { name: "Cinematic mode controls" })).toBeVisible();
 
   await page.goto("/");
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const house = page.getByRole("dialog", { name: "Film theater" }).locator(
-    '[data-film-scene="house"]'
-  );
-  await house.getByRole("button", { name: "Use House Grade grade" }).focus();
-  await house.getByRole("button", { name: "Use House Grade grade" }).click();
+  await openTheater(page);
+  await commitGrade(page, "house");
   await expect(page.locator("html")).not.toHaveAttribute("data-film-mode");
   await expect(page.getByRole("group", { name: "Cinematic mode controls" })).toHaveCount(0);
 });
@@ -263,11 +262,8 @@ test("audio defaults on at commit, follows commits instead of previews, and mute
 }) => {
   test.setTimeout(60_000);
   await page.goto("/");
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  let dialog = page.getByRole("dialog", { name: "Film theater" });
-  const dune = dialog.locator('[data-film-scene="dune"]');
-  await dune.getByRole("button", { name: "Use Dune grade" }).focus();
-  await dune.getByRole("button", { name: "Use Dune grade" }).click();
+  await openTheater(page);
+  await commitGrade(page, "dune");
 
   const root = page.locator("[data-film-experience-root]");
   await expect(root).toHaveAttribute("data-audio-state", "running", { timeout: 20_000 });
@@ -277,14 +273,13 @@ test("audio defaults on at commit, follows commits instead of previews, and mute
     "/audio/film-modes/dune-music.mp3"
   );
   await expect(root).toHaveAttribute("data-audio-effect-sources", "/audio/film-modes/dune-sand.mp3");
-  await expect(page.getByRole("button", { name: "Turn sound off" })).toHaveAttribute(
+  await expect(page.getByRole("button", { name: "sound on" })).toHaveAttribute(
     "title",
     /Cavernous desert choir.*Flowing desert sand/
   );
   await expect.poll(() => root.getAttribute("data-audio-nodes")).not.toBe("0");
 
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  dialog = page.getByRole("dialog", { name: "Film theater" });
+  const dialog = await openTheater(page);
   const matrix = dialog.locator('[data-film-scene="matrix"]');
   await matrix.getByRole("button", { name: "Use The Matrix grade" }).focus();
   await expect(page.locator("html")).toHaveAttribute("data-film-mode", "matrix");
@@ -300,14 +295,10 @@ test("audio defaults on at commit, follows commits instead of previews, and mute
     "fury-road": "/audio/film-modes/fury-road-music.mp3",
   } as const;
   for (const [gradeId, source] of Object.entries(nextCues)) {
-    await page.evaluate((id) => {
-      window.dispatchEvent(new CustomEvent("gradechange", {
-        detail: { gradeId: id, intent: "commit" },
-      }));
-    }, gradeId);
+    await dispatchGrade(page, gradeId, "commit");
     await expect(root).toHaveAttribute("data-audio-film", gradeId);
     await expect(root).toHaveAttribute(
-      "data-audio-source",
+      "data-audio-music-source",
       source
     );
   }
@@ -337,29 +328,22 @@ test("audio defaults on at commit, follows commits instead of previews, and mute
   });
   await expect(root).toHaveAttribute("data-audio-state", "running");
 
-  await page.getByRole("button", { name: "Turn sound off" }).click();
+  await page.getByRole("button", { name: "sound on" }).click();
   await expect(root).toHaveAttribute("data-audio-state", "off");
-  await expect(root).toHaveAttribute("data-audio-source", "none");
+  await expect(root).toHaveAttribute("data-audio-music-source", "none");
   await expect(root).toHaveAttribute("data-audio-nodes", "0");
   await expect(root).toHaveAttribute("data-audio-tracks", "0");
 
   // Committing another film re-arms the sound-on default.
-  await page.evaluate(() => {
-    window.dispatchEvent(new CustomEvent("gradechange", {
-      detail: { gradeId: "arrival", intent: "commit" },
-    }));
-  });
+  await dispatchGrade(page, "arrival", "commit");
   await expect(root).toHaveAttribute("data-audio-state", "running", { timeout: 20_000 });
   await expect(root).toHaveAttribute("data-audio-film", "arrival");
 });
 
 test("canvas runtime owns one renderer and House removes it", async ({ page }) => {
   await page.goto("/");
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  let dialog = page.getByRole("dialog", { name: "Film theater" });
-  const dune = dialog.locator('[data-film-scene="dune"]');
-  await dune.getByRole("button", { name: "Use Dune grade" }).focus();
-  await dune.getByRole("button", { name: "Use Dune grade" }).click();
+  await openTheater(page);
+  await commitGrade(page, "dune");
 
   const root = page.locator("[data-film-experience-root]");
   const canvas = page.locator("canvas[data-cinematic-layer]");
@@ -369,11 +353,8 @@ test("canvas runtime owns one renderer and House removes it", async ({ page }) =
   await expect(root).toHaveAttribute("data-frame-state", "running");
   await expect(canvas).toHaveCSS("pointer-events", "none");
 
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  dialog = page.getByRole("dialog", { name: "Film theater" });
-  const house = dialog.locator('[data-film-scene="house"]');
-  await house.getByRole("button", { name: "Use House Grade grade" }).focus();
-  await house.getByRole("button", { name: "Use House Grade grade" }).click();
+  await openTheater(page);
+  await commitGrade(page, "house");
   await expect(page.locator("canvas[data-cinematic-layer]")).toHaveCount(0);
   await expect(root).toHaveAttribute("data-frame-state", "off");
 });
@@ -381,11 +362,8 @@ test("canvas runtime owns one renderer and House removes it", async ({ page }) =
 test("reduced motion renders a deliberate static film frame", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
-  const casablanca = dialog.locator('[data-film-scene="casablanca"]');
-  await casablanca.getByRole("button", { name: "Use Casablanca grade" }).focus();
-  await casablanca.getByRole("button", { name: "Use Casablanca grade" }).click();
+  await openTheater(page);
+  await commitGrade(page, "casablanca");
 
   const root = page.locator("[data-film-experience-root]");
   await expect(root).toHaveAttribute("data-frame-state", "static");
@@ -396,18 +374,7 @@ test("reduced motion renders a deliberate static film frame", async ({ page }) =
 
   await page.setViewportSize({ width: 720, height: 840 });
   await expect
-    .poll(() =>
-      page.locator("canvas[data-cinematic-layer]").evaluate((element) => {
-        const context = element.getContext("2d");
-        if (!context) return 0;
-        const pixels = context.getImageData(0, 0, element.width, element.height).data;
-        let visible = 0;
-        for (let index = 3; index < pixels.length; index += 64) {
-          if (pixels[index] > 4) visible += 1;
-        }
-        return visible;
-      })
-    )
+    .poll(() => visiblePixelCount(page.locator("canvas[data-cinematic-layer]")))
     .toBeGreaterThan(20);
 });
 
@@ -439,14 +406,11 @@ test("Casablanca serves its aircraft silhouette and renders an authored world", 
   expect(plane.ok()).toBe(true);
   expect(plane.headers()["content-type"]).toContain("image/webp");
 
-  await page.locator('button[aria-haspopup="dialog"]').first().click();
-  const dialog = page.getByRole("dialog", { name: "Film theater" });
-  const casablanca = dialog.locator('[data-film-scene="casablanca"]');
-  await casablanca.getByRole("button", { name: "Use Casablanca grade" }).click();
+  await openTheater(page);
+  await commitGrade(page, "casablanca");
 
   const canvas = page.locator("canvas[data-cinematic-layer]");
   await expect(canvas).toHaveAttribute("data-renderer", "casablanca");
-  await expect(canvas).toHaveAttribute("data-authored", "true");
   // The aircraft is drawn by the canvas runtime; no DOM image layer remains.
   await expect(page.locator("img[data-film-asset]")).toHaveCount(0);
 });
@@ -459,11 +423,7 @@ test("film modes load their verified real-asset fragments", async ({ page }) => 
   );
 
   for (const experience of filmExperiences) {
-    await page.evaluate((gradeId) => {
-      window.dispatchEvent(new CustomEvent("gradechange", {
-        detail: { gradeId, intent: "commit" },
-      }));
-    }, experience.id);
+    await dispatchGrade(page, experience.id, "commit");
 
     const assets = page.locator(`[data-film-asset][data-film-id="${experience.id}"]`);
     await expect(assets).toHaveCount(experience.visualAssets.length);
@@ -513,6 +473,53 @@ test("WarGames exposes a keyboard-operable draw simulation", async ({ page }) =>
   await expect(openButton).toBeFocused();
 });
 
+test("audio failure tears down only the failed film", async ({ page }) => {
+  test.setTimeout(60_000);
+  // Dune's recordings never arrive; its sound pipeline must fail closed
+  // instead of leaving the control stuck on.
+  await page.route("**/audio/film-modes/dune-*", (route) => route.abort());
+  await page.goto("/");
+
+  await openTheater(page);
+  await commitGrade(page, "dune");
+
+  const root = page.locator("[data-film-experience-root]");
+  await expect(root).toHaveAttribute("data-audio-state", "off", { timeout: 20_000 });
+  await expect(page.getByRole("button", { name: "sound off" })).toBeVisible();
+
+  // The failure must not poison the shared audio pipeline: an unblocked film
+  // committed afterwards still gets sound.
+  await openTheater(page);
+  await commitGrade(page, "matrix");
+  await expect(root).toHaveAttribute("data-audio-state", "running", { timeout: 20_000 });
+  await expect(root).toHaveAttribute("data-audio-film", "matrix");
+});
+
+test("simulation cannot outlive its film", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("film-grade", "wargames"));
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Open tic-tac-toe simulation" }).click();
+  const dialog = page.getByRole("dialog", { name: "JXN-83 tic-tac-toe simulation" });
+  await expect(dialog).toBeVisible();
+
+  // Committing another film while the simulation is open must close it —
+  // and nothing may resurrect it afterwards.
+  await dispatchGrade(page, "dune", "commit");
+  await expect(dialog).toHaveCount(0);
+  await page.waitForTimeout(1000);
+  await expect(dialog).toHaveCount(0);
+
+  // Returning to WarGames must not resurrect the dialog unclicked: a chunk
+  // that resolved after the switch is stale state, not an open request.
+  await dispatchGrade(page, "wargames", "commit");
+  await expect(
+    page.getByRole("button", { name: "Open tic-tac-toe simulation" })
+  ).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(dialog).toHaveCount(0);
+});
+
 test("complete catalog switches through one bounded experience lifecycle", async ({ page }) => {
   test.setTimeout(60_000);
   const errors: string[] = [];
@@ -528,11 +535,7 @@ test("complete catalog switches through one bounded experience lifecycle", async
   const root = page.locator("[data-film-experience-root]");
   await expect(root).toHaveAttribute("data-experience-ready", "true");
   for (const grade of grades) {
-    await page.evaluate((gradeId) => {
-      window.dispatchEvent(new CustomEvent("gradechange", {
-        detail: { gradeId, intent: "commit" },
-      }));
-    }, grade.id);
+    await dispatchGrade(page, grade.id, "commit");
     await expect(root).toHaveAttribute("data-committed-film", grade.id);
     await expect(root).toHaveAttribute("data-frame-state", "running");
     await expect(page.locator("canvas[data-cinematic-layer]")).toHaveAttribute(
@@ -543,26 +546,14 @@ test("complete catalog switches through one bounded experience lifecycle", async
     await expect(page.getByRole("group", { name: "Cinematic mode controls" })).toHaveCount(1);
   }
 
-  await page.evaluate(() => {
-    window.dispatchEvent(new CustomEvent("gradechange", {
-      detail: { gradeId: "casablanca", intent: "preview" },
-    }));
-  });
+  await dispatchGrade(page, "casablanca", "preview");
   await expect(root).toHaveAttribute("data-active-film", "casablanca");
   await expect(root).toHaveAttribute("data-committed-film", "wargames");
 
-  await page.evaluate(() => {
-    window.dispatchEvent(new CustomEvent("gradechange", {
-      detail: { gradeId: "wargames", intent: "restore" },
-    }));
-  });
+  await dispatchGrade(page, "wargames", "restore");
   await expect(root).toHaveAttribute("data-active-film", "wargames");
 
-  await page.evaluate(() => {
-    window.dispatchEvent(new CustomEvent("gradechange", {
-      detail: { gradeId: null, intent: "commit" },
-    }));
-  });
+  await dispatchGrade(page, null, "commit");
   await expect(page.locator("canvas[data-cinematic-layer]")).toHaveCount(0);
   await expect(root).toHaveAttribute("data-frame-state", "off");
   expect(errors).toEqual([]);
@@ -575,7 +566,9 @@ test("mobile mode keeps the portfolio usable at the bounded quality tier", async
 
   const canvas = page.locator("canvas[data-cinematic-layer]");
   await expect(canvas).toHaveAttribute("data-renderer", "wall-e");
-  expect(await canvas.evaluate((element) => element.width)).toBeLessThanOrEqual(390);
+  expect(
+    await canvas.evaluate((element: HTMLCanvasElement) => element.width)
+  ).toBeLessThanOrEqual(390);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(page.getByRole("group", { name: "Cinematic mode controls" })).toBeVisible();
 
@@ -616,24 +609,10 @@ for (const [id, label, expectedReference] of filmRenderCases) {
     const canvas = page.locator("canvas[data-cinematic-layer]");
     await expect(root).toHaveAttribute("data-frame-state", "running");
     await expect(canvas).toHaveAttribute("data-renderer", id);
-    await expect(canvas).toHaveAttribute("data-authored", "true");
     await expect(canvas).toHaveAttribute(
       "data-visual-references",
       new RegExp(expectedReference, "i")
     );
-    await expect
-      .poll(() =>
-        canvas.evaluate((element) => {
-          const context = element.getContext("2d");
-          if (!context) return 0;
-          const pixels = context.getImageData(0, 0, element.width, element.height).data;
-          let visible = 0;
-          for (let index = 3; index < pixels.length; index += 64) {
-            if (pixels[index] > 4) visible += 1;
-          }
-          return visible;
-        })
-      )
-      .toBeGreaterThan(20);
+    await expect.poll(() => visiblePixelCount(canvas)).toBeGreaterThan(20);
   });
 }

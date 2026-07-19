@@ -23,6 +23,7 @@ export default function KonamiCode() {
 
   useEffect(() => {
     let progress = 0;
+    let redirectTimer = 0;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
@@ -33,11 +34,14 @@ export default function KonamiCode() {
       if (progress === SEQUENCE.length) {
         progress = 0;
         setUnlocked(true);
-        setTimeout(() => router.push("/flappy"), 900);
+        redirectTimer = window.setTimeout(() => router.push("/flappy"), 900);
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.clearTimeout(redirectTimer);
+    };
   }, [router]);
 
   if (!unlocked) return null;

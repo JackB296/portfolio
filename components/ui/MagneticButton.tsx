@@ -2,6 +2,7 @@
 
 import { useRef, ReactNode, MouseEvent } from "react";
 import { motion } from "framer-motion";
+import { PILL_SOLID_CLASSES } from "./Pill";
 
 type Props = {
   children: ReactNode;
@@ -38,9 +39,12 @@ export default function MagneticButton({
 
   const base =
     "group relative inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium tracking-wide transition-colors duration-300";
+  // Solid is Pill's solid recipe. Ghost is deliberately NOT Pill's outline:
+  // its text/90 and hover:border-accent/60 are hotter than Pill's /85 and
+  // /50, and aligning them would visibly change the hero buttons.
   const styles =
     variant === "solid"
-      ? "bg-accent text-ink hover:bg-accent-bright"
+      ? PILL_SOLID_CLASSES
       : "border border-white/15 text-white/90 hover:border-accent/60 hover:text-white";
 
   const inner = (

@@ -22,9 +22,10 @@
   --grain-opacity: 0.035;
   --grade-image-filter: none;
 
-  /* Film-experience material tokens; the active registry entry overrides these. */
+  /* Film-experience material tokens; the active registry entry overrides
+     these. These :root values are the CSS-origin defaults; the runtime/boot
+     writers share one var mapping in lib/grades.ts (FILM_TOKEN_VARS). */
   --film-radius: 10px;
-  --film-letter-spacing: 0em;
   --film-line-opacity: 0.2;
 }
 
@@ -83,10 +84,6 @@ body {
     @apply mx-auto w-full max-w-6xl px-6 md:px-10;
   }
 
-  .section-label {
-    @apply mb-4 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.25em] text-accent;
-  }
-
   .glass {
     @apply border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm;
   }
@@ -121,7 +118,8 @@ html[data-film-mode] .glass {
 
 /* Casablanca screens as a 35mm print: the canvas layer adds gate flicker and
    halation, and this fixed vignette supplies the projected-frame edge falloff
-   the screen-blended canvas cannot darken in itself. */
+   the screen-blended canvas cannot darken in itself. Bespoke escape hatch the
+   registry doesn't index — cross-referenced on lib/films/casablanca.ts. */
 html[data-film-mode="casablanca"] body::after {
   content: "";
   position: fixed;
@@ -131,17 +129,35 @@ html[data-film-mode="casablanca"] body::after {
   background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.4) 100%);
 }
 
-/* Arrival speaks in full circles; give card content extra breathing room so
-   text stays inside the curved corners instead of clipping against them. */
+/* Arrival speaks in full circles; the 999px radius turns every card into a
+   stadium shape, so the inline padding runs well ahead of the block padding
+   to keep words comfortably inside the rounded end caps instead of crowding
+   or clipping against the curve. Bespoke escape hatch the registry doesn't
+   index — cross-referenced on lib/films/arrival.ts. */
 html[data-film-mode="arrival"] .glass {
-  padding: clamp(1.75rem, 4vw, 2.75rem);
+  padding: clamp(1.75rem, 4vw, 2.75rem) clamp(2.75rem, 7vw, 4.5rem);
+}
+/* The stadium radius wants different masses per card: the skills pods stay
+   shorter than they are wide so the 999px radius resolves into compact
+   horizontal lozenges (two wide columns instead of three tall ones), while
+   the education capsule grows wider and taller so its content sits clear of
+   the dome curves. */
+html[data-film-mode="arrival"] #skills .glass {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(2rem, 3.5vw, 3rem);
+}
+html[data-film-mode="arrival"] #about .glass {
+  padding: clamp(3.25rem, 6vw, 5rem) clamp(2.5rem, 5vw, 4rem);
+}
+@media (min-width: 1024px) {
+  html[data-film-mode="arrival"] #skills .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-film-mode="arrival"] #about .grid {
+    grid-template-columns: 1.15fr 1fr;
+  }
 }
 html[data-film-mode="arrival"] .glass * {
   text-wrap: pretty;
-}
-
-html[data-film-mode] .section-label {
-  letter-spacing: calc(0.25em + var(--film-letter-spacing));
 }
 
 html[data-film-mode] a,
@@ -174,16 +190,6 @@ html[data-film-motion="rupture"] button {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* LED monogram power-on */
-@keyframes led-on {
-  0% { opacity: 0; }
-  60% { opacity: 0; }
-  100% { opacity: 1; }
-}
-.led-dot {
-  animation: led-on 0.5s ease-out backwards;
-}
-
 /* Terminal cursor for the hero status line */
 @keyframes cursor-blink {
   0%, 49% { opacity: 1; }
@@ -191,6 +197,24 @@ html[data-film-motion="rupture"] button {
 }
 .cursor-blink {
   animation: cursor-blink 1.1s steps(1) infinite;
+}
+
+/* Guest terminal: CRT scanline pass over the panel */
+.crt-scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgb(0 0 0 / 0.22) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* Feature-presentation leader: the countdown ring's sweep hand */
+@keyframes leader-sweep {
+  to { transform: rotate(360deg); }
 }
 
 /* Animated gradient text */
@@ -209,26 +233,6 @@ html[data-film-motion="rupture"] button {
   50% { filter: saturate(1) contrast(1.08); transform: scale(1.035); }
 }
 
-@keyframes film-asset-drift {
-  0%, 100% { transform: translate3d(-1.2vw, 0, 0) rotate(-0.5deg); }
-  50% { transform: translate3d(1.2vw, -1.1vh, 0) rotate(0.5deg); }
-}
-
-@keyframes film-asset-float {
-  0%, 100% { transform: translate3d(0, -1vh, 0) rotate(-0.8deg); }
-  50% { transform: translate3d(-1vw, 1.2vh, 0) rotate(0.8deg); }
-}
-
-@keyframes film-asset-pulse {
-  0%, 100% { transform: scale(0.98); filter: brightness(0.9); }
-  50% { transform: scale(1.04); filter: brightness(1.18); }
-}
-
-@keyframes film-asset-track {
-  0%, 100% { transform: translate3d(-1.5vw, 0, 0); }
-  50% { transform: translate3d(1.5vw, 0, 0); }
-}
-
 .film-asset {
   display: block;
   max-width: none;
@@ -237,10 +241,6 @@ html[data-film-motion="rupture"] button {
 }
 
 .film-asset--breathe { animation: film-asset-breathe 13s ease-in-out infinite; }
-.film-asset--drift { animation: film-asset-drift 17s ease-in-out infinite; }
-.film-asset--float { animation: film-asset-float 22s ease-in-out infinite; }
-.film-asset--pulse { animation: film-asset-pulse 8s ease-in-out infinite; }
-.film-asset--track { animation: film-asset-track 11s ease-in-out infinite; }
 
 /* Honor the OS "Reduce Motion" setting: drop smooth scrolling and neutralize
    CSS animations/transitions. JS-driven motion (Lenis smooth scroll, the WebGL

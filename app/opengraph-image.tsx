@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { profile } from "@/lib/data";
 import { ACCENT, ACCENT_BRIGHT } from "@/lib/theme";
 
 export const runtime = "edge";
@@ -39,7 +40,7 @@ export default function OG() {
             <div style={{ width: 20, height: 36, background: ACCENT, display: "flex" }} />
           </div>
           <div style={{ color: "rgba(231,233,243,0.65)", fontSize: 24 }}>
-            Available for co-op: Spring 2027
+            {profile.status}
           </div>
         </div>
 

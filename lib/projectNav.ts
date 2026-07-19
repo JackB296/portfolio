@@ -1,17 +1,17 @@
 import { demos } from "./demos";
-import { caseStudies, professionalCaseStudySlugs } from "./caseStudies";
+import { professionalCaseStudies } from "./caseStudies";
 
-export type RingItem = { href: string; label: string };
+type RingItem = { href: string; label: string };
 
 // Ring 1: professional case studies. /work pages for these cycle among themselves.
-export const caseStudyRing: RingItem[] = professionalCaseStudySlugs
-  .map((slug) => caseStudies.find((c) => c.slug === slug))
-  .filter((c): c is NonNullable<typeof c> => Boolean(c))
-  .map((c) => ({ href: `/work/${c.slug}`, label: c.cardName }));
+const caseStudyRing: RingItem[] = professionalCaseStudies.map((c) => ({
+  href: `/work/${c.slug}`,
+  label: c.cardName,
+}));
 
 // Ring 2: "real projects". The 8-bit computer (a /work page) plus every live demo.
 // The 8-bit case-study page and all demo pages cycle through this ring.
-export const projectRing: RingItem[] = [
+const projectRing: RingItem[] = [
   { href: "/work/8-bit-computer", label: "8-Bit Computer" },
   ...demos.map((d) => ({ href: `/${d.slug}`, label: `${d.title} ${d.titleAccent}` })),
 ];

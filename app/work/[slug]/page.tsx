@@ -5,7 +5,10 @@ import { caseStudies, getCaseStudy, professionalCaseStudySlugs } from "@/lib/cas
 import { nextForWork } from "@/lib/projectNav";
 import { profile } from "@/lib/data";
 import BackLink from "@/components/ui/BackLink";
+import Glow from "@/components/ui/Glow";
 import Img from "@/components/ui/Img";
+import Pill from "@/components/ui/Pill";
+import { ArrowRightIcon } from "@/components/ui/icons";
 
 export function generateStaticParams() {
   return caseStudies.map((c) => ({ slug: c.slug }));
@@ -37,7 +40,7 @@ export default function CaseStudyPage({
 
   return (
     <main className="relative overflow-hidden pb-28">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[460px] w-[760px] max-w-full -translate-x-1/2 rounded-full bg-accent/10 blur-[150px]" />
+      <Glow className="top-0 h-[460px] w-[760px] blur-[150px]" />
 
       <div className="container-x py-12">
         <BackLink href="/#experience" label="Back to experience" />
@@ -168,21 +171,14 @@ export default function CaseStudyPage({
 
         {/* Footer nav */}
         <div className="mt-20 flex flex-col items-start justify-between gap-6 border-t border-white/[0.07] pt-10 sm:flex-row sm:items-center">
-          <Link
-            href="/#contact"
-            className="rounded-full bg-accent px-7 py-3.5 text-sm font-medium text-ink transition-colors hover:bg-accent-bright"
-          >
-            Get in touch
-          </Link>
+          <Pill href="/#contact">Get in touch</Pill>
           {next && (
             <Link
               href={next.href}
               className="group inline-flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-accent"
             >
               {isCaseStudy ? "Next case study" : "Next project"}: {next.label}
-              <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           )}
         </div>

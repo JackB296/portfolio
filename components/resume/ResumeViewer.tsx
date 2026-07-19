@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Pill from "../ui/Pill";
 
 export default function ResumeViewer({ src }: { src: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -22,26 +23,29 @@ export default function ResumeViewer({ src }: { src: string }) {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-end gap-3">
-        <button
+        <Pill
           type="button"
           onClick={handlePrint}
-          className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm font-medium text-white/85 transition-colors hover:border-accent/50 hover:text-white"
+          variant="outline"
+          size="sm"
+          className="inline-flex items-center gap-2"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Print
-        </button>
-        <a
+        </Pill>
+        <Pill
           href={src}
           download
-          className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-accent-bright"
+          size="sm"
+          className="inline-flex items-center gap-2"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Download PDF
-        </a>
+        </Pill>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white shadow-2xl shadow-accent/10">

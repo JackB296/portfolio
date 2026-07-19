@@ -1,21 +1,14 @@
-import { drawFilmLabel, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
-
-const markers = [
-  "glyph rain",
-  "red pill blue pill",
-  "no spoon",
-  "wake up call",
-  "1999 build",
-  "source layer",
-] as const;
+import { drawFilmLabel, hash, makeStatefulFilmVisual, withAlpha, wrap } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
 const glyphs = ["0", "1", "J", "B", "{", "}", "λ", "∑", "◇", "/", ">", "_"];
 
-// The wake-up call types from the moment the mode activates, not page load.
-let lastFrameAt = -Infinity;
-let typingStartedAt = 0;
+export default makeStatefulFilmVisual(() => {
+  // The wake-up call types from the moment the mode activates, not page load.
+  let lastFrameAt = -Infinity;
+  let typingStartedAt = 0;
 
-export default makeFilmVisual(markers, (frame) => {
+  const draw = (frame: FilmFrame) => {
   const { context, width, height, time, pointerX, pointerY } = frame;
   if (time - lastFrameAt > 1) typingStartedAt = time;
   lastFrameAt = time;
@@ -85,11 +78,14 @@ export default makeFilmVisual(markers, (frame) => {
     context.restore();
   });
 
-  // There is no spoon: the bowl bends away from an approaching pointer.
+  // There is no spoon: it bends by itself on a slow sway, and leans away
+  // harder as the pointer approaches.
   const spoonX = 74;
-  const spoonY = height - 46;
+  const spoonY = height - 76;
+  const sway = Math.sin(time * 0.8) * 0.4;
   const reach = Math.hypot(pointerX - spoonX, pointerY - (spoonY - 40));
-  const bend = (1 - Math.min(1, reach / 240)) * (pointerX > spoonX ? -1 : 1);
+  const pointerBend = (1 - Math.min(1, reach / 240)) * (pointerX > spoonX ? -1 : 1);
+  const bend = Math.max(-1, Math.min(1, sway + pointerBend));
   context.save();
   context.translate(spoonX, spoonY);
   context.rotate(-0.9);
@@ -114,17 +110,22 @@ export default makeFilmVisual(markers, (frame) => {
   context.lineWidth = 1;
 
   // The terminal wakes the visitor once per load, then keeps its cursor lit.
+  // It types in the top-left corner, stacked under the build label, well away
+  // from the spoon.
   const message = "Wake up, Jack...";
   const typed = message.slice(0, Math.floor((time - typingStartedAt) * 6));
   context.font = "13px ui-monospace, SFMono-Regular, Menlo, monospace";
   context.fillStyle = withAlpha(frame.accentBright, 0.55);
-  context.fillText(typed, 24, height - 96);
+  context.fillText(typed, 24, 58);
   if (Math.floor(time * 2.2) % 2 === 0) {
     const cursorX = 24 + context.measureText(typed).width + 3;
-    context.fillRect(cursorX, height - 107, 7, 13);
+    context.fillRect(cursorX, 47, 7, 13);
   }
 
   drawFilmLabel(frame, "BUILD 1999 / ARRAY 120", 22, 32, 0.46);
 
   context.restore();
+  };
+
+  return { draw };
 });

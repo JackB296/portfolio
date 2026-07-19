@@ -1,4 +1,8 @@
-import type { FilmFrame, FilmVisualModule } from "@/lib/filmExperienceTypes";
+import type {
+  FilmFrame,
+  FilmVisualInstance,
+  FilmVisualModule,
+} from "@/lib/filmExperienceTypes";
 
 export const hash = (index: number, seed = 1) => {
   const value = Math.sin(index * 127.1 + seed * 311.7) * 43758.5453;
@@ -8,20 +12,22 @@ export const hash = (index: number, seed = 1) => {
 export const wrap = (value: number, maximum: number) =>
   ((value % maximum) + maximum) % maximum;
 
-export const cssRgb = (variable: string, fallback: string) => {
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(variable)
-    .trim();
-  return `rgb(${(value || fallback).split(/\s+/).join(", ")})`;
-};
-
 export const withAlpha = (rgb: string, alpha: number) =>
   rgb.startsWith("rgb(") ? rgb.replace("rgb(", "rgba(").replace(")", `, ${alpha})`) : rgb;
 
+/** A stateless film world: one draw function, no per-activation state. */
 export const makeFilmVisual = (
-  markers: readonly string[],
   draw: (frame: FilmFrame) => void
-): FilmVisualModule => ({ authored: true, markers, draw });
+): FilmVisualModule => ({ create: () => ({ draw }) });
+
+/**
+ * A stateful film world: the factory runs once per activation, so cached
+ * bitmaps, freeze-frame machines, and other working state live in the
+ * instance closure and are released when CinematicLayer disposes it.
+ */
+export const makeStatefulFilmVisual = (
+  create: () => FilmVisualInstance
+): FilmVisualModule => ({ create });
 
 export function drawFilmLabel(
   frame: FilmFrame,
@@ -43,41 +49,48 @@ export function drawFilmLabel(
 
 const HERO_LABEL = "JACKSON'S PORTFOLIO SITE";
 const SECTION_REFRESH_MS = 1_500;
-let sectionsMeasuredAt = -Infinity;
-let cachedSections: ReadonlyArray<{ top: number; label: string }> = [];
 
 /**
- * The page section under the reader's eye for the given scroll offset.
+ * Tracks the page section under the reader's eye. Each film activation
+ * creates its own tracker inside its create() closure, so the measurement
+ * cache lives per instance and is released with it — no module-level state.
  * Index 0 is the hero; sections are re-measured periodically so layout
  * shifts (fonts, images) do not strand stale offsets.
  */
-export function pageSectionAt(scroll: number): { label: string; index: number } {
-  if (typeof document === "undefined") return { label: HERO_LABEL, index: 0 };
-  const now = performance.now();
-  if (now - sectionsMeasuredAt > SECTION_REFRESH_MS) {
-    sectionsMeasuredAt = now;
-    cachedSections = Array.from(
-      document.querySelectorAll<HTMLElement>("section[id]")
-    )
-      // The hero (#top) is the "Chapter I" landing state, not its own section.
-      .filter((element) => element.id !== "top")
-      .map((element) => ({
-        top: element.getBoundingClientRect().top + window.scrollY,
-        label: element.id.replace(/-/g, " ").toUpperCase(),
-      }))
-      .sort((a, b) => a.top - b.top);
-  }
+export function createSectionTracker() {
+  let measuredAt = -Infinity;
+  let sections: ReadonlyArray<{ top: number; label: string }> = [];
 
-  const anchor = scroll + window.innerHeight * 0.4;
-  let index = 0;
-  let label = HERO_LABEL;
-  cachedSections.forEach((section, sectionIndex) => {
-    if (anchor >= section.top) {
-      index = sectionIndex + 1;
-      label = section.label;
-    }
-  });
-  return { label, index };
+  return {
+    sectionAt(scroll: number): { label: string; index: number } {
+      if (typeof document === "undefined") return { label: HERO_LABEL, index: 0 };
+      const now = performance.now();
+      if (now - measuredAt > SECTION_REFRESH_MS) {
+        measuredAt = now;
+        sections = Array.from(
+          document.querySelectorAll<HTMLElement>("section[id]")
+        )
+          // The hero (#top) is the "Chapter I" landing state, not its own section.
+          .filter((element) => element.id !== "top")
+          .map((element) => ({
+            top: element.getBoundingClientRect().top + window.scrollY,
+            label: element.id.replace(/-/g, " ").toUpperCase(),
+          }))
+          .sort((a, b) => a.top - b.top);
+      }
+
+      const anchor = scroll + window.innerHeight * 0.4;
+      let index = 0;
+      let label = HERO_LABEL;
+      sections.forEach((section, sectionIndex) => {
+        if (anchor >= section.top) {
+          index = sectionIndex + 1;
+          label = section.label;
+        }
+      });
+      return { label, index };
+    },
+  };
 }
 
 /* --- music analysis tap --------------------------------------------------
