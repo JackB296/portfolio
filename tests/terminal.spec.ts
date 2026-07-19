@@ -5,6 +5,12 @@ import { waitForHydration } from "./helpers";
 // the shell features (ghost suggestions, persistent history, the unix-flavored
 // commands), and the per-film profile picker in the title bar.
 
+// Reduced motion: the terminal is non-modal, so the WebGL hero keeps
+// rendering behind it. CI runners have no GPU — SwiftShader burns both cores
+// and every action crawls past the 30s ceiling. Under reduced motion the site
+// collapses every canvas to a still frame, and nothing here needs animation.
+test.use({ reducedMotion: "reduce" });
+
 const openTerminal = async (page: import("@playwright/test").Page) => {
   await page.goto("/");
   await waitForHydration(page);
@@ -149,6 +155,7 @@ test.describe("guest shell features", () => {
   test("unix flavor: whoami, pwd, uname, date, man, ls -a, cat", async ({
     page,
   }) => {
+    test.slow(); // eight sequential command round-trips
     await openTerminal(page);
     const input = page.getByLabel("Terminal command");
     const output = page.locator("[data-terminal-output]");
@@ -191,6 +198,7 @@ test.describe("guest shell features", () => {
   test("cd walks the virtual filesystem and cat prints raw page data", async ({
     page,
   }) => {
+    test.slow(); // nine sequential command round-trips
     await openTerminal(page);
     const input = page.getByLabel("Terminal command");
     const output = page.locator("[data-terminal-output]");
