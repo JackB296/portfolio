@@ -1,4 +1,4 @@
-import { defineExperience, effect, music } from "./builders";
+import { defineExperience, music } from "./builders";
 import type { FilmDefinition } from "./types";
 
 const fightClub: FilmDefinition = {
@@ -22,9 +22,18 @@ const fightClub: FilmDefinition = {
     radius: "3px",
     audio: {
       music: music("Industrial breakbeat", "/audio/film-modes/fight-club-music.mp3", { volume: 0.21, filterFrequency: 15_000, scrollResponse: 0.45, scrollGain: 0.2, scrollRate: 0.12 }),
-      effects: [effect("event", "Physical impact and burn", "/audio/film-modes/fight-club-impact.mp3", { volume: 0.24, filterFrequency: 8_500, triggerThreshold: 0.4, triggerCooldownMs: 4_200, segmentDuration: 1.5 })],
+      // The impact hit was retired 2026-07-21 at the owner's request: Fight Club
+      // runs on its breakbeat bed alone, with no foreground effect.
+      effects: [],
     },
     loadVisuals: () => import("@/components/film-experience/modes/fightClub"),
+    simulations: [
+      {
+        id: "fight-club-tourist",
+        name: "the tourist",
+        load: () => import("@/components/film-experience/simulations/FightClubTourist"),
+      },
+    ],
   }),
   review: {
     rating: 5,

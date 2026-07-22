@@ -24,6 +24,24 @@ const bladeRunner: FilmDefinition = {
       effects: [effect("loop", "Rain on balcony metal", "/audio/film-modes/blade-runner-rain.mp3", { volume: 0.08, filterFrequency: 12_000, scrollResponse: 0.3, scrollGain: 0.24, scrollRate: 0.02 })],
     },
     loadVisuals: () => import("@/components/film-experience/modes/bladeRunner"),
+    simulationsMenuTitle: "More human than human",
+    simulations: [
+      {
+        id: "blade-runner-vk",
+        name: "voight-kampff",
+        load: () => import("@/components/film-experience/simulations/BladeRunnerVoightKampff"),
+      },
+      {
+        id: "blade-runner-enhance",
+        name: "enhance",
+        load: () => import("@/components/film-experience/simulations/BladeRunnerEnhance"),
+      },
+      {
+        id: "blade-runner-origami",
+        name: "origami tell",
+        load: () => import("@/components/film-experience/simulations/BladeRunnerOrigami"),
+      },
+    ],
   }),
   review: {
     rating: 4,

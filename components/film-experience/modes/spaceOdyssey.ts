@@ -1,7 +1,7 @@
-import { drawFilmLabel, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
+import { drawFilmLabel, hash, makeFilmVisual, withAlpha } from "../shared";
 
 export default makeFilmVisual((frame) => {
-  const { context, width, height, time, pointerX, pointerY, scrollVelocity, accent, accentBright, accentDim } = frame;
+  const { context, width, height, time, pointerX, pointerY, accent, accentBright, accentDim } = frame;
   context.save();
 
   context.fillStyle = withAlpha(accentBright, 0.45);
@@ -23,26 +23,8 @@ export default makeFilmVisual((frame) => {
   }
   context.setTransform(frame.dpr, 0, 0, frame.dpr, 0, 0);
 
-  // The Star Gate: light bars rush past while the page is in motion.
-  const rush = Math.min(1, Math.abs(scrollVelocity) / 26);
-  if (rush > 0.02) {
-    for (let bar = 0; bar < 18; bar += 1) {
-      const progress = wrap(hash(bar) + time * (0.2 + hash(bar, 2) * 0.16), 1);
-      const side = hash(bar, 3) > 0.5 ? 1 : -1;
-      const y = centerY + side * (6 + progress * height * 0.5);
-      const span = progress * width * 0.4 * (0.4 + rush * 0.6);
-      context.strokeStyle = withAlpha(
-        hash(bar, 4) > 0.75 ? accentBright : accent,
-        (0.06 + progress * 0.4) * rush
-      );
-      context.lineWidth = 1 + progress * 2;
-      context.beginPath();
-      context.moveTo(centerX - span, y);
-      context.lineTo(centerX + span, y);
-      context.stroke();
-    }
-    context.lineWidth = 1;
-  }
+  // The Star Gate's scroll-driven light bars were removed 2026-07-21: this
+  // film's world holds its own stately pace and never reacts to the page.
 
   const slabWidth = Math.max(26, Math.min(54, width * 0.05));
   const slabHeight = Math.max(130, Math.min(270, height * 0.31));

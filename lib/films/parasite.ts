@@ -21,6 +21,29 @@ const parasite: FilmDefinition = {
     radius: "0px",
     audio: { music: music("Minimal piano and strings", "/audio/film-modes/parasite-music.mp3", { volume: 0.18, filterFrequency: 13_000, scrollResponse: 0.22, scrollGain: 0.12, scrollRate: 0.04 }), effects: [] },
     loadVisuals: () => import("@/components/film-experience/modes/parasite"),
+    simulationsMenuTitle: "You know what plan never fails?",
+    simulations: [
+      {
+        id: "parasite-con",
+        name: "the con",
+        load: () => import("@/components/film-experience/simulations/ParasiteTheCon"),
+      },
+      {
+        id: "parasite-stairs",
+        name: "up and down",
+        load: () => import("@/components/film-experience/simulations/ParasiteUpAndDown"),
+      },
+      {
+        id: "parasite-wifi",
+        name: "the wi-fi hunt",
+        load: () => import("@/components/film-experience/simulations/ParasiteWifiHunt"),
+      },
+      {
+        id: "parasite-morse",
+        name: "morse in the dark",
+        load: () => import("@/components/film-experience/simulations/ParasiteMorse"),
+      },
+    ],
   }),
   review: {
     rating: 4.5,

@@ -35,42 +35,71 @@ export const DEFAULT_THEME_PALETTE: LiveThemePalette = {
   inkSoft: `rgb(${INK_SOFT_RGB})`,
 };
 
-/** Read a `--*-rgb` custom property ("52 211 153") as "52, 211, 153". */
-function liveRgb(varName: string, fallback: string): string {
-  if (typeof window === "undefined") return fallback;
-  const v = getComputedStyle(document.documentElement)
-    .getPropertyValue(varName)
-    .trim();
-  return v ? v.split(/\s+/).join(", ") : fallback;
+// Reading a custom property means getComputedStyle, which forces a style
+// recalculation. Canvas loops call these hundreds of times a frame, so the
+// channels are resolved once per grade and reused. The active grade is
+// identified by the <html> data attributes the grade system already writes
+// (see lib/grades.ts), and reading a dataset value costs nothing.
+type Channels = Readonly<{
+  accent: string;
+  bright: string;
+  dim: string;
+  inkSoft: string;
+}>;
+
+const FALLBACK_CHANNELS: Channels = {
+  accent: ACCENT_RGB,
+  bright: ACCENT_BRIGHT_RGB,
+  dim: ACCENT_DIM_RGB,
+  inkSoft: INK_SOFT_RGB,
+};
+
+let cacheKey: string | null = null;
+let cached: Channels = FALLBACK_CHANNELS;
+
+/** "52 211 153" → "52, 211, 153". */
+const commas = (value: string, fallback: string) =>
+  value ? value.trim().split(/\s+/).join(", ") : fallback;
+
+/** The active grade's channels, resolved at most once per grade change. */
+function channels(): Channels {
+  if (typeof window === "undefined") return FALLBACK_CHANNELS;
+  const root = document.documentElement;
+  // Previews and commits both rewrite data-grade; data-film-mode covers the
+  // experience tokens layered on top of it.
+  const key = `${root.dataset.grade ?? ""}|${root.dataset.filmMode ?? ""}`;
+  if (cacheKey === key) return cached;
+
+  const style = getComputedStyle(root);
+  cached = {
+    accent: commas(style.getPropertyValue("--accent-rgb"), ACCENT_RGB),
+    bright: commas(style.getPropertyValue("--accent-bright-rgb"), ACCENT_BRIGHT_RGB),
+    dim: commas(style.getPropertyValue("--accent-dim-rgb"), ACCENT_DIM_RGB),
+    inkSoft: commas(style.getPropertyValue("--ink-soft-rgb"), INK_SOFT_RGB),
+  };
+  cacheKey = key;
+  return cached;
 }
-
-/** The current accent's RGB channels, e.g. "52, 211, 153". Canvas-safe. */
-const liveAccentRgb = () => liveRgb("--accent-rgb", ACCENT_RGB);
-
-/** The current bright accent's RGB channels. Canvas-safe. */
-const liveAccentBrightRgb = () =>
-  liveRgb("--accent-bright-rgb", ACCENT_BRIGHT_RGB);
-
-/** The current dim accent's RGB channels. Canvas-safe. */
-const liveAccentDimRgb = () => liveRgb("--accent-dim-rgb", ACCENT_DIM_RGB);
-
-/** The current soft surface channels. */
-const liveInkSoftRgb = () => liveRgb("--ink-soft-rgb", INK_SOFT_RGB);
 
 /** The current accent as an rgba() string at the given alpha (0-1). Canvas-safe. */
 export const accentAlpha = (alpha: number) =>
-  `rgba(${liveAccentRgb()}, ${alpha})`;
+  `rgba(${channels().accent}, ${alpha})`;
 
-/** The current accent as an opaque color string. Canvas-safe. */
-const liveAccent = () => `rgb(${liveAccentRgb()})`;
-
-/** The current bright accent as an opaque color string. Canvas-safe. */
-const liveAccentBright = () => `rgb(${liveAccentBrightRgb()})`;
+/**
+ * Any `rgb(r, g, b)` string → `rgba(r, g, b, alpha)`. For colors already
+ * sampled from a palette (e.g. getLiveThemePalette), where accentAlpha's live
+ * channel lookup isn't what you want.
+ */
+export const withAlpha = (rgb: string, alpha: number) =>
+  rgb.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
 
 /** A live four-role palette sampled from the active grade. */
-export const getLiveThemePalette = (): LiveThemePalette => ({
-  accent: liveAccent(),
-  bright: liveAccentBright(),
-  dim: `rgb(${liveAccentDimRgb()})`,
-  inkSoft: `rgb(${liveInkSoftRgb()})`,
-});
+export const getLiveThemePalette = (): LiveThemePalette => {
+  const live = channels();
+  return {
+    accent: `rgb(${live.accent})`,
+    bright: `rgb(${live.bright})`,
+    dim: `rgb(${live.dim})`,
+    inkSoft: `rgb(${live.inkSoft})`,
+  };
+};

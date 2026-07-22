@@ -1,4 +1,4 @@
-import { createSectionTracker, drawFilmLabel, makeStatefulFilmVisual, withAlpha } from "../shared";
+import { createSectionTracker, makeStatefulFilmVisual, withAlpha } from "../shared";
 import type { FilmFrame } from "@/lib/filmExperienceTypes";
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"] as const;
@@ -8,36 +8,25 @@ export default makeStatefulFilmVisual(() => {
   const sections = createSectionTracker();
 
   const draw = (frame: FilmFrame) => {
-  const { context, width, height, time, scroll, accent, accentBright, accentDim } = frame;
+  const { context, width, height, time, scroll, accentBright, accentDim } = frame;
   context.save();
 
-  // Flat storybook color bands, dead symmetric.
-  const bandHeight = height * 0.09;
-  context.fillStyle = withAlpha(accentBright, 0.13);
-  context.fillRect(0, 0, width, bandHeight);
-  context.fillStyle = withAlpha(accent, 0.1);
-  context.fillRect(0, height - bandHeight, width, bandHeight);
-  const paper = context.createLinearGradient(0, bandHeight, 0, height - bandHeight);
+  // Bare book paper edge to edge. The storybook bands that used to cap the top
+  // and bottom of the world are gone, so the gradient runs the full height.
+  const paper = context.createLinearGradient(0, 0, 0, height);
   paper.addColorStop(0, withAlpha(accentBright, 0.05));
   paper.addColorStop(1, withAlpha(accentDim, 0.03));
   context.fillStyle = paper;
-  context.fillRect(0, bandHeight, width, height - bandHeight * 2);
+  context.fillRect(0, 0, width, height);
 
-  // The double-rule chapter frame.
+  // No rule around the chapter any more: the centring is carried by the type
+  // and the falcon's circuit, the way a title page holds its own centre.
   const center = width / 2;
-  const frameWidth = Math.min(width * 0.6, 560);
-  const frameTop = height * 0.2;
-  const frameHeight = height * 0.56;
-  context.strokeStyle = withAlpha(accentBright, 0.3);
-  context.lineWidth = 2;
-  context.strokeRect(center - frameWidth / 2, frameTop, frameWidth, frameHeight);
-  context.lineWidth = 1;
-  context.strokeRect(
-    center - frameWidth / 2 + 9,
-    frameTop + 9,
-    frameWidth - 18,
-    frameHeight - 18
-  );
+  // The width the chapter block occupies — the falcon still circles across it.
+  const span = Math.min(width * 0.6, 560);
+  // With the bands gone nothing crops the page, so the type sits dead centre
+  // and the falcon's circuit above it carries the remaining weight.
+  const chapterY = height * 0.5;
 
   // The chapter tracks the page section under the reader in deadpan snaps.
   const section = sections.sectionAt(scroll);
@@ -46,18 +35,19 @@ export default makeStatefulFilmVisual(() => {
   context.font = "600 22px ui-monospace, SFMono-Regular, Menlo, monospace";
   context.textAlign = "center";
   context.letterSpacing = "6px";
-  context.fillText(`CHAPTER ${ROMAN[chapter]}`, center, height * 0.42);
+  context.fillText(`CHAPTER ${ROMAN[chapter]}`, center, chapterY);
   context.font = "11px ui-monospace, SFMono-Regular, Menlo, monospace";
   context.letterSpacing = "3px";
   context.fillStyle = withAlpha(accentBright, 0.32);
-  context.fillText(section.label, center, height * 0.42 + 26);
+  context.fillText(section.label, center, chapterY + 26);
   context.textAlign = "left";
   context.letterSpacing = "0px";
 
-  // Mordecai banks a slow, unhurried circuit above the chapter frame.
+  // Mordecai banks a slow, unhurried circuit above the chapter title — closer
+  // to it now that there is no rule between them to bridge.
   const orbit = time * 0.5;
-  const falconX = center + Math.cos(orbit) * frameWidth * 0.42;
-  const falconY = frameTop - 34 + Math.sin(orbit) * 20;
+  const falconX = center + Math.cos(orbit) * span * 0.42;
+  const falconY = chapterY - height * 0.17 + Math.sin(orbit) * 20;
   const bank = Math.cos(orbit) * 0.35;
   context.save();
   context.translate(falconX, falconY);
@@ -115,7 +105,6 @@ export default makeStatefulFilmVisual(() => {
   context.arc(deckX + deckRadius + 18, deckY - deckRadius * 0.65, 3.5, 0, Math.PI * 2);
   context.fill();
 
-  drawFilmLabel(frame, "THE FAMILY ARCHIVE", center, height * 0.08, 0.48, "center");
   context.restore();
   };
 

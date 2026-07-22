@@ -16,11 +16,21 @@ const royalTenenbaums: FilmDefinition = {
   experience: defineExperience({
     label: "Illustrated family archive",
     signature: "Symmetric chapter framing, Mordecai circling overhead, and a record spinning in the corner",
-    markers: ["chapter numbers", "record player", "falcon circuit", "townhouse", "family archive", "storybook bands"],
+    // "family archive" and "storybook bands" named the top/bottom overlay that
+    // has been removed; these two are drawn by the world that remains.
+    markers: ["chapter numbers", "record player", "falcon circuit", "townhouse", "section label", "banked wings"],
     motion: "snap",
     radius: "0px",
     audio: { music: music("Satie: Gymnopédie No. 1", "/audio/film-modes/royal-tenenbaums-music.mp3", { volume: 0.2 }), effects: [] },
     loadVisuals: () => import("@/components/film-experience/modes/royalTenenbaums"),
+    // One game, so no menu: the pill opens Mordecai's flight directly.
+    simulations: [
+      {
+        id: "royal-tenenbaums-mordecai",
+        name: "mordecai's return",
+        load: () => import("@/components/film-experience/simulations/RoyalTenenbaumsMordecai"),
+      },
+    ],
   }),
   review: {
     rating: 5,

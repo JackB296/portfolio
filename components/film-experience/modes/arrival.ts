@@ -1,7 +1,26 @@
-import { drawFilmLabel, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
+import type { FilmFrame } from "@/lib/filmExperienceTypes";
+import { drawFilmLabel, hash, makeStatefulFilmVisual, withAlpha, wrap } from "../shared";
 
-export default makeFilmVisual((frame) => {
-  const { context, width, height, time, pointerX, pointerY, accentBright, accentDim } = frame;
+/** Seconds for the shell's descent to be all but finished. */
+const SETTLE_TAU = 30;
+
+/**
+ * `age` is seconds since this activation's first frame, not since page load —
+ * `frame.time` is the document clock, so a visitor who reaches Arrival after
+ * two minutes of scrolling would otherwise find the shell already landed.
+ */
+function drawArrival(frame: FilmFrame, age: number) {
+  const {
+    context,
+    width,
+    height,
+    time,
+    staticFrame,
+    pointerX,
+    pointerY,
+    accentBright,
+    accentDim,
+  } = frame;
   context.save();
 
   const fog = context.createRadialGradient(width / 2, height * 0.48, 10, width / 2, height * 0.48, Math.max(width, height) * 0.7);
@@ -13,21 +32,31 @@ export default makeFilmVisual((frame) => {
   // A heptapod behind the glass: seven limbs, barely there in the mist.
   const podX = width * 0.1;
   const podY = height * 0.28;
+  const podRx = 30;
+  const podRy = 22;
   context.fillStyle = withAlpha(accentDim, 0.3);
   context.beginPath();
-  context.ellipse(podX, podY, 30, 22, 0, 0, Math.PI * 2);
+  context.ellipse(podX, podY, podRx, podRy, 0, 0, Math.PI * 2);
   context.fill();
   context.strokeStyle = withAlpha(accentDim, 0.28);
   context.lineWidth = 5;
   context.lineCap = "round";
   for (let limb = 0; limb < 7; limb += 1) {
-    const angle = Math.PI * (0.15 + (limb / 6) * 0.7) + Math.sin(time * 0.3 + limb) * 0.03;
+    // Each limb is rooted ON the body's rim, using the body's own radii, and
+    // only across its underside (0.2π–0.8π, where sine is positive). Rooting
+    // at a smaller radius than the body drove the limbs up inside the mass;
+    // rooting at a larger one would leave them floating. The sway is applied
+    // to the far end of the curve, so the joint never leaves the rim.
+    const angle = Math.PI * (0.2 + (limb / 6) * 0.6);
+    const rootX = podX + Math.cos(angle) * podRx;
+    const rootY = podY + Math.sin(angle) * podRy;
+    const drift = Math.sin(time * 0.4 + limb) * 5;
     context.beginPath();
-    context.moveTo(podX + Math.cos(angle) * 20, podY + Math.sin(angle) * 18);
+    context.moveTo(rootX, rootY);
     context.quadraticCurveTo(
-      podX + Math.cos(angle) * 60,
-      podY + Math.sin(angle) * 70,
-      podX + Math.cos(angle) * 68 + Math.sin(time * 0.4 + limb) * 5,
+      rootX + Math.cos(angle) * 34,
+      rootY + (height * 0.94 - rootY) * 0.55,
+      rootX + Math.cos(angle) * 42 + drift,
       height * 0.94
     );
     context.stroke();
@@ -59,12 +88,22 @@ export default makeFilmVisual((frame) => {
     context.fill();
   }
 
-  // The shell hangs over the right horizon, dead still except a slow breath.
-  const shellX = width * 0.84;
-  const shellY = height * 0.38 + Math.sin(time * 0.4) * 2;
+  // The shell comes down over the right horizon. Two motions, both slow enough
+  // to read as weather rather than animation: an exponential settle that spends
+  // its first minute descending and then all but stops, and under it a hover
+  // drift built from two out-of-phase sines so the hull never repeats on a beat
+  // you can count. Reduced motion (staticFrame) gets the composed frame — fully
+  // landed, mid-drift, dead still — rather than a random instant of the descent.
+  const settle = staticFrame ? 1 : 1 - Math.exp(-age / SETTLE_TAU);
+  const hover = staticFrame
+    ? 0
+    : Math.sin(age * 0.17) * 7 + Math.sin(age * 0.29 + 1.3) * 3.2;
+  const sway = staticFrame ? 0 : Math.sin(age * 0.11 + 0.6) * 4;
+  const shellX = width * 0.84 + sway;
+  const shellY = height * (0.26 + settle * 0.14) + hover;
   context.save();
   context.translate(shellX, shellY);
-  context.rotate(0.06);
+  context.rotate(0.06 + (staticFrame ? 0 : Math.sin(age * 0.13) * 0.014));
   const hull = context.createLinearGradient(0, -82, 0, 82);
   hull.addColorStop(0, withAlpha(accentBright, 0.3));
   hull.addColorStop(1, withAlpha(accentDim, 0.12));
@@ -79,11 +118,16 @@ export default makeFilmVisual((frame) => {
   context.fillStyle = withAlpha(accentBright, 0.5);
   context.fillRect(-5, 56, 10, 6);
   context.restore();
+  // The fog banks hang in front of the hull and take a share of its motion
+  // inverted, each bank a different share — so the shell reads as descending
+  // through the cloud rather than dragging it along.
   context.fillStyle = withAlpha(accentDim, 0.2);
   for (let bank = 0; bank < 5; bank += 1) {
-    const bx = shellX - 90 + wrap(hash(bank) * 180 + time * 6, 180);
+    const depth = 0.3 + hash(bank, 5) * 0.5;
+    const bx = shellX - 90 + wrap(hash(bank) * 180 + time * 6, 180) - sway * depth * 2;
+    const by = height * 0.52 + hash(bank, 2) * 10 - hover * depth;
     context.beginPath();
-    context.ellipse(bx, height * 0.52 + hash(bank, 2) * 10, 34 + hash(bank, 3) * 22, 7, 0, 0, Math.PI * 2);
+    context.ellipse(bx, by, 34 + hash(bank, 3) * 22, 7, 0, 0, Math.PI * 2);
     context.fill();
   }
 
@@ -113,4 +157,16 @@ export default makeFilmVisual((frame) => {
 
   drawFilmLabel(frame, "12 MARKERS / MIRRORED TIME", 20, 30, 0.45);
   context.restore();
+}
+
+export default makeStatefulFilmVisual(() => {
+  // The only per-activation state this world needs: when it went live.
+  let bornAt = -1;
+
+  return {
+    draw(frame) {
+      if (bornAt < 0) bornAt = frame.time;
+      drawArrival(frame, Math.max(0, frame.time - bornAt));
+    },
+  };
 });

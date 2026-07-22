@@ -25,6 +25,14 @@ const goodfellas: FilmDefinition = {
       effects: [effect("event", "Passing car and road", "/audio/film-modes/goodfellas-road.mp3", { volume: 0.21, filterFrequency: 10_000, triggerThreshold: 0.32, triggerCooldownMs: 5_000, segmentDuration: 6.7 })],
     },
     loadVisuals: () => import("@/components/film-experience/modes/goodfellas"),
+    simulationsMenuTitle: "Whaddya want?",
+    simulations: [
+      {
+        id: "goodfellas-helicopter",
+        name: "helicopter day",
+        load: () => import("@/components/film-experience/simulations/GoodfellasHelicopterDay"),
+      },
+    ],
   }),
   review: {
     rating: 4.5,

@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { getGrade, GRADE_EVENT, type GradeChangeIntent } from "../lib/grades";
 import { HOUSE_FILM, HOUSE_ID } from "../lib/films";
 
@@ -39,6 +39,61 @@ export async function dispatchGrade(
       );
     },
     [GRADE_EVENT, gradeId, intent] as const
+  );
+}
+
+/**
+ * Open a film simulation from a cold load: seed the grade, visit the home page,
+ * click the simulate pill, and (for multi-game films) pick a game from the
+ * launcher. Returns the visible game dialog. This is the opener every
+ * tests/sim-*.spec.ts repeats.
+ *
+ * - `grade`  — the film-grade id to seed in localStorage.
+ * - `pill`   — accessible name of the simulate pill (also the launcher dialog's
+ *              name for multi-game films).
+ * - `dialog` — accessible name of the game dialog.
+ * - `game`   — for multi-game films, the game's button name in the launcher.
+ * - `reducedMotion` — emulate reduced motion before loading (deterministic play).
+ * - `start`  — if set, click this start control once the dialog is open.
+ */
+export async function openFilmSim(
+  page: Page,
+  opts: {
+    grade: string;
+    pill: string;
+    dialog: string;
+    game?: string;
+    reducedMotion?: boolean;
+    start?: string;
+  }
+): Promise<Locator> {
+  if (opts.reducedMotion) await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript((grade) => {
+    localStorage.setItem("film-grade", grade);
+  }, opts.grade);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: opts.pill }).click();
+  if (opts.game) {
+    const menu = page.getByRole("dialog", { name: opts.pill });
+    await expect(menu).toBeVisible();
+    await menu.getByRole("button", { name: opts.game }).click();
+  }
+
+  const dialog = page.getByRole("dialog", { name: opts.dialog });
+  await expect(dialog).toBeVisible();
+  if (opts.start) await dialog.getByRole("button", { name: opts.start }).click();
+  return dialog;
+}
+
+/** Read the persisted simulation high-score map from localStorage. */
+export function readSimulationScores(page: Page): Promise<Record<string, number>> {
+  return page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("simulation-scores") ?? "{}") as Record<
+        string,
+        number
+      >
   );
 }
 

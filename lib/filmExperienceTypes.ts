@@ -77,7 +77,9 @@ export type AudioCueDefinition = Readonly<{
 }>;
 
 type FilmAudioDefinition = Readonly<{
-  music: AudioCueDefinition;
+  /** The bed a film plays under everything else. Optional: a film may run on
+   * effects alone (Dune is sand and wind, no score). */
+  music?: AudioCueDefinition;
   effects: readonly AudioCueDefinition[];
 }>;
 
@@ -97,13 +99,16 @@ export type FilmVisualAssetDefinition = Readonly<{
   motion: FilmAssetMotion;
 }>;
 
-/** A film-specific interactive layer (e.g. WarGames' tic-tac-toe dialog),
+/** A film-specific interactive game (e.g. WarGames' tic-tac-toe dialog),
  * loaded on demand and rendered by the experience controls. */
 export type FilmSimulationComponent = ComponentType<{ onClose: () => void }>;
 
-type FilmSimulationDefinition = Readonly<{
-  /** Accessible name for the launch control in the experience pill. */
-  label: string;
+export type FilmSimulationDefinition = Readonly<{
+  /** Stable id: React key, per-game score key, and Playwright hook. */
+  id: string;
+  /** Short game name — the launcher menu item, and the pill's accessible
+   * name ("Open <name>") when a film has a single game. */
+  name: string;
   load: () => Promise<{ default: FilmSimulationComponent }>;
 }>;
 
@@ -123,5 +128,9 @@ export type FilmExperienceDefinition = Readonly<{
   /** DOM image layers over the canvas world. Omitted means none. */
   visualAssets?: readonly FilmVisualAssetDefinition[];
   loadVisuals: () => Promise<{ default: FilmVisualModule }>;
-  simulation?: FilmSimulationDefinition;
+  /** Interactive games for this film. A single game opens straight from the
+   * pill; two or more open a launcher menu first. */
+  simulations?: readonly FilmSimulationDefinition[];
+  /** Heading for the launcher menu (only shown when there are 2+ games). */
+  simulationsMenuTitle?: string;
 }>;

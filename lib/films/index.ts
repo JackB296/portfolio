@@ -80,7 +80,8 @@ export type FilmExperienceView = FilmExperienceDefinition &
   Readonly<{
     visualAssets: readonly FilmVisualAssetDefinition[];
     audio: Readonly<{
-      music: ResolvedAudioCue;
+      /** Absent when the film runs on effects alone. */
+      music?: ResolvedAudioCue;
       effects: readonly ResolvedAudioCue[];
     }>;
   }>;
@@ -102,7 +103,7 @@ export const filmExperiences: readonly FilmExperienceView[] = films.map(
     ...experience,
     visualAssets: experience.visualAssets ?? [],
     audio: {
-      music: resolveCue(experience.audio.music),
+      music: experience.audio.music ? resolveCue(experience.audio.music) : undefined,
       effects: experience.audio.effects.map(resolveCue),
     },
   })

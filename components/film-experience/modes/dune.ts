@@ -1,7 +1,7 @@
 import { drawFilmLabel, hash, makeFilmVisual, withAlpha, wrap } from "../shared";
 
 export default makeFilmVisual((frame) => {
-  const { context, width, height, time, pointerX, pointerY, scrollVelocity } = frame;
+  const { context, width, height, time, scrollVelocity } = frame;
   context.save();
 
   const haze = context.createLinearGradient(0, 0, 0, height);
@@ -38,13 +38,6 @@ export default makeFilmVisual((frame) => {
     context.stroke();
   }
 
-  const pulse = 24 + wrap(time * 38, 110);
-  context.strokeStyle = withAlpha(frame.accentBright, 0.34 * (1 - (pulse - 24) / 110));
-  context.lineWidth = 1.5;
-  context.beginPath();
-  context.ellipse(pointerX, pointerY, pulse * 1.5, pulse * 0.42, 0, 0, Math.PI * 2);
-  context.stroke();
-
   context.fillStyle = withAlpha(frame.accentBright, 0.32);
   context.beginPath();
   context.arc(width - 104, 78, 18, 0, Math.PI * 2);
@@ -52,7 +45,6 @@ export default makeFilmVisual((frame) => {
   context.fill();
 
   drawFilmLabel(frame, "N 24° / WATER 03", 24, 34, 0.4);
-  drawFilmLabel(frame, "GROUND SIGNAL", pointerX, Math.max(24, pointerY - pulse * 0.55), 0.28, "center");
 
   // An ornithopter crosses the sky, wings at dragonfly flutter.
   const thopterX = wrap(time * 60, width + 400) - 200;

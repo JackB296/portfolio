@@ -15,12 +15,30 @@ const her: FilmDefinition = {
   },
   experience: defineExperience({
     label: "Attentive operating system",
-    signature: "A warm attentive waveform, a small earpiece listening, and an OS assembling itself on arrival",
-    markers: ["2013", "OS calibration", "earpiece", "warm waveform", "OS boot", "letter cursor"],
+    signature: "A warm attentive waveform, a small earpiece listening, a letter half-written, and an OS assembling itself on arrival",
+    markers: ["2013", "OS calibration", "earpiece", "warm waveform", "OS boot", "letter cursor", "handwritten letter"],
     motion: "breathe",
     radius: "20px",
     audio: { music: music("Wistful intimate piano", "/audio/film-modes/her-music.mp3", { volume: 0.19, filterFrequency: 14_000 }), effects: [] },
     loadVisuals: () => import("@/components/film-experience/modes/her"),
+    simulationsMenuTitle: "Hello, I'm here",
+    simulations: [
+      {
+        id: "her-letter",
+        name: "compose a letter",
+        load: () => import("@/components/film-experience/simulations/HerComposeLetter"),
+      },
+      {
+        id: "her-boot",
+        name: "boot OS1",
+        load: () => import("@/components/film-experience/simulations/HerBootOS1"),
+      },
+      {
+        id: "her-waveform",
+        name: "waveform",
+        load: () => import("@/components/film-experience/simulations/HerWaveform"),
+      },
+    ],
   }),
   review: {
     rating: 4.5,

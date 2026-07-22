@@ -38,7 +38,10 @@ const appCsp = {
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
     "connect-src 'self' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
-    "frame-src 'self'",
+    // The film simulations front each game with the official YouTube player for
+    // the scene they allude to. Privacy-enhanced (nocookie) host only, and only
+    // frames — no YouTube script, style, or image origins are opened up.
+    "frame-src 'self' https://www.youtube-nocookie.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

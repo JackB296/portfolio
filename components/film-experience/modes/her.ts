@@ -98,6 +98,75 @@ export default makeStatefulFilmVisual(() => {
     context.textAlign = "left";
   }
 
+  // Theodore's day job, resting in the lower left: a handwritten sheet half
+  // out of its envelope, the last line still being written. Ambient — it
+  // breathes on the same slow lift as the voice and settles flat when the
+  // frame is static. Skipped on short or narrow viewports where it would
+  // crowd the hero rather than sit behind it.
+  const letterX = 84;
+  // Clears the cinematic control bar that sits along the bottom edge.
+  const letterY = height - 152;
+  if (width > 420 && letterY > 200) {
+    const breath = frame.staticFrame ? 0.5 : 0.5 + 0.5 * Math.sin(time * 0.7);
+    const w = 92;
+    const h = 58;
+    context.save();
+    context.translate(letterX, letterY);
+
+    // The sheet, riding just above the envelope's mouth.
+    context.save();
+    context.translate(0, -breath * 3);
+    context.fillStyle = withAlpha(frame.accentDim, 0.12);
+    context.strokeStyle = withAlpha(accentBright, 0.3);
+    context.beginPath();
+    context.rect(-w * 0.34, -h * 0.66, w * 0.68, h * 0.76);
+    context.fill();
+    context.stroke();
+    // Longhand: four ruled strokes, the last one still under the nib.
+    for (let line = 0; line < 4; line += 1) {
+      const y = -h * 0.5 + line * 9;
+      const span = w * 0.56;
+      const written = line < 3 ? span * (0.92 - line * 0.08) : span * (0.24 + breath * 0.4);
+      context.strokeStyle = withAlpha(accentBright, line < 3 ? 0.26 : 0.44);
+      context.beginPath();
+      context.moveTo(-w * 0.28, y);
+      for (let x = 2; x <= written; x += 4) {
+        context.lineTo(-w * 0.28 + x, y + Math.sin(x * 0.55 + line * 1.7) * 0.9);
+      }
+      context.stroke();
+      // The letter cursor: it waits at the end of the line being written.
+      if (line === 3) {
+        context.strokeStyle = withAlpha(
+          accentBright,
+          frame.staticFrame ? 0.4 : 0.15 + 0.5 * (wrap(time * 0.9, 1) < 0.5 ? 1 : 0)
+        );
+        context.beginPath();
+        context.moveTo(-w * 0.28 + written + 3, y - 4);
+        context.lineTo(-w * 0.28 + written + 3, y + 2);
+        context.stroke();
+      }
+    }
+    context.restore();
+
+    // The envelope: the body, then the flap folded open across it.
+    context.strokeStyle = withAlpha(accentBright, 0.36);
+    context.beginPath();
+    context.rect(-w / 2, -h * 0.16, w, h * 0.5);
+    context.stroke();
+    context.strokeStyle = withAlpha(accentBright, 0.22);
+    context.beginPath();
+    context.moveTo(-w / 2, -h * 0.16);
+    context.lineTo(0, h * 0.16);
+    context.lineTo(w / 2, -h * 0.16);
+    context.stroke();
+    // The seal, warm where the two edges meet.
+    context.fillStyle = withAlpha(accentBright, 0.18 + breath * 0.14);
+    context.beginPath();
+    context.arc(0, h * 0.16, 3.4, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
   drawFilmLabel(frame, "OS CALIBRATION / 2013", 22, 30, 0.47);
   context.restore();
   };

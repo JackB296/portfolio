@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { GRADE_EVENT } from "@/lib/grades";
 import { ACCENT_RGB } from "@/lib/theme";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+import { isHouse } from "@/lib/useHtmlAttr";
 
 const CELL = 16; // CSS px per cell
 const STEP_MS = 150; // generation length
@@ -31,7 +32,7 @@ function grayscaleRgb(triplet: string) {
 }
 
 function getCellPalette(): CellPalette {
-  if (!document.documentElement.dataset.grade) return HOUSE_PALETTE;
+  if (isHouse()) return HOUSE_PALETTE;
 
   const styles = getComputedStyle(document.documentElement);
   const bright = cssRgb(styles, "--accent-bright-rgb");
@@ -204,6 +205,24 @@ export default function LifeHero() {
       else stop();
     });
     io.observe(canvas);
+
+    // Re-fit when the canvas's own box changes — not just the window. Mounting
+    // as the default backdrop can happen before the hero has its final size, so
+    // the first measure may read a zero box; the observer re-sizes and redraws
+    // the moment layout settles, instead of waiting for a window resize that
+    // may never come.
+    let lastW = canvas.clientWidth;
+    let lastH = canvas.clientHeight;
+    const ro = new ResizeObserver(() => {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (w === lastW && h === lastH) return;
+      lastW = w;
+      lastH = h;
+      resize();
+      draw();
+    });
+    ro.observe(canvas);
     const onVisibility = () => {
       if (document.hidden) stop();
       else start();
@@ -233,6 +252,7 @@ export default function LifeHero() {
     return () => {
       stop();
       io.disconnect();
+      ro.disconnect();
       clearTimeout(resizeTimer);
       heroEl.removeEventListener("pointermove", onPointerMove as EventListener);
       window.removeEventListener("resize", onResize);

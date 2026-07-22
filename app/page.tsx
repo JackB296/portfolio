@@ -7,10 +7,13 @@ import Projects from "@/components/home/Projects";
 import Skills from "@/components/home/Skills";
 import Contact from "@/components/home/Contact";
 import Footer from "@/components/layout/Footer";
+import { profilePageJsonLd } from "@/lib/structuredData";
+import JsonLd from "@/components/JsonLd";
 
 export default function Home() {
   return (
     <>
+      <JsonLd data={profilePageJsonLd} />
       <SmoothScroll />
       <div className="noise-overlay" aria-hidden />
       <Navbar />

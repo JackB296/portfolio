@@ -105,6 +105,22 @@ export default function FilmCreditsPage() {
               <CompactCredits entries={pixabayEffects} />
             </CreditSection>
 
+            <CreditSection title="Startup sound">
+              <p className="text-sm text-white/50">
+                Entering the Her grade boots the screening room with a short
+                chime:{" "}
+                <a
+                  href="https://pixabay.com/sound-effects/musical-startup-sound-variation-6-316850/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-4 hover:text-white"
+                >
+                  &ldquo;Musical Startup Sound Variation 6&rdquo;
+                </a>
+                , from Pixabay, used under the Pixabay Content License.
+              </p>
+            </CreditSection>
+
             <CreditSection title="Background images">
               <p className="text-sm text-white/50">
                 The decorative background images layered behind a few grades are

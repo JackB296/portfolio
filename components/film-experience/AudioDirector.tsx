@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { getFilmExperience, type ResolvedAudioCue } from "@/lib/films";
+import { CLIP_PLAYBACK_EVENT } from "@/lib/simulationClips";
 import { setMusicAnalyser } from "./shared";
 
 export type AudioDirectorStatus = Readonly<{
@@ -38,7 +39,8 @@ type SampleTrack = {
 
 type SampleMix = {
   filmId: string;
-  musicSource: string;
+  /** null when the film has no music bed and runs on effects alone. */
+  musicSource: string | null;
   effectSources: readonly string[];
   tracks: readonly SampleTrack[];
 };
@@ -207,6 +209,8 @@ export default function AudioDirector({ filmId, enabled, onStatus }: AudioDirect
     const masterRef = useRef<GainNode | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const currentRef = useRef<SampleMix | null>(null);
+    // True while an embedded scene clip is playing; survives effect re-runs.
+    const clipPlayingRef = useRef(false);
     const tracksRef = useRef(new Set<SampleTrack>());
     const timersRef = useRef(new Set<number>());
     const bufferCacheRef = useRef(new Map<string, Promise<AudioBuffer>>());
@@ -306,7 +310,17 @@ export default function AudioDirector({ filmId, enabled, onStatus }: AudioDirect
             return true;
           }
 
-          const cues = [experience.audio.music, ...experience.audio.effects];
+          // A film may run on effects alone; the music bed is optional, and the
+          // rest of the pipeline (fades, analyser tap, scroll response) is
+          // per-cue, so an absent bed simply contributes no track.
+          const music = experience.audio.music;
+          const cues: readonly ResolvedAudioCue[] = music
+            ? [music, ...experience.audio.effects]
+            : experience.audio.effects;
+          if (cues.length === 0) {
+            stopEverything();
+            return false;
+          }
           const loadBuffer = (audioCue: ResolvedAudioCue) => {
             let promise = bufferCacheRef.current.get(audioCue.src);
             if (!promise) {
@@ -364,7 +378,7 @@ export default function AudioDirector({ filmId, enabled, onStatus }: AudioDirect
           });
           const next: SampleMix = {
             filmId: nextFilmId,
-            musicSource: experience.audio.music.src,
+            musicSource: music?.src ?? null,
             effectSources: experience.audio.effects.map(({ src }) => src),
             tracks: nextTracks,
           };
@@ -409,35 +423,41 @@ export default function AudioDirector({ filmId, enabled, onStatus }: AudioDirect
     }, [enabled, filmId, startFilm, stopEverything]);
 
     useEffect(() => {
-      const onVisibilityChange = () => {
+      // Two independent reasons to go quiet: the tab is hidden, or an embedded
+      // scene clip is playing and the score would talk over it. Either one
+      // suspends; sound only returns when neither holds. The clip flag lives on
+      // a ref so a re-run of this effect mid-clip cannot resume the score over
+      // a video that is still playing.
+      const applyState = () => {
         const context = contextRef.current;
         if (!enabled || !context || !currentRef.current) return;
+        const shouldPlay =
+          document.visibilityState !== "hidden" && !clipPlayingRef.current;
 
-        if (document.visibilityState === "hidden") {
-          void context
-            .suspend()
-            .then(() => {
-              if (contextRef.current === context) reportCurrent("suspended");
-            })
-            .catch(() => {
-              // A stale context's failure is not the live mix's problem.
-              if (contextRef.current === context) stopEverything();
-            });
-          return;
-        }
-
-        void context
-          .resume()
+        void context[shouldPlay ? "resume" : "suspend"]()
           .then(() => {
-            if (contextRef.current === context) reportCurrent("running");
+            if (contextRef.current === context) {
+              reportCurrent(shouldPlay ? "running" : "suspended");
+            }
           })
           .catch(() => {
+            // A stale context's failure is not the live mix's problem.
             if (contextRef.current === context) stopEverything();
           });
       };
 
-      document.addEventListener("visibilitychange", onVisibilityChange);
-      return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+      const onClipPlayback = (event: Event) => {
+        const detail = (event as CustomEvent<{ playing?: boolean }>).detail;
+        clipPlayingRef.current = Boolean(detail?.playing);
+        applyState();
+      };
+
+      document.addEventListener("visibilitychange", applyState);
+      window.addEventListener(CLIP_PLAYBACK_EVENT, onClipPlayback);
+      return () => {
+        document.removeEventListener("visibilitychange", applyState);
+        window.removeEventListener(CLIP_PLAYBACK_EVENT, onClipPlayback);
+      };
     }, [enabled, reportCurrent, stopEverything]);
 
     useEffect(() => stopEverything, [stopEverything]);

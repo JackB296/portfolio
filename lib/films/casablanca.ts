@@ -31,6 +31,29 @@ const casablanca: FilmDefinition = {
       effects: [effect("event", "Propeller-plane approach", "/audio/film-modes/casablanca-plane.mp3", { volume: 0.34, filterFrequency: 11_000, triggerThreshold: 0.5, triggerCooldownMs: 15_000, segmentDuration: 12 })],
     },
     loadVisuals: () => import("@/components/film-experience/modes/casablanca"),
+    simulationsMenuTitle: "Of all the games in all the world",
+    simulations: [
+      {
+        id: "casablanca-letters",
+        name: "letters of transit",
+        load: () => import("@/components/film-experience/simulations/CasablancaLetters"),
+      },
+      {
+        id: "casablanca-roulette",
+        name: "land it on 22",
+        load: () => import("@/components/film-experience/simulations/CasablancaRoulette"),
+      },
+      {
+        id: "casablanca-runway",
+        name: "the runway goodbye",
+        load: () => import("@/components/film-experience/simulations/CasablancaRunway"),
+      },
+      {
+        id: "casablanca-piano",
+        name: "play it, sam",
+        load: () => import("@/components/film-experience/simulations/CasablancaPiano"),
+      },
+    ],
   }),
   review: {
     rating: 4,

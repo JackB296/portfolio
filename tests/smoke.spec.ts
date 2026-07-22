@@ -158,10 +158,18 @@ test("theater stays above the mobile navigation", async ({ page }) => {
   await page.locator('button[aria-haspopup="dialog"]:visible').click();
   await expect(page.getByRole("dialog", { name: "Film theater" })).toBeVisible();
 
-  const topLayer = await page.evaluate(() =>
-    document.elementFromPoint(24, 24)?.closest('[role="dialog"]')?.getAttribute("aria-label")
-  );
-  expect(topLayer).toBe("Film theater");
+  // Poll rather than read once: the dialog animates in, so under load the
+  // corner may not be covered on the first frame after it reports visible.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        document
+          .elementFromPoint(24, 24)
+          ?.closest('[role="dialog"]')
+          ?.getAttribute("aria-label")
+      )
+    )
+    .toBe("Film theater");
 });
 
 test("theater honors reduced motion", async ({ page }) => {
@@ -182,7 +190,8 @@ test("Game of Life grade palette follows theater previews", async ({ page }) => 
   await page.goto("/");
   await page.evaluate(() => localStorage.removeItem("film-grade"));
 
-  // Orbit is the default backdrop; this test reads Game of Life pixels.
+  // Life is the house default; pick it explicitly so the choice sticks through
+  // the theater previews below, and read its pixels.
   await page.locator('button[title="Game of Life"]').click();
   const canvas = page.locator("#top canvas");
   await expect(canvas).toBeVisible();
@@ -321,24 +330,28 @@ test("open hero removes terminal framing and softens the Game of Life", async ({
   ).toBe(false);
 });
 
-test("hero backdrop defaults to orbit and switches to life", async ({ page }) => {
+test("hero backdrop defaults to life under the house and switches to orbit", async ({ page }) => {
   await page.goto("/");
   const wrap = page.locator("[data-hero-bg]");
+  // The house has no film behind it, so it gets the automaton by default.
+  await expect(wrap).toHaveAttribute("data-hero-bg", "life");
+  await page.locator('button[title="3D orbit"]').click();
   await expect(wrap).toHaveAttribute("data-hero-bg", "orbit");
   // The three.js scene actually mounts a canvas. Headless WebGL init can
   // stall well past 10s when workers share the machine; give it room.
   await expect(wrap.locator("canvas")).toBeVisible({ timeout: 20_000 });
-  await page.locator('button[title="Game of Life"]').click();
-  await expect(wrap).toHaveAttribute("data-hero-bg", "life");
   // Choice persists across a reload
   await page.reload();
-  await expect(page.locator("[data-hero-bg]")).toHaveAttribute("data-hero-bg", "life");
+  await expect(page.locator("[data-hero-bg]")).toHaveAttribute("data-hero-bg", "orbit");
 });
 
 test("3D orbit follows theater previews and restores the grade palette", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
 
+  // The house defaults to Life now, so pick orbit explicitly to mount its
+  // scene; the choice sticks through the previews below.
+  await page.locator('button[title="3D orbit"]').click();
   const orbit = page.getByTestId("orbit-theme");
   const canvas = orbit.locator("canvas");
   await expect(canvas).toBeVisible({ timeout: 10_000 });

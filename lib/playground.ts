@@ -5,6 +5,7 @@
 // is the shared behavior, mirroring how lib/grades.ts backs the film system.
 
 import { useEffect, useState } from "react";
+import { useHtmlAttr } from "@/lib/useHtmlAttr";
 
 export const PLAYGROUND_STORAGE_KEY = "playground-enabled";
 export const PLAYGROUND_EVENT = "playgroundchange";
@@ -87,19 +88,7 @@ export function usePlaygroundEnabled(): boolean {
  * a time: when the film experience owns the page, playground layers pause.
  */
 export function useFilmModeActive(): boolean {
-  const [active, setActive] = useState(false);
-  useEffect(() => {
-    const read = () =>
-      setActive(document.documentElement.dataset.filmMode != null);
-    read();
-    // data-film-mode is written by a React effect (applyExperienceTokens),
-    // not synchronously with GRADE_EVENT — watch the attribute itself.
-    const observer = new MutationObserver(read);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-film-mode"],
-    });
-    return () => observer.disconnect();
-  }, []);
-  return active;
+  // data-film-mode is written by a React effect (applyExperienceTokens), not
+  // synchronously with GRADE_EVENT — the hook watches the attribute itself.
+  return useHtmlAttr("data-film-mode") != null;
 }

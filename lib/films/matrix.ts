@@ -27,6 +27,24 @@ const matrix: FilmDefinition = {
       effects: [effect("event", "Glyph data cascade", "/audio/film-modes/matrix-cascade.mp3", { volume: 0.18, filterFrequency: 10_000, triggerThreshold: 0.3, triggerCooldownMs: 2_200, segmentDuration: 1.5 })],
     },
     loadVisuals: () => import("@/components/film-experience/modes/matrix"),
+    simulationsMenuTitle: "Free your mind",
+    simulations: [
+      {
+        id: "matrix-decode",
+        name: "decode the rain",
+        load: () => import("@/components/film-experience/simulations/MatrixDecodeRain"),
+      },
+      {
+        id: "matrix-bullet-time",
+        name: "bullet-time",
+        load: () => import("@/components/film-experience/simulations/MatrixBulletTime"),
+      },
+      {
+        id: "matrix-red-or-blue",
+        name: "red pill or blue",
+        load: () => import("@/components/film-experience/simulations/MatrixRedOrBlue"),
+      },
+    ],
   }),
   review: {
     rating: 5,

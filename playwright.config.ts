@@ -8,14 +8,19 @@ export default defineConfig({
   fullyParallel: true,
   // Local runs choke at the default worker count: the WebGL hero, the film
   // canvases, and the playground sims contend for one GPU and random tests
-  // die by timeout. Four workers keeps the suite deterministic on a laptop.
-  workers: process.env.CI ? undefined : 4,
+  // die by timeout. Since every film gained real-time simulations, each worker
+  // now paints a hero, a film world, and a game canvas at once — four workers
+  // starved each other and flaked a different test every run. Two is stable.
+  workers: process.env.CI ? undefined : 2,
+  // Real-time canvas games on a software renderer are inherently timing-
+  // sensitive; one retry absorbs a starved frame budget without hiding a
+  // reproducible failure (a real break fails both attempts).
+  retries: 1,
   // The heaviest tests (full catalog lifecycle, WebGL mounts) run ~20s alone
   // and stretch past 30s when the suite shares a laptop GPU. CI keeps the
   // strict ceiling.
   timeout: process.env.CI ? 30_000 : 60_000,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: "http://localhost:3000",

@@ -6,8 +6,10 @@
 /** Mini live previews available for home-page project cards. */
 export type DemoPreview = "life" | "raycaster" | "cloth" | "flappy";
 
-type Demo = {
+export type Demo = {
   slug: string; // used as the route, e.g. "mandelbrot" -> /mandelbrot
+  /** Last significant page update, used by JSON-LD and the sitemap. */
+  lastModified: string;
   title: string;
   titleAccent: string; // the highlighted word(s) in the page heading
   blurb: string; // short description for the playground hub
@@ -26,6 +28,7 @@ type Demo = {
 export const demos: Demo[] = [
   {
     slug: "flappy",
+    lastModified: "2026-07-20",
     title: "Neuroevolution",
     titleAccent: "Flappy Bird",
     blurb:
@@ -43,6 +46,7 @@ export const demos: Demo[] = [
   },
   {
     slug: "raycaster",
+    lastModified: "2026-07-20",
     title: "Raycasting",
     titleAccent: "Engine",
     blurb:
@@ -60,6 +64,7 @@ export const demos: Demo[] = [
   },
   {
     slug: "cloth",
+    lastModified: "2026-07-20",
     title: "Cloth",
     titleAccent: "Simulation",
     blurb:
@@ -77,6 +82,7 @@ export const demos: Demo[] = [
   },
   {
     slug: "game-of-life",
+    lastModified: "2026-07-20",
     title: "Conway's Game of",
     titleAccent: "Life",
     blurb:
@@ -93,6 +99,7 @@ export const demos: Demo[] = [
   },
   {
     slug: "mandelbrot",
+    lastModified: "2026-07-20",
     title: "Mandelbrot",
     titleAccent: "Set",
     blurb:
@@ -102,6 +109,7 @@ export const demos: Demo[] = [
   },
   {
     slug: "perceptron",
+    lastModified: "2026-07-20",
     title: "Perceptron",
     titleAccent: "Classifier",
     blurb:
@@ -112,6 +120,7 @@ export const demos: Demo[] = [
   },
   {
     slug: "pi-blocks",
+    lastModified: "2026-07-20",
     title: "Pi from",
     titleAccent: "Collisions",
     blurb:

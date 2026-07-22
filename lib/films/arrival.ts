@@ -25,6 +25,19 @@ const arrival: FilmDefinition = {
     audio: { music: music("Alien futuristic ambience", "/audio/film-modes/arrival-music.mp3", { volume: 0.18, filterFrequency: 14_000, scrollResponse: 0.12, scrollGain: 0.08, scrollRate: 0.02 }), effects: [] },
     visualAssets: [asset("arrival-fog", "/posters/open/arrival-fog.webp", { left: "0", top: "0", width: "100vw", height: "100vh", objectFit: "cover", objectPosition: "center", opacity: 0.17, blendMode: "luminosity", motion: "breathe" })],
     loadVisuals: () => import("@/components/film-experience/modes/arrival"),
+    simulationsMenuTitle: "Shall we begin?",
+    simulations: [
+      {
+        id: "arrival-logogram",
+        name: "draw the logogram",
+        load: () => import("@/components/film-experience/simulations/ArrivalLogogram"),
+      },
+      {
+        id: "arrival-translate",
+        name: "translate",
+        load: () => import("@/components/film-experience/simulations/ArrivalTranslate"),
+      },
+    ],
   }),
   review: {
     rating: 5,

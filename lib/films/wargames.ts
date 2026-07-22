@@ -27,10 +27,19 @@ const wargames: FilmDefinition = {
       effects: [effect("event", "Whispered system prompt", "/audio/film-modes/wargames-whisper.mp3", { volume: 0.3, filterFrequency: 6_000, triggerThreshold: 0.65, triggerCooldownMs: 18_000, segmentDuration: 1.4 })],
     },
     loadVisuals: () => import("@/components/film-experience/modes/wargames"),
-    simulation: {
-      label: "Open tic-tac-toe simulation",
-      load: () => import("@/components/film-experience/WarGamesSimulation"),
-    },
+    simulationsMenuTitle: "Shall we play a game?",
+    simulations: [
+      {
+        id: "wargames-tic-tac-toe",
+        name: "tic-tac-toe simulation",
+        load: () => import("@/components/film-experience/simulations/WarGamesTicTacToe"),
+      },
+      {
+        id: "wargames-thermonuclear",
+        name: "global thermonuclear war",
+        load: () => import("@/components/film-experience/simulations/WarGamesThermonuclear"),
+      },
+    ],
   }),
   review: {
     rating: 4,

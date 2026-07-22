@@ -9,6 +9,8 @@ import Glow from "@/components/ui/Glow";
 import Img from "@/components/ui/Img";
 import Pill from "@/components/ui/Pill";
 import { ArrowRightIcon } from "@/components/ui/icons";
+import { caseStudyJsonLd } from "@/lib/structuredData";
+import JsonLd from "@/components/JsonLd";
 
 export function generateStaticParams() {
   return caseStudies.map((c) => ({ slug: c.slug }));
@@ -40,6 +42,7 @@ export default function CaseStudyPage({
 
   return (
     <main className="relative overflow-hidden pb-28">
+      <JsonLd data={caseStudyJsonLd(cs)} />
       <Glow className="top-0 h-[460px] w-[760px] blur-[150px]" />
 
       <div className="container-x py-12">

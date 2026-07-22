@@ -1,87 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { dispatchGrade, visiblePixelCount, waitForHydration } from "./helpers";
-import { tonightsFeatureId } from "../lib/featurePresentation";
-import { getGrade } from "../lib/grades";
 
 // Coverage for the uniqueness suite (docs/specs/uniqueness-suite-2026-07-17.md):
-// the feature-presentation leader, the Now Showing label, director's
-// commentary, the guest terminal, and the playground takeover.
-
-test.describe("feature presentation", () => {
-  test("never shows under automation by default", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator("[data-feature-leader]")).toHaveCount(0);
-  });
-
-  test("forced leader counts down, applies tonight's grade, marks itself seen", async ({
-    page,
-  }) => {
-    // The pick is date-hashed, so the test can compute the same answer the
-    // browser will: the leader must name tonight's film, then apply it.
-    const feature = getGrade(tonightsFeatureId());
-    if (!feature) throw new Error("tonight's feature has no grade record");
-
-    await page.addInitScript(() => {
-      localStorage.setItem("feature-leader-force", "1");
-    });
-    await page.goto("/");
-    const leader = page.locator("[data-feature-leader]");
-    await expect(leader).toBeVisible();
-    await expect(leader).toContainText(
-      `Now showing · ${feature.film} (${feature.year})`
-    );
-    // The countdown runs ~2.4s, then the fade applies the preview grade.
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-grade",
-      feature.id,
-      { timeout: 6_000 }
-    );
-    // A SILENT commit by design: the film experience runs for the visit, but
-    // sound stays off (no gesture asked for audio) and the controls pulse
-    // their sound toggle instead.
-    await expect(page.locator("[data-film-experience-root]")).toHaveAttribute(
-      "data-committed-film",
-      feature.id
-    );
-    await expect(page.locator("[data-film-experience-root]")).toHaveAttribute(
-      "data-audio-state",
-      "off"
-    );
-    const soundButton = page.getByRole("button", { name: "sound off" });
-    await expect(soundButton).toBeVisible();
-    await expect(soundButton).toHaveAttribute("data-sound-nudge", "on");
-    await expect(page.locator("[data-feature-leader]")).toHaveCount(0, {
-      timeout: 6_000,
-    });
-    // Transient by design: nothing was committed…
-    expect(
-      await page.evaluate(() => localStorage.getItem("film-grade"))
-    ).toBeNull();
-    // …but the leader never replays.
-    expect(
-      await page.evaluate(() => localStorage.getItem("feature-leader-seen"))
-    ).toBe("1");
-  });
-
-  test("skip applies the grade immediately", async ({ page }) => {
-    await page.addInitScript(() => {
-      localStorage.setItem("feature-leader-force", "1");
-    });
-    await page.goto("/");
-    await expect(page.locator("[data-feature-leader]")).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(page.locator("html")).toHaveAttribute("data-grade", /.+/);
-  });
-
-  test("a committed grade suppresses the leader", async ({ page }) => {
-    await page.addInitScript(() => {
-      localStorage.setItem("feature-leader-force", "1");
-      localStorage.setItem("film-grade", "dune");
-    });
-    await page.goto("/");
-    await expect(page.locator("[data-feature-leader]")).toHaveCount(0);
-  });
-});
+// the Now Showing label, director's commentary, the guest terminal, and the
+// playground takeover.
 
 test.describe("now showing label", () => {
   test("the theater button names the active grade", async ({ page }) => {

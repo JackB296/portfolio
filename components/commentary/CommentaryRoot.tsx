@@ -9,6 +9,7 @@ import {
   SOURCE_BASE,
   type CommentaryEntry,
 } from "@/lib/commentary";
+import { useHtmlAttr } from "@/lib/useHtmlAttr";
 
 /**
  * Director's-commentary mode: a REC-style toggle (bottom right, mirroring the
@@ -20,9 +21,19 @@ import {
  * navbar and the film system's section tracker already rely on — so the
  * registry stays a pure data file. v1 is home-page only.
  */
+/** The one grade that turns commentary on by itself: Samantha reads the site's
+ * construction aloud, so the written track is on to match. */
+const HER_GRADE = "her";
+
 export default function CommentaryRoot() {
   const pathname = usePathname();
-  const [enabled, setEnabled] = useState(false);
+  // Tri-state intent: null follows the grade (on under Her, off otherwise),
+  // true/false is the visitor's own toggle. Only an explicit "on" persists, so
+  // Her keeps re-defaulting on across visits while a within-visit "off" holds.
+  const [manual, setManual] = useState<boolean | null>(null);
+  // lib/grades writes data-grade from an effect and the pre-paint boot script;
+  // the hook watches the attribute so entering Her switches commentary on.
+  const grade = useHtmlAttr("data-grade");
   const [openSection, setOpenSection] = useState<string | null>(null);
   // Section anchors resolved after mount (portals need real DOM nodes).
   const [targets, setTargets] = useState<ReadonlyMap<string, HTMLElement>>(
@@ -32,12 +43,15 @@ export default function CommentaryRoot() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   const onHome = pathname === "/";
+  const enabled = manual ?? grade === HER_GRADE;
 
   useEffect(() => {
     try {
-      setEnabled(localStorage.getItem(COMMENTARY_STORAGE_KEY) === "1");
+      // A persisted "on" is a standing choice; absence means "let the grade
+      // decide", which is how Her defaults on without a stored flag.
+      if (localStorage.getItem(COMMENTARY_STORAGE_KEY) === "1") setManual(true);
     } catch {
-      // Private browsing: commentary just starts off.
+      // Private browsing: commentary just follows the grade.
     }
   }, []);
 
@@ -89,16 +103,17 @@ export default function CommentaryRoot() {
 
   const toggle = () => {
     setOpenSection(null);
-    setEnabled((current) => {
-      const next = !current;
-      try {
-        if (next) localStorage.setItem(COMMENTARY_STORAGE_KEY, "1");
-        else localStorage.removeItem(COMMENTARY_STORAGE_KEY);
-      } catch {
-        // Storage blocked: the toggle still works for this visit.
-      }
-      return next;
-    });
+    const next = !enabled;
+    setManual(next);
+    try {
+      // Persist only an explicit "on". Turning it off just drops back to the
+      // grade default for the visit (so Her re-defaults on next time), rather
+      // than pinning it off forever.
+      if (next) localStorage.setItem(COMMENTARY_STORAGE_KEY, "1");
+      else localStorage.removeItem(COMMENTARY_STORAGE_KEY);
+    } catch {
+      // Storage blocked: the toggle still works for this visit.
+    }
   };
 
   if (!onHome) return null;

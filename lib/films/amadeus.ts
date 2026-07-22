@@ -22,6 +22,24 @@ const amadeus: FilmDefinition = {
     radius: "2px",
     audio: { music: music("Mozart: Lacrimosa (Requiem)", "/audio/film-modes/amadeus-music.mp3", { volume: 0.22 }), effects: [] },
     loadVisuals: () => import("@/components/film-experience/modes/amadeus"),
+    simulationsMenuTitle: "From your obedient servant",
+    simulations: [
+      {
+        id: "amadeus-manuscript",
+        name: "the flawless page",
+        load: () => import("@/components/film-experience/simulations/AmadeusManuscript"),
+      },
+      {
+        id: "amadeus-conduct",
+        name: "conduct",
+        load: () => import("@/components/film-experience/simulations/AmadeusConduct"),
+      },
+      {
+        id: "amadeus-notes",
+        name: "too many notes",
+        load: () => import("@/components/film-experience/simulations/AmadeusNotes"),
+      },
+    ],
   }),
   review: {
     rating: 4.5,

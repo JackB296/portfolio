@@ -14,6 +14,7 @@ import AudioDirector, {
   type AudioDirectorStatus,
 } from "./AudioDirector";
 import CinematicLayer, { type VisualStatus } from "./CinematicLayer";
+import OsAmbience from "./OsAmbience";
 
 type ExperienceState = Readonly<{
   activeId: string | null;
@@ -132,6 +133,12 @@ export default function FilmExperienceRoot() {
         filmId={state.committedId}
         enabled={soundEnabled}
         onStatus={handleAudioStatus}
+      />
+      {/* The boot chime and screening-room narration; null under the house. */}
+      <OsAmbience
+        committedFilmId={state.committedId}
+        soundEnabled={soundEnabled}
+        lastIntent={state.lastIntent}
       />
       {committed && committedExperience && (
         <ExperienceControls

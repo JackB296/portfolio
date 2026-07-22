@@ -5,7 +5,6 @@ import "./globals.css";
 import { profile } from "@/lib/data";
 import { gradeBootScript } from "@/lib/grades";
 import KonamiCode from "@/components/layout/KonamiCode";
-import FeaturePresentation from "@/components/layout/FeaturePresentation";
 import CommentaryRoot from "@/components/commentary/CommentaryRoot";
 import GuestTerminal from "@/components/terminal/GuestTerminal";
 import PlaygroundToggle from "@/components/playground/PlaygroundToggle";
@@ -70,33 +69,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// Person structured data — helps search engines connect "Jack/Jackson Bialecki" to this site.
-// profile.location is "City, State"; split it so the address stays wired to lib/data.
-const [addressLocality, addressRegion] = profile.location
-  .split(",")
-  .map((part) => part.trim());
-const personJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: profile.name,
-  alternateName: ["Jack Bialecki", "Jackson R. Bialecki"],
-  jobTitle: profile.title,
-  email: `mailto:${profile.email}`,
-  url: siteUrl,
-  image: `${siteUrl}/opengraph-image`,
-  address: { "@type": "PostalAddress", addressLocality, addressRegion, addressCountry: "US" },
-  alumniOf: { "@type": "CollegeOrUniversity", name: "University of Cincinnati" },
-  knowsAbout: [
-    "Full-Stack Web Development",
-    "Artificial Intelligence",
-    "Machine Learning",
-    "Industrial Control Systems",
-    "PostgreSQL",
-    "React",
-  ],
-  sameAs: [profile.github, profile.linkedin],
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -111,13 +83,8 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         {/* Re-apply the persisted film grade before first paint (no flash). */}
         <script dangerouslySetInnerHTML={{ __html: gradeBootScript() }} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
-        />
         {children}
         <FilmExperienceRoot />
-        <FeaturePresentation />
         <CommentaryRoot />
         <GuestTerminal />
         <PlaygroundToggle />

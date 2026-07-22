@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FilmExperienceView } from "@/lib/films";
-import type { FilmSimulationComponent } from "@/lib/filmExperienceTypes";
-import {
-  SOUND_NUDGE_EVENT,
-  SOUND_NUDGE_KEY,
-} from "@/lib/featurePresentation";
+import type {
+  FilmSimulationComponent,
+  FilmSimulationDefinition,
+} from "@/lib/filmExperienceTypes";
+import SimulationMenu from "@/components/film-experience/SimulationMenu";
 
 type ExperienceControlsProps = {
   film: string;
@@ -25,68 +25,63 @@ export default function ExperienceControls({
     forId: string;
     Component: FilmSimulationComponent;
   } | null>(null);
-  // The sound nudge: after the feature-presentation leader commits a film
-  // silently, the sound toggle pulses until the visitor uses it (or sound
-  // comes on some other way). Session-scoped — a reload mid-visit keeps it.
-  const [nudge, setNudge] = useState(false);
-  useEffect(() => {
-    try {
-      setNudge(sessionStorage.getItem(SOUND_NUDGE_KEY) === "1");
-    } catch {
-      // Storage blocked: no nudge.
-    }
-    const onNudge = () => setNudge(true);
-    window.addEventListener(SOUND_NUDGE_EVENT, onNudge);
-    return () => window.removeEventListener(SOUND_NUDGE_EVENT, onNudge);
-  }, []);
-  const clearNudge = () => {
-    setNudge(false);
-    try {
-      sessionStorage.removeItem(SOUND_NUDGE_KEY);
-    } catch {
-      // Storage blocked: state alone is fine.
-    }
-  };
-  // Sound arriving by any path (theater commit, terminal) retires the nudge
-  // for good — it must not reappear when sound is later toggled off.
-  useEffect(() => {
-    if (soundEnabled && nudge) clearNudge();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [soundEnabled, nudge]);
+  const [menuOpen, setMenuOpen] = useState(false);
   const simulationButtonRef = useRef<HTMLButtonElement>(null);
-  const simulation = experience.simulation;
+  const simulations = experience.simulations ?? [];
+  const hasSimulations = simulations.length > 0;
+  const singleGame = simulations.length === 1;
 
-  // Switching films closes and forgets any open simulation, so a WarGames
+  // Switching films closes and forgets any open simulation or menu, so a
   // dialog can't survive into another mode.
   const liveIdRef = useRef(experience.id);
   useEffect(() => {
     liveIdRef.current = experience.id;
     setOpenSim(null);
+    setMenuOpen(false);
   }, [experience.id]);
 
-  const openSimulation = () => {
-    // Tagging the load with the film it was requested for keeps a chunk that
-    // resolves after a film switch from opening its dialog over the new mode —
-    // and dropping stale resolutions keeps that state from resurrecting the
-    // dialog unclicked if the user later returns to this film.
-    const forId = experience.id;
-    void simulation
-      ?.load()
-      .then((module) => {
-        if (forId !== liveIdRef.current) return;
-        setOpenSim({ forId, Component: module.default });
-      })
-      .catch(() => {
-        // A failed chunk fetch leaves the button inert; retry is a re-click.
-      });
+  const launchGame = useCallback(
+    (game: FilmSimulationDefinition) => {
+      setMenuOpen(false);
+      // Tagging the load with the film it was requested for keeps a chunk that
+      // resolves after a film switch from opening its dialog over the new mode —
+      // and dropping stale resolutions keeps that state from resurrecting the
+      // dialog unclicked if the user later returns to this film.
+      const forId = experience.id;
+      void game
+        .load()
+        .then((module) => {
+          if (forId !== liveIdRef.current) return;
+          setOpenSim({ forId, Component: module.default });
+        })
+        .catch(() => {
+          // A failed chunk fetch leaves the button inert; retry is a re-click.
+        });
+    },
+    [experience.id]
+  );
+
+  // The pill opens the one game directly, or the launcher menu for several.
+  const onSimulateClick = () => {
+    if (singleGame) launchGame(simulations[0]);
+    else setMenuOpen(true);
   };
-  const closeSimulation = useCallback(() => {
-    setOpenSim(null);
+  // Closing any simulation surface returns focus to the pill that opened it.
+  const closeAndRefocus = useCallback((reset: () => void) => {
+    reset();
     window.requestAnimationFrame(() => simulationButtonRef.current?.focus());
   }, []);
+  const closeMenu = useCallback(
+    () => closeAndRefocus(() => setMenuOpen(false)),
+    [closeAndRefocus]
+  );
+  const closeSimulation = useCallback(
+    () => closeAndRefocus(() => setOpenSim(null)),
+    [closeAndRefocus]
+  );
 
   const soundLabel = [
-    experience.audio.music.label,
+    ...(experience.audio.music ? [experience.audio.music.label] : []),
     ...experience.audio.effects.map(({ label }) => label),
   ].join(" · ");
 
@@ -104,36 +99,36 @@ export default function ExperienceControls({
           type="button"
           aria-pressed={soundEnabled}
           title={soundLabel}
-          data-sound-nudge={nudge && !soundEnabled ? "on" : "off"}
-          onClick={() => {
-            clearNudge();
-            onToggleSound();
-          }}
-          className={`relative rounded-full px-2.5 py-1.5 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-            nudge && !soundEnabled ? "text-accent" : ""
-          }`}
+          onClick={onToggleSound}
+          className="rounded-full px-2.5 py-1.5 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           {soundEnabled ? "sound on" : "sound off"}
-          {nudge && !soundEnabled && (
-            <span
-              aria-hidden
-              className="absolute inset-0 animate-ping rounded-full border border-accent/60 [animation-duration:2s]"
-            />
-          )}
         </button>
-        {simulation && (
+        {hasSimulations && (
           <button
             ref={simulationButtonRef}
             type="button"
-            aria-label={simulation.label}
+            aria-label={
+              singleGame
+                ? `Open ${simulations[0].name}`
+                : experience.simulationsMenuTitle ?? "Open simulations"
+            }
             aria-haspopup="dialog"
-            onClick={openSimulation}
+            onClick={onSimulateClick}
             className="rounded-full px-2.5 py-1.5 text-accent transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             simulate
           </button>
         )}
       </div>
+      {menuOpen && !openSim && (
+        <SimulationMenu
+          title={experience.simulationsMenuTitle ?? "Select a simulation"}
+          games={simulations}
+          onPick={launchGame}
+          onClose={closeMenu}
+        />
+      )}
       {openSim && openSim.forId === experience.id && (
         <openSim.Component onClose={closeSimulation} />
       )}

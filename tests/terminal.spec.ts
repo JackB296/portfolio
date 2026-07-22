@@ -9,7 +9,7 @@ import { waitForHydration } from "./helpers";
 // rendering behind it. CI runners have no GPU — SwiftShader burns both cores
 // and every action crawls past the 30s ceiling. Under reduced motion the site
 // collapses every canvas to a still frame, and nothing here needs animation.
-test.use({ reducedMotion: "reduce" });
+test.use({ contextOptions: { reducedMotion: "reduce" } });
 
 const openTerminal = async (page: import("@playwright/test").Page) => {
   await page.goto("/");
@@ -188,7 +188,7 @@ test.describe("guest shell features", () => {
 
     await input.fill("cat .plan");
     await input.press("Enter");
-    await expect(output).toContainText("open to interesting work");
+    await expect(output).toContainText("take over the world");
 
     await input.fill("history");
     await input.press("Enter");

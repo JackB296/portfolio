@@ -1,4 +1,4 @@
-import { defineExperience, effect, music } from "./builders";
+import { defineExperience, music } from "./builders";
 import type { FilmDefinition } from "./types";
 
 const spaceOdyssey: FilmDefinition = {
@@ -21,14 +21,41 @@ const spaceOdyssey: FilmDefinition = {
     radius: "0px",
     lineOpacity: 0.3,
     audio: {
-      music: music("Also sprach Zarathustra", "/audio/film-modes/space-odyssey-music.mp3", { volume: 0.22 }),
-      // A synthesized whisper (macOS "Whisper" voice, not the film recording
-      // or Douglas Rain's voice) speaks HAL's line on a firm scroll. Long
-      // cooldown so the homage stays a rare, eerie surprise; no segmentDuration
-      // so the full sentence plays from the start each time.
-      effects: [effect("event", "Whispered HAL-9000 line", "/audio/film-modes/space-odyssey-hal.mp3", { volume: 0.32, filterFrequency: 7_000, triggerThreshold: 0.65, triggerCooldownMs: 20_000 })],
+      // 2001 is deliberately scroll-inert: the bed holds its own tempo and
+      // level no matter how the page moves, so the zeros are stated rather
+      // than inherited. startAt trims the recording's slow opening so the
+      // fanfare lands immediately, on the first pass and on every loop.
+      music: music("Also sprach Zarathustra", "/audio/film-modes/space-odyssey-music.mp3", { volume: 0.22, scrollResponse: 0, scrollGain: 0, scrollRate: 0, startAt: 3 }),
+      // The whispered HAL line was removed 2026-07-21. Event cues only ever
+      // re-fire from scroll velocity (AudioDirector.respondToScroll), so with
+      // scroll behaviour off for this film the cue could only have spoken once
+      // at start-up — a dead cue, not a rare surprise. Removed rather than left.
+      effects: [],
     },
     loadVisuals: () => import("@/components/film-experience/modes/spaceOdyssey"),
+    simulationsMenuTitle: "Good afternoon, gentlemen",
+    simulations: [
+      {
+        id: "space-odyssey-podbay",
+        name: "open the pod bay doors",
+        load: () => import("@/components/film-experience/simulations/SpaceOdysseyPodBay"),
+      },
+      {
+        id: "space-odyssey-bone",
+        name: "the bone toss",
+        load: () => import("@/components/film-experience/simulations/SpaceOdysseyBoneToss"),
+      },
+      {
+        id: "space-odyssey-disconnect",
+        name: "disconnect HAL",
+        load: () => import("@/components/film-experience/simulations/SpaceOdysseyDisconnect"),
+      },
+      {
+        id: "space-odyssey-docking",
+        name: "docking waltz",
+        load: () => import("@/components/film-experience/simulations/SpaceOdysseyDocking"),
+      },
+    ],
   }),
   review: {
     rating: 4.5,

@@ -21,6 +21,29 @@ const theBatman: FilmDefinition = {
     radius: "2px",
     audio: { music: music("Siniestro detective piano", "/audio/film-modes/the-batman-music.mp3", { volume: 0.18, filterFrequency: 12_000 }), effects: [] },
     loadVisuals: () => import("@/components/film-experience/modes/theBatman"),
+    simulationsMenuTitle: "A riddle for you",
+    simulations: [
+      {
+        id: "the-batman-riddle",
+        name: "decode the riddle",
+        load: () => import("@/components/film-experience/simulations/TheBatmanRiddle"),
+      },
+      {
+        id: "the-batman-flashlight",
+        name: "the flashlight",
+        load: () => import("@/components/film-experience/simulations/TheBatmanFlashlight"),
+      },
+      {
+        id: "the-batman-vengeance",
+        name: "i'm vengeance",
+        load: () => import("@/components/film-experience/simulations/TheBatmanVengeance"),
+      },
+      {
+        id: "the-batman-evidence",
+        name: "the evidence board",
+        load: () => import("@/components/film-experience/simulations/TheBatmanEvidence"),
+      },
+    ],
   }),
   review: {
     rating: 4.5,

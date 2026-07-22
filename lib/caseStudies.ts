@@ -1,5 +1,7 @@
-type CaseStudy = {
+export type CaseStudy = {
   slug: string;
+  /** Last significant page update, used by JSON-LD and the sitemap. */
+  lastModified: string;
   company: string;
   /** Short title used on the project/case-study card. */
   cardName: string;
@@ -34,6 +36,7 @@ export const professionalCaseStudySlugs = [
 export const caseStudies: CaseStudy[] = [
   {
     slug: "voyage-foods-dashboard",
+    lastModified: "2026-07-20",
     company: "Voyage Foods",
     cardName: "Manufacturing Ops Dashboard",
     cardBlurb:
@@ -87,6 +90,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "jakapa-canvas-integration",
+    lastModified: "2026-07-20",
     company: "JAKAPA",
     cardName: "JAKAPA × Canvas LMS",
     cardBlurb:
@@ -138,6 +142,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "aef-access-migration",
+    lastModified: "2026-07-20",
     company: "American Equity Funding, Inc.",
     cardName: "Solo Database Administration",
     cardBlurb:
@@ -186,6 +191,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "8-bit-computer",
+    lastModified: "2026-07-20",
     company: "Engineering Pathway Capstone",
     cardName: "8-Bit Programmable Computer",
     cardBlurb:
@@ -237,6 +243,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "lcs-big-team",
+    lastModified: "2026-07-20",
     company: "London Computer Systems",
     cardName: "Shipping on a 50+ Engineer Team",
     cardBlurb:

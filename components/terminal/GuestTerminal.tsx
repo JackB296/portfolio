@@ -521,7 +521,12 @@ export default function GuestTerminal() {
             onClick={() => {
               if (window.getSelection()?.isCollapsed) inputRef.current?.focus();
             }}
-            className="min-h-0 flex-1 overflow-y-auto px-4 py-3 font-mono text-[13px] leading-relaxed"
+            // The terminal is non-modal, so the site keeps scrolling behind it —
+            // but a wheel over the scrollback belongs to the scrollback.
+            // data-lenis-prevent keeps the smooth-scroll engine out of here, and
+            // overscroll-contain stops the page taking over at either end.
+            data-lenis-prevent
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 font-mono text-[13px] leading-relaxed"
             data-terminal-output
           >
             {entries.map((entry, i) => (

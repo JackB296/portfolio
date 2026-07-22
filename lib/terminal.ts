@@ -153,7 +153,9 @@ const filmTxt = (f: Film): readonly string[] => [
   `motion: ${f.experience.tokens.motion} · radius: ${f.experience.tokens.radius}`,
   "",
   "## audio",
-  `music: ${f.experience.audio.music.label} (${f.experience.audio.music.src})`,
+  f.experience.audio.music
+    ? `music: ${f.experience.audio.music.label} (${f.experience.audio.music.src})`
+    : "music: none",
   ...f.experience.audio.effects.map((e) => `effect: ${e.label} (${e.src})`),
   "",
   `wear it: \`theme ${f.id}\``,
@@ -162,13 +164,13 @@ const filmTxt = (f: Film): readonly string[] => [
 const VFS: Record<TerminalDir, Record<string, readonly string[]>> = {
   "~": {
     ".plan": [
-      "ship demos. score them like films.",
-      "answer email. drink water.",
-      "current status: open to interesting work.",
+      "take over the world",
+      "become a ceo of a compnay that actually does something. not just AI slop",
+      "help my friends and family succeed with me",
     ],
     "readme.md": [
       "# jbialecki.com",
-      "a portfolio that behaves like a screening room.",
+      "my personal portfolio.",
       "`cd work/` for case studies, `cd demos/` for toys, `cd films/` for grades.",
       "`cat <file>` prints the raw data behind each page.",
     ],

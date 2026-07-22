@@ -19,8 +19,14 @@ test("film experience registry contract covers every named grade", () => {
   for (const experience of filmExperiences) {
     expect(experience.signature.length).toBeGreaterThan(8);
     expect(experience.markers.length).toBeGreaterThanOrEqual(5);
-    expect(experience.audio.music.mode).toBe("music");
-    for (const cue of [experience.audio.music, ...experience.audio.effects]) {
+    // A music bed is optional — Dune runs on its sand loop and Fury Road on its
+    // dust loop alone — but when a film has one it must be a music cue.
+    if (experience.audio.music) expect(experience.audio.music.mode).toBe("music");
+    expect(experience.audio.music || experience.audio.effects.length > 0).toBeTruthy();
+    for (const cue of [
+      ...(experience.audio.music ? [experience.audio.music] : []),
+      ...experience.audio.effects,
+    ]) {
       expect(cue.label.length).toBeGreaterThan(3);
       expect(cue.src).toMatch(/^\/audio\/film-modes\/[a-z0-9-]+\.mp3$/);
       expect(cue.volume).toBeGreaterThan(0);
@@ -34,7 +40,18 @@ test("film experience registry contract covers every named grade", () => {
     expect(experience.tokens.motion).toMatch(/^(dissolve|drift|precision|pulse|stalk|descend|loop|rush|breathe|pantomime|snap|rupture|track|theatrical|terminal)$/);
     expect(typeof experience.loadVisuals).toBe("function");
   }
-  expect(new Set(filmExperiences.map((experience) => experience.audio.music.src)).size).toBe(16);
+  // Every film that has a music bed brings its own recording. Dune and Fury
+  // Road have no bed at all, so 14 beds across 16 films.
+  const musicSources = filmExperiences.flatMap(({ audio }) =>
+    audio.music ? [audio.music.src] : []
+  );
+  expect(new Set(musicSources).size).toBe(14);
+  expect(
+    filmExperiences
+      .filter(({ audio }) => !audio.music)
+      .map(({ id }) => id)
+      .sort()
+  ).toEqual(["dune", "fury-road"]);
   // After the 2026-07-16 motif overhaul, only these films keep DOM image
   // layers; the rest are fully authored canvas worlds. (2001's Jupiter plate
   // was retired along with its old aperture glow.)
@@ -53,22 +70,39 @@ test("film experience registry contract covers every named grade", () => {
     "blade-runner",
     "casablanca",
     "dune",
-    "fight-club",
     "fury-road",
     "goodfellas",
     "matrix",
-    "space-odyssey",
     "wargames",
   ]);
   expect(filmExperiences.find(({ id }) => id === "matrix")?.audio.effects[0].label).toMatch(/data|number/i);
   expect(filmExperiences.find(({ id }) => id === "wargames")?.audio.effects[0].label).toMatch(/whisper/i);
-  expect(filmExperiences.find(({ id }) => id === "space-odyssey")?.audio.effects[0].label).toMatch(/hal/i);
 
-  // Revved down 2026-07-16: the engine still reacts to scroll, but no longer
-  // swells on every gesture.
-  const furyScrollResponse = filmExperiences.find(
-    (experience) => experience.id === "fury-road"
-  )?.audio.effects[0].scrollResponse;
+  // 2001 is scroll-inert by owner's decision (2026-07-21): no scroll-driven
+  // gain, rate, or event cue. Its whispered HAL line was removed with the
+  // scroll behaviour, since event cues only ever re-fire from scroll velocity.
+  const odyssey = filmExperiences.find(({ id }) => id === "space-odyssey");
+  expect(odyssey?.audio.effects).toEqual([]);
+  // 2001 keeps its bed, so assert it exists before reading through it — `music`
+  // is optional now that Dune and Fury Road run without one.
+  expect(odyssey?.audio.music).toBeDefined();
+  expect(odyssey?.audio.music?.scrollResponse).toBe(0);
+  expect(odyssey?.audio.music?.scrollGain).toBe(0);
+  expect(odyssey?.audio.music?.scrollRate).toBe(0);
+  // The bed skips the recording's slow opening, on the first pass and on loop.
+  expect(odyssey?.audio.music?.startAt).toBe(3);
+
+  // Fury Road runs on dust alone (2026-07-21): the music bed and the engine
+  // loop were both retired, and the single remaining loop reuses Dune's CC0
+  // sand recording, filtered darker and driven harder. Its scroll response
+  // stays inside the same revved-down band the engine held from 2026-07-16.
+  const fury = filmExperiences.find((experience) => experience.id === "fury-road");
+  expect(fury?.audio.music).toBeUndefined();
+  expect(fury?.audio.effects).toHaveLength(1);
+  expect(fury?.audio.effects[0].src).toBe("/audio/film-modes/dune-sand.mp3");
+  expect(fury?.audio.effects[0].label).toMatch(/dust/i);
+  expect(fury?.audio.effects[0].mode).toBe("loop");
+  const furyScrollResponse = fury?.audio.effects[0].scrollResponse;
   expect(furyScrollResponse).toBeGreaterThanOrEqual(0.3);
   expect(furyScrollResponse).toBeLessThanOrEqual(0.6);
 });
@@ -77,7 +111,7 @@ test("every film music and effect cue is a decodable local recording", async ({ 
   test.setTimeout(60_000);
   await page.goto("/");
   const cues = filmExperiences.flatMap(({ id, audio }) => [
-    { id, role: "music", src: audio.music.src },
+    ...(audio.music ? [{ id, role: "music", src: audio.music.src }] : []),
     ...audio.effects.map(({ src }) => ({ id, role: "effect", src })),
   ]);
   const decoded = await page.evaluate(async (sources) => {
@@ -100,7 +134,13 @@ test("every film music and effect cue is a decodable local recording", async ({ 
     );
   }, cues);
 
-  expect(decoded).toHaveLength(25);
+  // 14 music beds + 7 effect cues (2001's HAL whisper retired 2026-07-21;
+  // Dune's choir retired the same day, leaving it on sand alone; Fury Road's
+  // bed and engine retired the same day, leaving it on a dust loop that reuses
+  // Dune's sand recording — so dune-sand.mp3 is fetched twice here, once per
+  // film that cues it; Fight Club's impact hit retired the same day, leaving it
+  // on its breakbeat bed alone).
+  expect(decoded).toHaveLength(21);
   for (const recording of decoded) {
     expect(recording.ok, recording.src).toBe(true);
     expect(recording.contentType, recording.src).toContain("audio/mpeg");
@@ -268,14 +308,12 @@ test("audio defaults on at commit, follows commits instead of previews, and mute
   const root = page.locator("[data-film-experience-root]");
   await expect(root).toHaveAttribute("data-audio-state", "running", { timeout: 20_000 });
   await expect(root).toHaveAttribute("data-audio-film", "dune");
-  await expect(root).toHaveAttribute(
-    "data-audio-music-source",
-    "/audio/film-modes/dune-music.mp3"
-  );
+  // Dune has no music bed: the sand loop alone must still arm the pipeline.
+  await expect(root).toHaveAttribute("data-audio-music-source", "none");
   await expect(root).toHaveAttribute("data-audio-effect-sources", "/audio/film-modes/dune-sand.mp3");
   await expect(page.getByRole("button", { name: "sound on" })).toHaveAttribute(
     "title",
-    /Cavernous desert choir.*Flowing desert sand/
+    /Flowing desert sand/
   );
   await expect.poll(() => root.getAttribute("data-audio-nodes")).not.toBe("0");
 
@@ -292,7 +330,8 @@ test("audio defaults on at commit, follows commits instead of previews, and mute
     arrival: "/audio/film-modes/arrival-music.mp3",
     wargames: "/audio/film-modes/wargames-music.mp3",
     amadeus: "/audio/film-modes/amadeus-music.mp3",
-    "fury-road": "/audio/film-modes/fury-road-music.mp3",
+    // Fury Road lost its bed with the engine on 2026-07-21: dust alone.
+    "fury-road": "none",
   } as const;
   for (const [gradeId, source] of Object.entries(nextCues)) {
     await dispatchGrade(page, gradeId, "commit");
@@ -302,11 +341,16 @@ test("audio defaults on at commit, follows commits instead of previews, and mute
       source
     );
   }
-  // The engine still responds to scroll, but gently — revved down 2026-07-16
-  // so the multi-rev loop stops swelling on every scroll gesture.
-  const furyEngine = filmExperiences.find(({ id }) => id === "fury-road")?.audio.effects[0];
-  expect(furyEngine?.scrollRate).toBeGreaterThan(0.05);
-  expect(furyEngine?.scrollRate).toBeLessThanOrEqual(0.15);
+  // Fury Road runs on a lone dust loop now, and it still responds to scroll
+  // gently — the same bounded rate band the retired engine held from
+  // 2026-07-16, so dust at speed never swells on a single gesture.
+  await expect(root).toHaveAttribute(
+    "data-audio-effect-sources",
+    "/audio/film-modes/dune-sand.mp3"
+  );
+  const furyDust = filmExperiences.find(({ id }) => id === "fury-road")?.audio.effects[0];
+  expect(furyDust?.scrollRate).toBeGreaterThan(0.05);
+  expect(furyDust?.scrollRate).toBeLessThanOrEqual(0.15);
   expect(Number(await root.getAttribute("data-audio-tracks"))).toBeLessThanOrEqual(4);
 
   await page.evaluate(() => {
@@ -445,32 +489,103 @@ test("WarGames exposes a keyboard-operable draw simulation", async ({ page }) =>
   await page.addInitScript(() => localStorage.setItem("film-grade", "wargames"));
   await page.goto("/");
 
-  const openButton = page.getByRole("button", { name: "Open tic-tac-toe simulation" });
+  // WarGames has two games behind a launcher — the pill opens the menu, and
+  // tic-tac-toe is one item on it. The shell fronts every game with its
+  // reference card, so the board only appears once the visitor starts.
+  const openButton = page.getByRole("button", { name: "Shall we play a game?" });
   await openButton.click();
+  const menu = page.getByRole("dialog", { name: "Shall we play a game?" });
+  await expect(menu).toBeVisible();
+  await menu.getByRole("button", { name: "tic-tac-toe simulation" }).click();
   const dialog = page.getByRole("dialog", { name: "JXN-83 tic-tac-toe simulation" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Draw-seeking simulation")).toBeVisible();
+  const startButton = dialog.getByRole("button", { name: "Play a game" });
+  await expect(startButton).toBeFocused();
+  await startButton.click();
+
   const closeButton = dialog.getByRole("button", { name: "Close simulation" });
   const resetButton = dialog.getByRole("button", { name: "Reset simulation" });
-  await expect(closeButton).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  await expect(resetButton).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(closeButton).toBeFocused();
+  await expect(resetButton).toBeVisible();
 
+  // The board is fully keyboard-operable: focus a cell, press it, and WOPR
+  // answers — two marks on the board without a pointer in sight.
   const firstCell = dialog.getByRole("button", { name: "Cell 1 empty" });
   await firstCell.focus();
   await page.keyboard.press("Enter");
   await expect(dialog.getByRole("button", { name: "Cell 1 X" })).toBeVisible();
-  await expect(dialog.locator("[data-simulation-moves]"))
+  await expect(dialog.locator("[data-sim-state]"))
     .toHaveAttribute("data-simulation-moves", "2");
 
   await resetButton.click();
-  await expect(dialog.locator("[data-simulation-moves]"))
+  await expect(dialog.locator("[data-sim-state]"))
     .toHaveAttribute("data-simulation-moves", "0");
+  await closeButton.focus();
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(openButton).toBeFocused();
+});
+
+test("WarGames launcher runs the thermonuclear game", async ({ page }) => {
+  // Launcher-level only: the menu opens each game behind its reference card
+  // and escape hands focus back. Deep gameplay lives in tests/sim-wargames.spec.ts.
+  await page.addInitScript(() => localStorage.setItem("film-grade", "wargames"));
+  await page.goto("/");
+
+  const pill = page.getByRole("button", { name: "Shall we play a game?" });
+  const menu = page.getByRole("dialog", { name: "Shall we play a game?" });
+
+  const games: Array<[entry: string, title: string, start: string]> = [
+    ["global thermonuclear war", "Global thermonuclear war", "Begin simulation"],
+  ];
+  for (const [entry, title, start] of games) {
+    await pill.click();
+    await menu.getByRole("button", { name: entry }).click();
+    const dialog = page.getByRole("dialog", { name: title });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: start })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(pill).toBeFocused();
+  }
+
+  // Declining is reachable in one step from the strategic game's first screen.
+  await pill.click();
+  await menu.getByRole("button", { name: "global thermonuclear war" }).click();
+  const war = page.getByRole("dialog", { name: "Global thermonuclear war" });
+  await war.getByRole("button", { name: "Begin simulation" }).click();
+  await war.getByRole("button", { name: "Decline to play" }).click();
+  await expect(war.locator("[data-sim-state]")).toHaveAttribute("data-sim-state", "refused");
+  await page.keyboard.press("Escape");
+  await expect(war).toHaveCount(0);
+  await expect(pill).toBeFocused();
+});
+
+test("Matrix launcher runs decode, bullet-time, and the pill choice", async ({ page }) => {
+  // Launcher-level only: the menu opens each trial and escape returns focus.
+  // Deep gameplay coverage lives in tests/sim-matrix.spec.ts.
+  await page.addInitScript(() => localStorage.setItem("film-grade", "matrix"));
+  await page.goto("/");
+
+  const pill = page.getByRole("button", { name: "Free your mind" });
+  const menu = page.getByRole("dialog", { name: "Free your mind" });
+
+  const games: Array<[entry: string, title: string, start: string]> = [
+    ["decode the rain", "Decode the rain", "Run the trace"],
+    ["bullet-time", "Bullet-time", "Enter the loop"],
+    ["red pill or blue", "Red pill or blue", "Take the offer"],
+  ];
+  for (const [entry, title, start] of games) {
+    await pill.click();
+    await menu.getByRole("button", { name: entry }).click();
+    const dialog = page.getByRole("dialog", { name: title });
+    await expect(dialog).toBeVisible();
+    // The reference card fronts every game: the start control holds focus.
+    await expect(dialog.getByRole("button", { name: start })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(pill).toBeFocused();
+  }
 });
 
 test("audio failure tears down only the failed film", async ({ page }) => {
@@ -499,7 +614,11 @@ test("simulation cannot outlive its film", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("film-grade", "wargames"));
   await page.goto("/");
 
-  await page.getByRole("button", { name: "Open tic-tac-toe simulation" }).click();
+  await page.getByRole("button", { name: "Shall we play a game?" }).click();
+  await page
+    .getByRole("dialog", { name: "Shall we play a game?" })
+    .getByRole("button", { name: "tic-tac-toe simulation" })
+    .click();
   const dialog = page.getByRole("dialog", { name: "JXN-83 tic-tac-toe simulation" });
   await expect(dialog).toBeVisible();
 
@@ -514,7 +633,7 @@ test("simulation cannot outlive its film", async ({ page }) => {
   // that resolved after the switch is stale state, not an open request.
   await dispatchGrade(page, "wargames", "commit");
   await expect(
-    page.getByRole("button", { name: "Open tic-tac-toe simulation" })
+    page.getByRole("button", { name: "Shall we play a game?" })
   ).toBeVisible();
   await page.waitForTimeout(500);
   await expect(dialog).toHaveCount(0);
@@ -581,7 +700,7 @@ test("mobile mode keeps the portfolio usable at the bounded quality tier", async
 
 const filmRenderCases = [
   ["casablanca", "Casablanca", "departures"],
-  ["dune", "Dune", "ground pulse"],
+  ["dune", "Dune", "twin moons"],
   ["matrix", "The Matrix", "glyph rain"],
   ["blade-runner", "Blade Runner 2049", "spinner traffic"],
   ["space-odyssey", "2001: A Space Odyssey", "JB-35"],

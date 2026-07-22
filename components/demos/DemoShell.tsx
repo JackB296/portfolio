@@ -6,6 +6,8 @@ import BackLink from "../ui/BackLink";
 import Glow from "../ui/Glow";
 import Pill from "../ui/Pill";
 import { GitHubIcon, ArrowRightIcon } from "../ui/icons";
+import { demoJsonLd } from "@/lib/structuredData";
+import JsonLd from "@/components/JsonLd";
 
 // Layout shared by every demo page. The heading, tags, accent label, and
 // GitHub link resolve from the demo registry (lib/demos.ts) by slug so page
@@ -35,6 +37,7 @@ export default function DemoShell({
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden">
+      <JsonLd data={demoJsonLd(demo)} />
       <Glow className="top-0 h-[500px] w-[700px] blur-[140px]" />
 
       <div className="container-x py-12">

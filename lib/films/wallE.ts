@@ -21,6 +21,24 @@ const wallE: FilmDefinition = {
     radius: "6px",
     audio: { music: music("Drifting space atmosphere", "/audio/film-modes/wall-e-music.mp3", { volume: 0.19, filterFrequency: 15_000, scrollResponse: 0.15, scrollGain: 0.08, scrollRate: 0.03 }), effects: [] },
     loadVisuals: () => import("@/components/film-experience/modes/wallE"),
+    simulationsMenuTitle: "Define playing",
+    simulations: [
+      {
+        id: "wall-e-spork",
+        name: "sort the spork",
+        load: () => import("@/components/film-experience/simulations/WallESortSpork"),
+      },
+      {
+        id: "wall-e-dance",
+        name: "space dance",
+        load: () => import("@/components/film-experience/simulations/WallESpaceDance"),
+      },
+      {
+        id: "wall-e-sprout",
+        name: "protect the sprout",
+        load: () => import("@/components/film-experience/simulations/WallEProtectSprout"),
+      },
+    ],
   }),
   review: {
     rating: 5,
