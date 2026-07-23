@@ -16,7 +16,7 @@ The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, sixteen fi
 
 **[Open the live site →](https://jbialecki.com)**
 
-<img src="docs/preview-hero.png" alt="The portfolio home page: a noise-displaced wireframe icosahedron rendered in WebGL, on a dark starfield" width="900">
+<img src="docs/preview-hero.png" alt="The portfolio home page: the hero over a live Conway's Game of Life running in the background, cells colored by age on a dark field" width="900">
 
 </div>
 
@@ -24,7 +24,7 @@ The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, sixteen fi
 
 ## Highlights
 
-- **A hand-written WebGL hero.** A noise-displaced icosahedron and a GPU particle field, both driven by custom GLSL vertex and fragment shaders, under a camera that eases toward the cursor. It's code-split out of the main bundle and capped to the device pixel ratio, so it stays smooth on a phone and collapses to a still frame under reduced-motion. A corner toggle swaps the whole scene for a live Game of Life.
+- **A WebGL hero.** A noise-displaced icosahedron and a GPU particle field, both driven by custom GLSL vertex and fragment shaders, under a camera that eases toward the cursor. It's code-split out of the main bundle and capped to the device pixel ratio, so it stays smooth on a phone and collapses to a still frame under reduced-motion. A corner toggle swaps the whole scene for a live Game of Life.
 - **Sixteen film modes.** Pick a film from the theater wall and the site re-themes to match: a color grade applied before first paint, a score with per-section audio cues, and a visual layer built for that film (WarGames draws a live missile-map simulation). A date-hashed feature presentation screens one film per day for first-time visitors, and every track is attributed on `/film-credits`.
 - **A guest terminal.** `cd`, `ls`, `cat`, and tab completion over a virtual filesystem generated from the same typed registries that render the pages, so the terminal can never drift from the site it navigates. It opens any route and applies any film grade.
 - **Director's commentary.** A toggle that pins a commentary track to each home section: the site explaining how it's engineered, with a link to the exact source file on GitHub.
