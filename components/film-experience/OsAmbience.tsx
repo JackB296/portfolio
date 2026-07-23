@@ -168,41 +168,56 @@ export default function OsAmbience({
   // (speak() stops what is playing before it starts). Only under Her.
   useEffect(() => {
     if (!isHer) return;
-    const els = SECTIONS.map((section) => document.getElementById(section)).filter(
-      (el): el is HTMLElement => el !== null
-    );
-    if (els.length === 0) return;
 
     // If Her is already up without a fresh boot (a reload with the grade
     // persisted), there's no greeting to wait on — arm narration right away.
     if (lastIntent !== "commit") narrationArmedRef.current = true;
 
-    // The section whose centre is nearest the viewport centre is the one being
-    // read. We re-pick on every scroll frame (rAF-throttled) rather than only on
-    // IntersectionObserver band-crossings: a crossing fires when a section enters
-    // or leaves a thin centre band, but between crossings a section can BECOME
-    // the centred one with no event — which is why scrolling back up used to keep
-    // the previous section's line playing instead of switching to the one you
-    // rose to. A per-scroll pick tracks the centred section in both directions.
+    // The active section is the one the viewport's vertical centre line sits
+    // within (nearest-centre as a fallback for the gaps between sections). We
+    // POLL it on a rAF loop instead of reacting to scroll / IntersectionObserver
+    // events: Lenis drives smooth scrolling through its own rAF and does not
+    // reliably surface a native scroll event at the instant a section becomes
+    // centred, which is why scrolling back up left the previous section's line
+    // playing instead of switching to the one you rose to. Polling tracks the
+    // centre in both directions however the scroll is driven; `syncActive` only
+    // acts when the section actually changes, so it stays cheap. The active id is
+    // mirrored onto <html> (data-os-section) so the behaviour is observable.
+    // Resolve the section elements FRESH each poll rather than caching them at
+    // effect start: on a fresh Her commit the hero swaps its backdrop and the
+    // section nodes can be momentarily unresolvable, which used to drop them
+    // (notably "top") from a cached list for the whole session — so returning to
+    // them never re-narrated.
     const pickActive = () => {
       const mid = window.innerHeight / 2;
-      let active: string | null = null;
+      let nearest: string | null = null;
       let best = Infinity;
-      for (const el of els) {
+      for (const id of SECTIONS) {
+        const el = document.getElementById(id);
+        if (!el) continue;
         const rect = el.getBoundingClientRect();
+        if (rect.top <= mid && rect.bottom > mid) return id;
         if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue;
         const distance = Math.abs(rect.top + rect.height / 2 - mid);
         if (distance < best) {
           best = distance;
-          active = el.id;
+          nearest = id;
         }
       }
-      return active;
+      return nearest;
     };
 
     const syncActive = () => {
       const section = pickActive();
-      if (!section || section === lastSectionRef.current) return;
+      if (!section) return;
+      // Mirror the active section for observers independent of the narration
+      // change-check below: this effect can re-run (e.g. sound toggling on right
+      // after commit) and must restore the marker even when the section itself
+      // has not changed.
+      if (document.documentElement.dataset.osSection !== section) {
+        document.documentElement.dataset.osSection = section;
+      }
+      if (section === lastSectionRef.current) return;
       // Track the current section even while the greeting suppresses narration,
       // so the post-welcome line reads wherever you actually are.
       lastSectionRef.current = section;
@@ -211,21 +226,15 @@ export default function OsAmbience({
       void speak(NARRATION_ID(section), "her");
     };
 
-    let scheduled = false;
-    const onScroll = () => {
-      if (scheduled) return;
-      scheduled = true;
-      window.requestAnimationFrame(() => {
-        scheduled = false;
-        syncActive();
-      });
+    let rafId = 0;
+    const tick = () => {
+      syncActive();
+      rafId = window.requestAnimationFrame(tick);
     };
-    syncActive();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
+    rafId = window.requestAnimationFrame(tick);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.cancelAnimationFrame(rafId);
+      delete document.documentElement.dataset.osSection;
     };
   }, [isHer, soundEnabled, lastIntent]);
 
