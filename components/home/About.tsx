@@ -4,11 +4,11 @@ import { profile, education } from "@/lib/data";
 import Reveal from "../ui/Reveal";
 
 const competencies = [
-  "Full-Stack Web (React · Angular · .NET · Node)",
+  "Full-Stack Web (React · Next.js · Angular · .NET)",
   "Data & Migrations (PostgreSQL · SQL)",
   "Industrial / SCADA Integration",
   "API Design & Third-Party Integration",
-  "AI / ML Experimentation",
+  "AI-Assisted Development (Claude Code · Codex · MCP)",
 ];
 
 export default function About() {

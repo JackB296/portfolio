@@ -18,6 +18,7 @@ const pages = [
   "/work/jakapa-canvas-integration",
   "/work/aef-access-migration",
   "/work/8-bit-computer",
+  "/work/media-archiver",
 ];
 
 for (const path of pages) {

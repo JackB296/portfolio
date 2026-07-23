@@ -6,7 +6,7 @@
 
 The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, sixteen film modes that restyle the whole site, seven interactive demos you can play in the browser, a guest terminal, and write-ups of the software I've shipped on a factory floor and at an ed-tech startup.
 
-[![Live site](https://img.shields.io/badge/live-jbialecki.com-f59e0b?style=flat-square)](https://jbialecki.com)
+[![Live site](https://img.shields.io/badge/live-jbialecki.com-34d399?style=flat-square)](https://jbialecki.com)
 &nbsp;![Next.js 14](https://img.shields.io/badge/Next.js_14-111-fff?style=flat-square&logo=nextdotjs&logoColor=fff)
 &nbsp;![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?style=flat-square&logo=typescript&logoColor=fff)
 &nbsp;![Three.js](https://img.shields.io/badge/Three.js-111-fff?style=flat-square&logo=threedotjs&logoColor=fff)
@@ -31,7 +31,7 @@ The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, sixteen fi
 - **A playground takeover.** Flip the switch and live simulations run behind the home page itself, Game of Life behind Projects and the cloth sim behind Skills, with a persistent scoreboard.
 - **Seven interactive demos.** Six began as Python projects and were rebuilt in JavaScript and canvas: a raycaster, a Verlet cloth, Conway's Game of Life, the Mandelbrot set, a perceptron, and the pi-from-collisions trick. The Neuroevolution Flappy Bird runs as its original p5.js build, embedded live. All seven share one canvas scaffold that handles DPR sizing, pauses off-screen, and holds a still frame under reduced-motion.
 - **A serverless contact backend.** The form posts to `/api/contact`, which validates the payload, blocks bots with a honeypot, rate-limits by IP through a clock-injectable limiter with bounded memory, and sends mail through Resend. With no API key set it stays working and shows a friendly "email me directly" message.
-- **Case studies, written up as problem, approach, and outcome.** A manufacturing dashboard at Voyage Foods, a Canvas LMS integration at JAKAPA, shipping on a 50+ engineer team at LCS, a solo database migration at American Equity Funding, plus a hardware write-up of an 8-bit computer I built on breadboards.
+- **Case studies, written up as problem, approach, and outcome.** A manufacturing dashboard at Voyage Foods, a Canvas LMS integration at JAKAPA, shipping on a 50+ engineer team at LCS, a solo database migration at American Equity Funding, and two personal builds: an 8-bit computer wired by hand on breadboards, and a self-hosted archiver that keeps 11,000+ short-form videos on my own disk.
 - **Production plumbing.** Vercel CI/CD, a generated Open Graph image, a sitemap, robots rules, JSON-LD structured data, and five Playwright suites that run in CI so a bad change can't quietly break a route.
 
 ## Film modes
@@ -62,7 +62,7 @@ Each one runs live in the browser, and most link to their source on GitHub from 
 - **Framework:** Next.js 14 (App Router), TypeScript, React 18
 - **3D and graphics:** Three.js, React Three Fiber, drei, custom GLSL shaders, HTML canvas
 - **Motion:** Framer Motion, Lenis smooth scroll
-- **Styling:** Tailwind CSS, a dark theme on a single amber accent (`#f59e0b`), plus a film grade layer of CSS custom properties
+- **Styling:** Tailwind CSS, a dark theme on a single emerald accent (`#34d399`), plus a film grade layer of CSS custom properties
 - **Backend:** Resend, on a serverless Vercel route
 - **Ops:** Vercel hosting and Analytics, Playwright, GitHub Actions CI
 
@@ -95,7 +95,7 @@ app/
   flappy/                The Neuroevolution Flappy Bird game, embedded live
   raycaster/ cloth/ mandelbrot/ game-of-life/ perceptron/ pi-blocks/
                          One route per demo, each built on components/demos/DemoShell
-  work/[slug]/page.tsx   Case-study pages (Voyage Foods, LCS, JAKAPA, AEF, 8-bit computer)
+  work/[slug]/page.tsx   Case-study pages (Voyage Foods, LCS, JAKAPA, AEF, 8-bit computer, media archiver)
   film-credits/page.tsx  Sources and licenses for the film-mode media
   resume/page.tsx        The PDF résumé, embedded with print and download
   api/contact/route.ts   Serverless contact endpoint (Resend)

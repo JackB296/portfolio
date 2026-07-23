@@ -36,14 +36,14 @@ export const professionalCaseStudySlugs = [
 export const caseStudies: CaseStudy[] = [
   {
     slug: "voyage-foods-dashboard",
-    lastModified: "2026-07-20",
+    lastModified: "2026-07-23",
     company: "Voyage Foods",
     cardName: "Manufacturing Ops Dashboard",
     cardBlurb:
       "A centralized React dashboard unifying Cin7 Core ERP, SafetyChain QA, and 200+ live Ignition SCADA tags into one plant-floor view with a SQLite → PostgreSQL migration powering the history layer.",
     headline: "One dashboard for the plant floor: ERP, QA, and 200+ live SCADA tags",
     role: "Computer Science Engineer Intern",
-    period: "May 2026 - Aug 2026",
+    period: "May 2026 - Present",
     location: "Mason, OH",
     accentLabel: "Industrial Systems",
     tags: ["React", "PostgreSQL", "Ignition SCADA", "OPC-UA", "Cin7 ERP", "SafetyChain"],
@@ -239,6 +239,68 @@ export const caseStudies: CaseStudy[] = [
       alt: "The 8-bit computer built across multiple breadboards with hundreds of jumper wires",
       width: 2000,
       height: 1500,
+    },
+  },
+  {
+    slug: "media-archiver",
+    lastModified: "2026-07-23",
+    company: "Personal Project",
+    cardName: "Self-Hosted Media Archiver",
+    cardBlurb:
+      "A Dockerized, fully-local archive for 11,000+ saved short-form videos: resumable concurrent downloads, a SQLite index, FastAPI range streaming, and a virtualized React interface, with optional Plex export.",
+    headline: "Archiving 11,000+ short-form videos, fully self-hosted",
+    role: "Solo Build",
+    period: "2025 - Present",
+    location: "Self-Hosted · Docker",
+    accentLabel: "Full-Stack · Self-Hosted",
+    tags: ["Python", "FastAPI", "React", "TypeScript", "SQLite", "Docker"],
+    summary:
+      "Short-form videos you save aren't really yours: they live on someone else's servers and vanish when a video is taken down or an account goes private. I built a self-hosted archive that pulls everything I'd favorited onto my own disk, indexes it, and streams it back through a fast web interface. No cloud, no account, nothing leaving the machine.",
+    problem: [
+      "I'd favorited thousands of short-form videos over the years, and they kept disappearing: deleted posts, private accounts, dead links. A 'saved' list is only a bookmark to content someone else controls, not a copy of it.",
+      "Archiving that much media is its own problem. Downloads fail and have to resume without starting over, 11,000+ files need to stay organized and de-duplicated, and browsing a library that large has to feel instant instead of loading everything at once.",
+    ],
+    approach: [
+      {
+        title: "Download resumably, in parallel",
+        body: "I built a concurrent downloader that fetches many items at once and checkpoints its progress, so an interrupted run picks up exactly where it stopped instead of re-downloading what it already has.",
+      },
+      {
+        title: "Index everything in SQLite",
+        body: "Every item is recorded in a SQLite index with its metadata, so the archive can dedupe, track what's already downloaded, and answer queries against 11,000+ entries without scanning the disk.",
+      },
+      {
+        title: "Stream it back with FastAPI",
+        body: "A FastAPI backend serves the media with HTTP range requests, so videos seek and scrub instantly and the browser only pulls the bytes it needs instead of whole files.",
+      },
+      {
+        title: "Browse thousands of items smoothly",
+        body: "The React front end is virtualized, rendering only the rows on screen, so scrolling a library thousands of items deep stays smooth. The whole thing ships as a Docker container and can optionally export into a Plex library.",
+      },
+    ],
+    stack: [
+      { group: "Backend", items: ["Python", "FastAPI", "Range Streaming"] },
+      { group: "Frontend", items: ["React", "TypeScript", "Virtualized Lists"] },
+      { group: "Data", items: ["SQLite", "Local Media Store"] },
+      { group: "Deploy", items: ["Docker", "Self-Hosted", "Plex (optional)"] },
+    ],
+    outcomes: [
+      { metric: "11,000+", label: "media items archived & streamable" },
+      { metric: "Self-hosted", label: "fully local, no cloud services" },
+      { metric: "Docker", label: "one-container deploy" },
+    ],
+    highlights: [
+      "Resumable, concurrent downloads that never restart from zero.",
+      "SQLite index keeps 11,000+ items de-duplicated and queryable.",
+      "FastAPI range streaming for instant seeking and scrubbing.",
+      "Virtualized React UI stays smooth thousands of items deep.",
+      "Optional Plex export to watch the archive anywhere.",
+    ],
+    image: {
+      src: "/media-archiver-overview.svg",
+      alt: "Data-flow diagram: saved short-form media is pulled by a resumable, concurrent downloader, indexed in SQLite alongside a local media store, and served by a FastAPI backend with HTTP range streaming to a virtualized React interface and an optional Plex library, all running self-hosted with no cloud services.",
+      width: 1360,
+      height: 460,
     },
   },
   {

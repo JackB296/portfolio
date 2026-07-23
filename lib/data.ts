@@ -130,6 +130,17 @@ export const projects: Project[] = [
     featured: true,
     image: "/8bit-computer.webp",
   },
+  {
+    name: "Self-Hosted Short-Form Media Archiver",
+    blurb:
+      "A Dockerized, fully-local archive for 11,000+ saved short-form videos. Resumable concurrent downloads, a SQLite index, FastAPI range streaming, and a virtualized React interface keep a library thousands of items deep fast and entirely under your control, with optional Plex export.",
+    tools: ["Python", "FastAPI", "React", "TypeScript", "SQLite", "Docker"],
+    github: "https://github.com/JackB296/tiktok-favorites-archiver",
+    caseStudy: "media-archiver",
+    accentLabel: "Full-Stack · Self-Hosted",
+    featured: true,
+    image: "/media-archiver-overview.svg",
+  },
   ...demoProjects,
 ];
 
@@ -141,23 +152,23 @@ type SkillGroup = {
 export const skillGroups: SkillGroup[] = [
   {
     title: "Languages",
-    skills: ["C#", "Java", "Python", "C", "C++", "SQL", "JavaScript", "HTML/CSS", "MATLAB", "VBA"],
+    skills: ["TypeScript", "JavaScript", "C#", "Python", "Java", "SQL", "C / C++", "HTML/CSS"],
   },
   {
     title: "Frameworks",
-    skills: ["React", "Angular", "Node.js", "Flask", ".NET"],
+    skills: ["React", "Next.js", "Angular", "Node.js", ".NET", "Flask"],
   },
   {
-    title: "Databases & Cloud",
-    skills: ["PostgreSQL", "Google Cloud SQL", "Cloud Scheduler", "SQLite", "MS Access", "pgAdmin"],
+    title: "Data & Infrastructure",
+    skills: ["PostgreSQL", "SQLite", "Docker", "Kubernetes", "Git", "CI/CD", "Google Cloud Platform"],
   },
   {
     title: "Industrial Systems",
-    skills: ["Ignition SCADA", "Tag Historian", "OPC-UA", "Siemens S7 PLCs", "Cin7 ERP", "SafetyChain"],
+    skills: ["Ignition SCADA", "OPC-UA", "Siemens S7 PLCs", "Cin7 Core ERP", "SafetyChain QA", "Limble CMMS"],
   },
   {
-    title: "Tools & Concepts",
-    skills: ["Git", "REST APIs", "API Integration", "Database Design", "SSL/TLS", "Full-Stack Dev"],
+    title: "AI-Assisted Development",
+    skills: ["Claude Code", "OpenAI Codex", "MCP Servers", "Custom Claude Skills", "Agentic Workflows"],
   },
   {
     title: "Professional",

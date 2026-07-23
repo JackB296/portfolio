@@ -13,6 +13,7 @@ const caseStudyRing: RingItem[] = professionalCaseStudies.map((c) => ({
 // The 8-bit case-study page and all demo pages cycle through this ring.
 const projectRing: RingItem[] = [
   { href: "/work/8-bit-computer", label: "8-Bit Computer" },
+  { href: "/work/media-archiver", label: "Media Archiver" },
   ...demos.map((d) => ({ href: `/${d.slug}`, label: `${d.title} ${d.titleAccent}` })),
 ];
 

@@ -13,13 +13,13 @@ test("sitemap publishes stable modification dates for indexable routes", async (
 
   const sitemap = await response.text();
   expect(sitemap).toMatch(
-    /<loc>https:\/\/jbialecki\.com<\/loc>\s*<lastmod>2026-07-20T00:00:00.000Z<\/lastmod>/
+    /<loc>https:\/\/jbialecki\.com<\/loc>\s*<lastmod>2026-07-23T00:00:00.000Z<\/lastmod>/
   );
   expect(sitemap).toMatch(
     /<loc>https:\/\/jbialecki\.com\/resume<\/loc>\s*<lastmod>2026-07-19T00:00:00.000Z<\/lastmod>/
   );
   expect(sitemap).toMatch(
-    /<loc>https:\/\/jbialecki\.com\/work\/voyage-foods-dashboard<\/loc>\s*<lastmod>2026-07-20T00:00:00.000Z<\/lastmod>/
+    /<loc>https:\/\/jbialecki\.com\/work\/voyage-foods-dashboard<\/loc>\s*<lastmod>2026-07-23T00:00:00.000Z<\/lastmod>/
   );
   expect(sitemap).toMatch(
     /<loc>https:\/\/jbialecki\.com\/flappy<\/loc>\s*<lastmod>2026-07-20T00:00:00.000Z<\/lastmod>/
@@ -55,7 +55,7 @@ test("case studies publish TechArticle structured data", async ({ page }) => {
     "@type": "TechArticle",
     headline: "One dashboard for the plant floor: ERP, QA, and 200+ live SCADA tags",
     url: "https://jbialecki.com/work/voyage-foods-dashboard",
-    dateModified: "2026-07-20",
+    dateModified: "2026-07-23",
     author: {
       "@type": "Person",
       name: "Jackson Bialecki",

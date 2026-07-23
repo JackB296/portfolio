@@ -1,0 +1,87 @@
+<svg viewBox="0 0 1360 460" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="Data-flow diagram: saved short-form media is pulled by a resumable, concurrent downloader, indexed in SQLite alongside a local media store, and served by a FastAPI backend with HTTP range streaming to a virtualized React interface and an optional Plex library, all running self-hosted with no cloud services.">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="arG" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#6b7180"/></marker>
+    <marker id="arA" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#f59e0b"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1360" height="460" rx="16" fill="#05060a"/>
+  <ellipse cx="680" cy="0" rx="820" ry="260" fill="url(#glow)"/>
+
+  <!-- Title -->
+  <text x="36" y="48" font-size="24" fill="#f2f3f7" font-weight="500">Self-hosted media archiver</text>
+  <text x="36" y="72" font-size="13" fill="#8b91a6">Download, index, and stream 11,000+ saved items. Fully local, no cloud.</text>
+
+  <!-- Column headers -->
+  <g font-size="12.5" fill="#7d8397" letter-spacing="2" text-anchor="middle">
+    <text x="136" y="114">SOURCE</text>
+    <text x="496" y="114">DOWNLOAD</text>
+    <text x="856" y="114">STORE</text>
+    <text x="1216" y="114">SERVE</text>
+  </g>
+
+  <!-- ================= CONNECTORS (drawn first, under boxes) ================= -->
+  <!-- Source -> Downloader -->
+  <line x1="236" y1="217" x2="396" y2="217" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+  <!-- Downloader -> SQLite index -->
+  <line x1="596" y1="217" x2="756" y2="217" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+  <!-- SQLite index -> FastAPI (amber, the serving path) -->
+  <line x1="956" y1="217" x2="1116" y2="217" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <text x="1036" y="209" font-size="10.5" fill="#7d8397" text-anchor="middle">range reads</text>
+  <!-- Media store -> FastAPI (bytes) -->
+  <polyline points="956,353 1036,353 1036,255 1116,255" fill="none" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arA)"/>
+  <text x="1010" y="345" font-size="10.5" fill="#7d8397" text-anchor="start">media bytes</text>
+  <!-- SQLite index -> Media store (same store) -->
+  <line x1="856" y1="244" x2="856" y2="316" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+
+  <!-- ================= NODES ================= -->
+  <!-- COL 1: SOURCE -->
+  <g>
+    <rect x="36" y="180" width="200" height="74" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="50" y="208" font-size="15" fill="#e7e9f3">Saved media</text>
+    <text x="50" y="227" font-size="11.5" fill="#8b91a6">everything you favorited</text>
+    <text x="50" y="243" font-size="11.5" fill="#8b91a6">11,000+ items</text>
+  </g>
+
+  <!-- COL 2: DOWNLOAD -->
+  <g>
+    <rect x="396" y="180" width="200" height="74" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="410" y="208" font-size="15" fill="#e7e9f3">Downloader</text>
+    <text x="410" y="227" font-size="11.5" fill="#8b91a6">concurrent + resumable</text>
+    <text x="410" y="243" font-size="11.5" fill="#8b91a6">picks up where it stopped</text>
+  </g>
+
+  <!-- COL 3: STORE -->
+  <g>
+    <rect x="756" y="180" width="200" height="64" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="770" y="207" font-size="15" fill="#e7e9f3">SQLite index</text>
+    <text x="770" y="226" font-size="11.5" fill="#8b91a6">metadata + dedupe</text>
+
+    <rect x="756" y="316" width="200" height="64" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="770" y="343" font-size="15" fill="#e7e9f3">Media store</text>
+    <text x="770" y="362" font-size="11.5" fill="#8b91a6">files on local disk</text>
+  </g>
+
+  <!-- COL 4: SERVE -->
+  <g>
+    <rect x="1116" y="180" width="200" height="64" rx="10" fill="#171207" stroke="#f59e0b"/>
+    <text x="1130" y="207" font-size="15" fill="#fbbf24">FastAPI</text>
+    <text x="1130" y="226" font-size="11.5" fill="#cfd3e0">HTTP range streaming</text>
+
+    <rect x="1116" y="256" width="200" height="60" rx="10" fill="#171207" stroke="#f59e0b"/>
+    <text x="1130" y="281" font-size="15" fill="#fbbf24">React UI</text>
+    <text x="1130" y="300" font-size="11.5" fill="#cfd3e0">virtualized rows</text>
+
+    <rect x="1116" y="328" width="200" height="52" rx="10" fill="#10131c" stroke="#262a36"/>
+    <text x="1130" y="352" font-size="14" fill="#e7e9f3">Plex</text>
+    <text x="1130" y="370" font-size="11.5" fill="#8b91a6">optional library export</text>
+  </g>
+
+  <!-- FastAPI -> React UI -->
+  <line x1="1216" y1="244" x2="1216" y2="256" stroke="#f59e0b" stroke-width="2.2"/>
+  <!-- Media store -> Plex -->
+  <polyline points="956,364 1036,364 1036,354 1116,354" fill="none" stroke="#6b7180" stroke-width="2.2" marker-end="url(#arG)"/>
+</svg>

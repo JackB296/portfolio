@@ -17,7 +17,7 @@ const icons: Record<string, ReactNode> = {
       <rect x="14" y="14" width="7" height="7" rx="1.5" />
     </>
   ),
-  "Databases & Cloud": (
+  "Data & Infrastructure": (
     <>
       <ellipse cx="12" cy="6" rx="8" ry="3" />
       <path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" strokeLinecap="round" />
@@ -28,10 +28,10 @@ const icons: Record<string, ReactNode> = {
       <path d="M3 21h18M5 21V10l5 3V10l5 3V7l4 2v12" strokeLinecap="round" strokeLinejoin="round" />
     </>
   ),
-  "Tools & Concepts": (
+  "AI-Assisted Development": (
     <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" strokeLinecap="round" />
+      <path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z" strokeLinejoin="round" />
+      <path d="M18.5 15.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9z" strokeLinejoin="round" />
     </>
   ),
   Professional: (

@@ -3,7 +3,7 @@ import type { Demo } from "./demos";
 import { profile } from "./data";
 
 export const SITE_URL = "https://jbialecki.com";
-export const PROFILE_LAST_MODIFIED = "2026-07-20";
+export const PROFILE_LAST_MODIFIED = "2026-07-23";
 /** Bump when the résumé PDF (public/Bialecki_Jackson_Resume2026.pdf) is regenerated. */
 export const RESUME_LAST_MODIFIED = "2026-07-19";
 
@@ -33,9 +33,13 @@ const person = {
     "Full-Stack Web Development",
     "Artificial Intelligence",
     "Machine Learning",
+    "AI-Assisted Development",
     "Industrial Control Systems",
     "PostgreSQL",
     "React",
+    "Next.js",
+    "TypeScript",
+    "Docker",
   ],
   sameAs: [profile.github, profile.linkedin],
 };
