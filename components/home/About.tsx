@@ -19,7 +19,7 @@ export default function About() {
           <div>
             <Reveal>
               <h2 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-                Engineer across the stack and across the{" "}
+                Full Stack Engineer that builds across the {" "}
                 <span className="text-accent">physical / digital</span> divide.
               </h2>
             </Reveal>

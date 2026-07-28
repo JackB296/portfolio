@@ -14,7 +14,7 @@ export default function Experience() {
       <div className="container-x relative z-10">
         <Reveal>
           <h2 className="mb-16 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            Where I&apos;ve shipped.
+            Expierence
           </h2>
         </Reveal>
 

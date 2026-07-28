@@ -351,7 +351,7 @@ export const caseStudies: CaseStudy[] = [
       { metric: "50+", label: "engineers on the team" },
     ],
     highlights: [
-      "Shipped full-stack changes across Angular, .NET, and SQL.",
+      "Made full-stack changes across Angular, .NET, and SQL.",
       "First time contributing to a codebase of this size.",
     ],
   },
