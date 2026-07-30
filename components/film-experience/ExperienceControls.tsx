@@ -115,9 +115,13 @@ export default function ExperienceControls({
             }
             aria-haspopup="dialog"
             onClick={onSimulateClick}
-            className="rounded-full px-2.5 py-1.5 text-accent transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            // The one filled control in the row: the games are the least
+            // discoverable thing in the experience, so the pill states how
+            // many there are rather than naming an action nobody is hunting for.
+            className="flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1.5 text-ink transition-colors hover:bg-accent-bright focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
           >
-            simulate
+            <span aria-hidden className="text-[8px] leading-none">▶</span>
+            {simulations.length} {singleGame ? "game" : "games"}
           </button>
         )}
       </div>

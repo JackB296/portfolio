@@ -22,6 +22,10 @@ export type TheaterEntry = Readonly<{
   grade: FilmGrade | null;
   /** Jack's review of the film — the House entry has none. */
   review?: FilmReview;
+  /** How many playable games this film hides behind its controls; 0 for the
+   * House entry and for films that ship none. Advertised in the detail panel
+   * so a visitor knows before committing to the grade. */
+  gameCount: number;
 }>;
 
 /** Every theater cover in wall order: House first, then the film registry. */
@@ -34,8 +38,9 @@ export const THEATER_ENTRIES: readonly TheaterEntry[] = [
     ink: HOUSE_INK_TRIPLET,
     accent: HOUSE_ACCENT_TRIPLET,
     grade: null,
+    gameCount: 0,
   },
-  ...films.map(({ id, film, year, grade, review }) => ({
+  ...films.map(({ id, film, year, grade, review, experience }) => ({
     id,
     film,
     year,
@@ -46,5 +51,6 @@ export const THEATER_ENTRIES: readonly TheaterEntry[] = [
     // one object identity. Every film id has a grade by construction.
     grade: getGrade(id)!,
     review,
+    gameCount: experience.simulations?.length ?? 0,
   })),
 ];

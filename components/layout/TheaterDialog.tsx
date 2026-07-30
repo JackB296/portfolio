@@ -294,10 +294,26 @@ export default function TheaterDialog({
                   <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/70 sm:text-sm">
                     {focusedReview ? focusedReview.body : focusedEntry.vibe}
                   </p>
-                  {focusedReview && (
-                    <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">
-                      Reviewed by {profile.name}
-                    </p>
+                  {/* The games are invisible until a visitor commits to a
+                      grade and finds the control pill, so the catalog says
+                      up front which covers have something to play. */}
+                  {(focusedEntry.gameCount > 0 || focusedReview) && (
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      {focusedEntry.gameCount > 0 && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-accent">
+                          <span aria-hidden="true" className="text-[8px] leading-none">
+                            ▶
+                          </span>
+                          {focusedEntry.gameCount}{" "}
+                          {focusedEntry.gameCount === 1 ? "game" : "games"} inside
+                        </span>
+                      )}
+                      {focusedReview && (
+                        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">
+                          Reviewed by {profile.name}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </section>
