@@ -5,6 +5,7 @@ import { caseStudies, getCaseStudy, professionalCaseStudySlugs } from "@/lib/cas
 import { nextForWork } from "@/lib/projectNav";
 import { profile } from "@/lib/data";
 import BackLink from "@/components/ui/BackLink";
+import DemoVideo from "@/components/ui/DemoVideo";
 import Glow from "@/components/ui/Glow";
 import Img from "@/components/ui/Img";
 import Pill from "@/components/ui/Pill";
@@ -70,15 +71,27 @@ export default function CaseStudyPage({
           </div>
         </header>
 
-        {cs.image && (
+        {(cs.image || cs.video) && (
           <figure className="mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-accent/10">
-            <Img
-              src={cs.image.src}
-              alt={cs.image.alt}
-              width={cs.image.width}
-              height={cs.image.height}
-              className="block h-auto w-full"
-            />
+            {cs.video && (
+              <DemoVideo
+                src={cs.video.src}
+                poster={cs.video.poster}
+                label={cs.video.label}
+                width={cs.video.width}
+                height={cs.video.height}
+                className="block h-auto w-full motion-reduce:hidden"
+              />
+            )}
+            {cs.image && (
+              <Img
+                src={cs.image.src}
+                alt={cs.image.alt}
+                width={cs.image.width}
+                height={cs.image.height}
+                className={`block h-auto w-full ${cs.video ? "hidden motion-reduce:block" : ""}`}
+              />
+            )}
           </figure>
         )}
 

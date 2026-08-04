@@ -133,8 +133,8 @@ export const projects: Project[] = [
   {
     name: "Self-Hosted Short-Form Media Archiver",
     blurb:
-      "A Dockerized, fully-local archive for 11,000+ saved short-form videos. Resumable concurrent downloads, a SQLite index, FastAPI range streaming, and a virtualized React interface keep a library thousands of items deep fast and entirely under your control, with optional Plex export.",
-    tools: ["Python", "FastAPI", "React", "TypeScript", "SQLite", "Docker"],
+      "A two-year solo project shipped as v1.0.0: turns a TikTok data export into a permanent, searchable local library of 11,000+ favorites. Resumable downloads, photo slideshows rebuilt into MP4s, local speech and on-screen text search with jump-to-timestamp, and a virtualized React interface, all in one Docker deploy.",
+    tools: ["Python", "FastAPI", "React", "TypeScript", "SQLite", "whisper.cpp", "Docker"],
     github: "https://github.com/JackB296/tiktok-favorites-archiver",
     caseStudy: "media-archiver",
     accentLabel: "Full-Stack · Self-Hosted",

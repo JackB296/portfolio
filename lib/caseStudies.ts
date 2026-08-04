@@ -22,6 +22,11 @@ export type CaseStudy = {
   /** Plain-language results for wins that aren't honest as a KPI tile. */
   highlights?: string[];
   image?: { src: string; alt: string; width: number; height: number };
+  /**
+   * Autoplaying, muted demo clip shown as the hero instead of `image`.
+   * `image` remains the reduced-motion fallback and the JSON-LD image.
+   */
+  video?: { src: string; poster: string; label: string; width: number; height: number };
   featured?: boolean;
 };
 
@@ -243,64 +248,82 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "media-archiver",
-    lastModified: "2026-07-23",
+    lastModified: "2026-08-04",
     company: "Personal Project",
     cardName: "Self-Hosted Media Archiver",
     cardBlurb:
-      "A Dockerized, fully-local archive for 11,000+ saved short-form videos: resumable concurrent downloads, a SQLite index, FastAPI range streaming, and a virtualized React interface, with optional Plex export.",
-    headline: "Archiving 11,000+ short-form videos, fully self-hosted",
+      "A two-year solo project, shipped as v1.0.0: a Dockerized archiver that turns a TikTok data export into a permanent, searchable local library of 11,000+ favorites, with local speech and on-screen text search, rebuilt photo slideshows, and 57 backend test files plus 23 frontend suites green in CI.",
+    headline: "Turning a TikTok data export into a permanent, searchable library",
     role: "Solo Build",
-    period: "2025 - Present",
+    period: "Aug 2024 - Present",
     location: "Self-Hosted · Docker",
     accentLabel: "Full-Stack · Self-Hosted",
-    tags: ["Python", "FastAPI", "React", "TypeScript", "SQLite", "Docker"],
+    tags: ["Python", "FastAPI", "React", "TypeScript", "SQLite", "whisper.cpp", "Docker"],
     summary:
-      "Short-form videos you save aren't really yours: they live on someone else's servers and vanish when a video is taken down or an account goes private. I built a self-hosted archive that pulls everything I'd favorited onto my own disk, indexes it, and streams it back through a fast web interface. No cloud, no account, nothing leaving the machine.",
+      "Favorites on TikTok aren't really yours: the posts live on someone else's servers and vanish when a video is taken down or an account goes private. Over two years I built a self-hosted archiver that turns the official TikTok data export into a permanent local library, with every favorite downloaded, indexed, and searchable down to the words spoken inside the videos. I shipped v1.0.0 in August 2026, MIT licensed, and I use it daily on my own 11,000+ item archive.",
     problem: [
-      "I'd favorited thousands of short-form videos over the years, and they kept disappearing: deleted posts, private accounts, dead links. A 'saved' list is only a bookmark to content someone else controls, not a copy of it.",
-      "Archiving that much media is its own problem. Downloads fail and have to resume without starting over, 11,000+ files need to stay organized and de-duplicated, and browsing a library that large has to feel instant instead of loading everything at once.",
+      "I'd favorited over 11,000 videos, and they kept disappearing: deleted posts, private accounts, dead links. A saved list is just a bookmark to content someone else controls. I wanted a real copy on my own disk that nothing could take down.",
+      "An archive that size is its own engineering problem. The export data is messy, downloads fail mid-run, photo slideshows aren't even videos, and once everything is on disk you still have to find one clip out of 11,000. Each of those became a subsystem: a resumable download engine, a slideshow renderer, local speech and text search, and an interface fast enough to scroll the whole library.",
     ],
     approach: [
       {
-        title: "Download resumably, in parallel",
-        body: "I built a concurrent downloader that fetches many items at once and checkpoints its progress, so an interrupted run picks up exactly where it stopped instead of re-downloading what it already has.",
+        title: "A download engine that expects failure",
+        body: "Every favorite is fetched through a self-hosted Cobalt instance by a rate-limited worker pool with 429 backoff. Writes are atomic (.part, then rename), runs are resumable, and dead posts become position-stable placeholder markers instead of errors, so a rerun never renumbers or overwrites what's already archived.",
       },
       {
-        title: "Index everything in SQLite",
-        body: "Every item is recorded in a SQLite index with its metadata, so the archive can dedupe, track what's already downloaded, and answer queries against 11,000+ entries without scanning the disk.",
+        title: "Rebuilding photo slideshows into real videos",
+        body: "TikTok photo slideshows arrive as loose images plus an audio track. An ffmpeg/MoviePy pipeline reassembles them into MP4s with their original audio, so they play like any other video in the archive. No comparable tool does this.",
       },
       {
-        title: "Stream it back with FastAPI",
-        body: "A FastAPI backend serves the media with HTTP range requests, so videos seek and scrub instantly and the browser only pulls the bytes it needs instead of whole files.",
+        title: "Search inside the videos",
+        body: "Bundled whisper.cpp speech transcription and Tesseract OCR run fully local, in-container, indexing what's said and what's on screen. I can search 'parmesan' and jump to the exact second someone says it. whisper.cpp compiles from source in a multi-stage Dockerfile with SHA-256-pinned model downloads, adds 142 MiB to the image, and analysis is pausable and resumable.",
       },
       {
-        title: "Browse thousands of items smoothly",
-        body: "The React front end is virtualized, rendering only the rows on screen, so scrolling a library thousands of items deep stays smooth. The whole thing ships as a Docker container and can optionally export into a Plex library.",
+        title: "An interface that keeps up with 11,000 items",
+        body: "A TikTok-style vertical feed and a virtualized, searchable gallery stay responsive across the whole archive. Fifteen UI tabs over roughly 90 API routes cover stats dashboards, creator and hashtag discovery, 'on this day' memories, private curation with stars, tags, and notes, duplicate detection, and similarity search built on a stdlib TF-IDF embedding.",
+      },
+      {
+        title: "A security model for a no-auth local app",
+        body: "A Host-header allowlist guards against DNS rebinding, a custom-header CSRF defense forces a CORS preflight on state-changing requests, and media serving walks directories with O_NOFOLLOW file descriptors to block path traversal. The only outbound calls are opt-in and off by default: Shazam song ID and Spotify playlist push. Zero telemetry.",
+      },
+      {
+        title: "Shipped like a product",
+        body: "v1.0.0 is a multi-arch Docker image (amd64 and arm64) published to GHCR through Actions, deployed with a single compose command, with install templates for Unraid, CasaOS, and Umbrel. Behind it sit 57 backend test files and 23 frontend behavior suites, all green in CI on every push, and a synthetic demo-data seeder that drives real app code paths for the screenshots and demo GIF.",
       },
     ],
     stack: [
-      { group: "Backend", items: ["Python", "FastAPI", "Range Streaming"] },
-      { group: "Frontend", items: ["React", "TypeScript", "Virtualized Lists"] },
-      { group: "Data", items: ["SQLite", "Local Media Store"] },
-      { group: "Deploy", items: ["Docker", "Self-Hosted", "Plex (optional)"] },
+      { group: "Backend", items: ["Python 3.12", "FastAPI", "SQLite"] },
+      { group: "Media & Search", items: ["ffmpeg / MoviePy", "Cobalt", "whisper.cpp", "Tesseract OCR"] },
+      { group: "Frontend", items: ["React 18", "TypeScript", "Tailwind 4", "Vite"] },
+      { group: "Deploy", items: ["Docker (multi-arch)", "GHCR", "Compose"] },
     ],
     outcomes: [
-      { metric: "11,000+", label: "media items archived & streamable" },
-      { metric: "Self-hosted", label: "fully local, no cloud services" },
-      { metric: "Docker", label: "one-container deploy" },
+      { metric: "11,000+", label: "favorites archived, searchable, driven daily" },
+      { metric: "22k", label: "lines of code, plus 11.7k lines of tests" },
+      { metric: "90", label: "API routes behind 15 UI tabs" },
+      { metric: "80", label: "test suites green in CI on every push" },
     ],
     highlights: [
-      "Resumable, concurrent downloads that never restart from zero.",
-      "SQLite index keeps 11,000+ items de-duplicated and queryable.",
-      "FastAPI range streaming for instant seeking and scrubbing.",
-      "Virtualized React UI stays smooth thousands of items deep.",
-      "Optional Plex export to watch the archive anywhere.",
+      "Photo slideshows rebuilt into MP4s with their original audio.",
+      "Speech and on-screen text search with jump-to-timestamp results.",
+      "Dead posts become position-stable placeholders; reruns never renumber.",
+      "Survived an adversarial multi-round security audit.",
+      "Multi-arch Docker image on GHCR; one compose command to deploy.",
+      "Plex, Jellyfin, and Kodi sidecar export for the whole library.",
     ],
     image: {
       src: "/media-archiver-overview.svg",
       alt: "Data-flow diagram: saved short-form media is pulled by a resumable, concurrent downloader, indexed in SQLite alongside a local media store, and served by a FastAPI backend with HTTP range streaming to a virtualized React interface and an optional Plex library, all running self-hosted with no cloud services.",
       width: 1360,
       height: 460,
+    },
+    video: {
+      src: "/media-archiver-demo.mp4",
+      poster: "/media-archiver-demo-poster.webp",
+      label:
+        "Screen recording of the archiver's first run on synthetic demo data: importing a TikTok export, downloading favorites, then browsing the feed, gallery, search, and stats views.",
+      width: 960,
+      height: 600,
     },
   },
   {
