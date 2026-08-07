@@ -9,10 +9,10 @@ export const profile = {
   status: "Available for co-op: Spring 2027",
   location: "Cincinnati, Ohio",
   tagline:
-    "I build real production systems where the web meets the real world; full-stack apps, ML experiments, and the SCADA/ERP pipelines that keep factories running.",
+  "I build full-stack apps, ML experiments, and the SCADA/ERP pipelines that keep a factory running.",
   bio: [
-    "I'm a Full Stack Engineer and Computer Science student at the University of Cincinnati, working through a 5-year co-op program. I've worked on real production software at a manufacturing plant, an enterprise software company, and an ed-tech startup.",
-    "My range runs from React/Angular front ends and C#/.NET and Node APIs down to PostgreSQL data layers and Ignition SCADA tag historians. I like problems like integrations, migrations, and dashboards that turn messy real-world data into something people can actually use.",
+  "I'm a Full Stack Engineer and Computer Science student at the University of Cincinnati, in a 5-year co-op program. I've shipped production software at a manufacturing plant, an enterprise software company, and an ed-tech startup.",
+  "My range runs from React and Angular front ends through C#/.NET and Node APIs down to PostgreSQL data layers and Ignition SCADA tag historians. I like integrations, migrations, and dashboards — the work of turning messy real-world data into something people actually use.",
   ],
   email: "bialecjr@mail.uc.edu",
   github: "https://github.com/JackB296",
