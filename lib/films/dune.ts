@@ -13,6 +13,7 @@ const dune: FilmDefinition = {
     accentBright: "245 158 11",
     accentDim: "146 64 14",
     grain: 0.06,
+    fontDisplay: "Optima, Candara, 'Gill Sans', 'Segoe UI', sans-serif",
   },
   experience: defineExperience({
     label: "Desert power",

@@ -25,8 +25,13 @@ export type FilmGrade = {
   grain?: number;
   /** CSS filter applied to every <img> while the grade is active. */
   imageFilter?: string;
-  /** Heading font treatment. Default keeps Space Grotesk. */
-  display?: "serif" | "mono";
+  /** The film's typeface, as a CSS font-family stack chosen for its
+   * aesthetic. Overrides the site-wide font slots (--font-pixel, --font-name,
+   * and body --font-sans), so the navbar, hero, labels, and running text all
+   * speak the film's typography. Omit to keep the house pixel voice. */
+  fontDisplay?: string;
+  /** Optional separate stack for running text; defaults to fontDisplay. */
+  fontBody?: string;
 };
 
 /** The per-record grade shape; id/film/year live on the record itself. */

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { profile } from "@/lib/data";
@@ -10,15 +11,26 @@ import GuestTerminal from "@/components/terminal/GuestTerminal";
 import PlaygroundToggle from "@/components/playground/PlaygroundToggle";
 import FilmExperienceRoot from "@/components/film-experience/FilmExperienceRoot";
 
+// The -base variables are the raw faces; globals.css maps them onto the
+// --font-sans / --font-pixel slots the Tailwind families read, so a film
+// grade can re-voice the whole site by overriding the slots inline.
 const sans = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-sans-base",
   display: "swap",
 });
 
 const mono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  display: "swap",
+});
+
+// The signature display face: a pixel mono whose letterforms share DNA with
+// the Game of Life cells. Self-hosted (OFL license lives next to the file).
+const pixel = localFont({
+  src: "./fonts/DepartureMono-Regular.woff2",
+  variable: "--font-pixel-base",
   display: "swap",
 });
 
@@ -77,7 +89,7 @@ export default function RootLayout({
     // data attributes) before React hydrates; that mismatch is intentional.
     <html
       lang="en"
-      className={`${sans.variable} ${mono.variable}`}
+      className={`${sans.variable} ${mono.variable} ${pixel.variable}`}
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">

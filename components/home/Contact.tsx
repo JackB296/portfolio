@@ -1,7 +1,6 @@
 "use client";
 
 import { profile } from "@/lib/data";
-import Glow from "../ui/Glow";
 import Reveal from "../ui/Reveal";
 import ContactForm from "./ContactForm";
 
@@ -10,8 +9,6 @@ export default function Contact() {
   // near the top of the viewport when the nav "Contact" link lands here.
   return (
     <section id="contact" className="relative scroll-mt-20 pt-20 pb-28 sm:pt-24 sm:pb-36">
-      <Glow className="top-1/2 h-[400px] w-[600px] -translate-y-1/2 blur-[120px]" />
-
       <div className="container-x">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           {/* Left: pitch + direct links */}
@@ -97,11 +94,15 @@ function ContactLink({
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className="group flex items-center gap-3.5 text-sm text-white/70 transition-colors hover:text-white"
     >
-      <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-white/10 bg-white/[0.02] text-white/60 transition-colors group-hover:border-accent/40 group-hover:text-accent">
-        <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          {icon}
-        </svg>
-      </span>
+      <svg
+        className="h-[18px] w-[18px] flex-none text-white/50 transition-colors group-hover:text-accent"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        {icon}
+      </svg>
       <span className="font-mono">{label}</span>
     </a>
   );

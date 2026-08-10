@@ -12,7 +12,7 @@ const amadeus: FilmDefinition = {
     accent: "253 224 71",
     accentBright: "254 240 138",
     accentDim: "161 98 7",
-    display: "serif",
+    fontDisplay: "'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif"
   },
   experience: defineExperience({
     label: "Candlelit manuscript",

@@ -13,6 +13,7 @@ const fightClub: FilmDefinition = {
     accentBright: "249 168 212",
     accentDim: "190 24 93",
     grain: 0.06,
+    fontDisplay: "'Courier New', Courier, monospace",
   },
   experience: defineExperience({
     label: "Fractured catalog",

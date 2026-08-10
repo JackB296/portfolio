@@ -12,6 +12,7 @@ const spaceOdyssey: FilmDefinition = {
     accent: "220 38 38",
     accentBright: "248 113 113",
     accentDim: "153 27 27",
+    fontDisplay: "Futura, 'Century Gothic', 'Trebuchet MS', sans-serif",
   },
   experience: defineExperience({
     label: "Orbital alignment",

@@ -8,7 +8,10 @@ import { isHouse } from "@/lib/useHtmlAttr";
 
 const CELL = 16; // CSS px per cell
 const STEP_MS = 150; // generation length
-const SEED_DENSITY = 0.12;
+const SOUP_DENSITY = 0.12;
+
+/** The hero readout listens for this: detail is { gen, pop, preset }. */
+export const LIFE_STATS_EVENT = "life:stats";
 
 type CellPalette = readonly [newborn: string, young: string, mature: string, elder: string];
 
@@ -44,12 +47,78 @@ function getCellPalette(): CellPalette {
   return [bright, accent, accent, dim];
 }
 
-/**
- * Conway's Game of Life as the hero backdrop, in bright age-based colors.
- * The same automaton as the /game-of-life demo, tuned to sit behind text:
- * sparse seed, age-colored cells, and cells born under the cursor.
- * Honors prefers-reduced-motion by rendering a single static generation.
- */
+/* ------------------------------------------------------------------ */
+/* Pattern library — the classics, as readable "O"/"." stamps.        */
+/* ------------------------------------------------------------------ */
+
+const GLIDER = [
+  ".O.",
+  "..O",
+  "OOO",
+];
+
+// Lightweight spaceship, travels horizontally.
+const LWSS = [
+  ".O..O",
+  "O....",
+  "O...O",
+  "OOOO.",
+];
+
+// Period-3 oscillator, the showiest of the common ones.
+const PULSAR = [
+  "..OOO...OOO..",
+  ".............",
+  "O....O.O....O",
+  "O....O.O....O",
+  "O....O.O....O",
+  "..OOO...OOO..",
+  ".............",
+  "..OOO...OOO..",
+  "O....O.O....O",
+  "O....O.O....O",
+  "O....O.O....O",
+  ".............",
+  "..OOO...OOO..",
+];
+
+// Period-15 oscillator.
+const PENTADECATHLON = [
+  "..O....O..",
+  "OO.OOOO.OO",
+  "..O....O..",
+];
+
+// Methuselahs: tiny seeds that boil chaotically for hundreds of generations.
+const R_PENTOMINO = [
+  ".OO",
+  "OO.",
+  ".O.",
+];
+
+const ACORN = [
+  ".O.....",
+  "...O...",
+  "OO..OOO",
+];
+
+// Gosper's glider gun: fires a glider every 30 generations, forever.
+const GLIDER_GUN = [
+  "........................O...........",
+  "......................O.O...........",
+  "............OO......OO............OO",
+  "...........O...O....OO............OO",
+  "OO........O.....O...OO..............",
+  "OO........O...O.OO....O.O...........",
+  "..........O.....O.......O...........",
+  "...........O...O....................",
+  "............OO......................",
+];
+
+type Pattern = string[];
+
+/* ------------------------------------------------------------------ */
+
 export default function LifeHero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduced = useReducedMotion();
@@ -71,13 +140,139 @@ export default function LifeHero() {
     let running = false;
     let inView = true;
     let palette = getCellPalette();
+    let gen = 0;
+    let pop = 0;
+    let presetName = "";
+    // Stagnation tracking: consecutive low-activity generations, and a
+    // cooldown so revival stamps never pile on top of each other.
+    let dullStreak = 0;
+    let injectCooldown = 0;
 
     const idx = (x: number, y: number) => y * cols + x;
 
+    /* ---- pattern stamping ---- */
+
+    // Random orientation: identity / mirrored / flipped / transposed.
+    function orient(pattern: Pattern): Pattern {
+      let p = pattern;
+      if (Math.random() < 0.5) p = p.map((row) => row.split("").reverse().join(""));
+      if (Math.random() < 0.5) p = [...p].reverse();
+      if (Math.random() < 0.5 && p.length !== p[0].length) {
+        // transpose only when it changes the silhouette
+        const t: string[] = [];
+        for (let x = 0; x < p[0].length; x++) {
+          t.push(p.map((row) => row[x]).join(""));
+        }
+        p = t;
+      }
+      return p;
+    }
+
+    function stamp(pattern: Pattern, cx: number, cy: number) {
+      const p = orient(pattern);
+      for (let y = 0; y < p.length; y++) {
+        for (let x = 0; x < p[y].length; x++) {
+          if (p[y][x] !== "O") continue;
+          const gx = (cx + x + cols) % cols;
+          const gy = (cy + y + rows) % rows;
+          grid[idx(gx, gy)] = 1;
+        }
+      }
+    }
+
+    function stampRandom(pattern: Pattern, margin = 0.12) {
+      const mx = Math.floor(cols * margin);
+      const my = Math.floor(rows * margin);
+      const x = mx + Math.floor(Math.random() * Math.max(1, cols - 2 * mx - pattern[0].length));
+      const y = my + Math.floor(Math.random() * Math.max(1, rows - 2 * my - pattern.length));
+      stamp(pattern, x, y);
+    }
+
+    function soup(density: number) {
+      for (let i = 0; i < grid.length; i++) {
+        if (Math.random() < density) grid[i] = 1;
+      }
+    }
+
+    /* ---- opening presets ---- */
+
+    const PRESETS: [name: string, seed: () => void][] = [
+      [
+        "primordial soup",
+        () => soup(SOUP_DENSITY),
+      ],
+      [
+        "glider gun",
+        () => {
+          // The gun sits in the upper third and streams gliders forever;
+          // thin soup elsewhere keeps the rest of the field breathing.
+          soup(0.045);
+          // A phone-width grid is narrower than the gun; ships stand in.
+          if (cols > GLIDER_GUN[0].length + 8) stamp(GLIDER_GUN, 3, 3);
+          else for (let i = 0; i < 2; i++) stampRandom(LWSS);
+          for (let i = 0; i < 3; i++) stampRandom(GLIDER);
+        },
+      ],
+      [
+        "methuselah bloom",
+        () => {
+          // Near-empty field; two tiny seeds boil into chaos for minutes.
+          soup(0.015);
+          stampRandom(R_PENTOMINO, 0.3);
+          stampRandom(ACORN, 0.2);
+        },
+      ],
+      [
+        "oscillator garden",
+        () => {
+          soup(0.02);
+          const across = Math.max(1, Math.floor(cols / 34));
+          for (let i = 0; i < across; i++) {
+            stamp(
+              PULSAR,
+              Math.floor(((i + 0.5) * cols) / across - 6),
+              Math.floor(rows * (0.22 + Math.random() * 0.4))
+            );
+          }
+          stampRandom(PENTADECATHLON);
+          for (let i = 0; i < 2; i++) stampRandom(GLIDER);
+        },
+      ],
+      [
+        "spaceship fleet",
+        () => {
+          soup(0.03);
+          const ships = 4 + Math.floor(Math.random() * 3);
+          for (let i = 0; i < ships; i++) stampRandom(LWSS);
+          stampRandom(PULSAR);
+        },
+      ],
+    ];
+
     function seed() {
       grid.fill(0);
-      for (let i = 0; i < grid.length; i++) {
-        if (Math.random() < SEED_DENSITY) grid[i] = 1;
+      const [name, plant] = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+      presetName = name;
+      plant();
+      gen = 0;
+      dullStreak = 0;
+      injectCooldown = 0;
+    }
+
+    // When the field goes quiet, drop in something alive rather than wiping
+    // the canvas: a methuselah, a few ships, or (rarely) a whole gun.
+    function inject() {
+      const roll = Math.random();
+      if (roll < 0.35) {
+        stampRandom(ACORN, 0.2);
+      } else if (roll < 0.7) {
+        stampRandom(R_PENTOMINO, 0.25);
+        stampRandom(GLIDER);
+      } else if (roll < 0.9 || cols <= GLIDER_GUN[0].length + 8) {
+        stampRandom(LWSS, 0.2);
+        stampRandom(LWSS, 0.2);
+      } else {
+        stampRandom(GLIDER_GUN, 0.15);
       }
     }
 
@@ -96,6 +291,8 @@ export default function LifeHero() {
     }
 
     function step() {
+      let changed = 0;
+      let alive = 0;
       for (let y = 0; y < rows; y++) {
         const up = (y - 1 + rows) % rows;
         const dn = (y + 1) % rows;
@@ -111,17 +308,43 @@ export default function LifeHero() {
             (grid[idx(lf, dn)] ? 1 : 0) +
             (grid[idx(x, dn)] ? 1 : 0) +
             (grid[idx(rt, dn)] ? 1 : 0);
-          const alive = grid[idx(x, y)] > 0;
-          if (alive && (n === 2 || n === 3)) {
+          const was = grid[idx(x, y)] > 0;
+          if (was && (n === 2 || n === 3)) {
             next[idx(x, y)] = Math.min(grid[idx(x, y)] + 1, 12);
-          } else if (!alive && n === 3) {
+          } else if (!was && n === 3) {
             next[idx(x, y)] = 1;
           } else {
             next[idx(x, y)] = 0;
           }
+          const is = next[idx(x, y)] > 0;
+          if (is !== was) changed++;
+          if (is) alive++;
         }
       }
       [grid, next] = [next, grid];
+      gen++;
+      pop = alive;
+
+      // Boring-field detection. Settled ash (a few blinkers) flips only a
+      // handful of cells per generation; healthy soup flips hundreds.
+      const cells = cols * rows;
+      if (injectCooldown > 0) injectCooldown--;
+      if (changed < cells * 0.008 || alive < cells * 0.02) {
+        dullStreak++;
+      } else {
+        dullStreak = 0;
+      }
+      if (dullStreak > 45 && injectCooldown === 0) {
+        inject();
+        dullStreak = 0;
+        injectCooldown = 90;
+      }
+    }
+
+    function publishStats() {
+      window.dispatchEvent(
+        new CustomEvent(LIFE_STATS_EVENT, { detail: { gen, pop, preset: presetName } })
+      );
     }
 
     function draw() {
@@ -145,6 +368,7 @@ export default function LifeHero() {
           ctx!.fillRect(x * CELL + 2, y * CELL + 2, CELL - 4, CELL - 4);
         }
       }
+      publishStats();
     }
 
     function frame(t: number) {

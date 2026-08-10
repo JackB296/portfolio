@@ -12,6 +12,7 @@ const royalTenenbaums: FilmDefinition = {
     accent: "234 179 8",
     accentBright: "250 204 21",
     accentDim: "161 98 7",
+    fontDisplay: "Rockwell, 'Rockwell Nova', 'Courier New', serif",
   },
   experience: defineExperience({
     label: "Illustrated family archive",

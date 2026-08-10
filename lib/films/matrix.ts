@@ -13,7 +13,7 @@ const matrix: FilmDefinition = {
     accentBright: "74 222 128",
     accentDim: "21 128 61",
     grain: 0.05,
-    display: "mono",
+    fontDisplay: "var(--font-mono), ui-monospace, monospace"
   },
   experience: defineExperience({
     label: "System under the system",

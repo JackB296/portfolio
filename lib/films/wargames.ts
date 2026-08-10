@@ -13,7 +13,7 @@ const wargames: FilmDefinition = {
     accentBright: "96 165 250",
     accentDim: "29 78 216",
     grain: 0.05,
-    display: "mono",
+    fontDisplay: "var(--font-pixel-base), var(--font-mono), monospace"
   },
   experience: defineExperience({
     label: "JXN-83 simulation",

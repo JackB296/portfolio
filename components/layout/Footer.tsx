@@ -31,7 +31,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={s.label}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] text-white/60 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:text-accent"
+              className="flex h-11 w-11 items-center justify-center text-white/60 transition-colors hover:text-accent"
             >
               <s.Icon className="h-5 w-5" />
             </a>

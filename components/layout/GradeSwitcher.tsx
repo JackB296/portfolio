@@ -62,7 +62,7 @@ export default function GradeSwitcher() {
         <TheaterIcon className="h-[18px] w-[18px] flex-none" />
         {/* The marquee: names the grade the visitor is looking at. */}
         <span
-          className={`hidden max-w-40 truncate font-mono text-[11px] tracking-wide lg:inline ${
+          className={`hidden max-w-40 truncate font-pixel text-[11px] lowercase tracking-wide lg:inline ${
             active ? "text-accent" : ""
           }`}
         >

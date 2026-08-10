@@ -48,7 +48,9 @@ export function getGrade(id: string | null | undefined) {
   return grades.find((g) => g.id === id);
 }
 
-/** The custom-property map a grade sets on <html>. */
+/** The custom-property map a grade sets on <html>. Font keys are always
+ * present (falling back to the house faces) so ALL_VARS removal and
+ * grade-to-grade switches can never leave a stale voice behind. */
 function gradeVars(g: FilmGrade): Record<string, string> {
   return {
     "--ink-rgb": g.ink,
@@ -59,6 +61,9 @@ function gradeVars(g: FilmGrade): Record<string, string> {
     "--accent-dim-rgb": g.accentDim,
     "--grain-opacity": String(g.grain ?? 0.035),
     "--grade-image-filter": g.imageFilter ?? "none",
+    "--font-pixel": g.fontDisplay ?? "var(--font-pixel-base)",
+    "--font-name": g.fontDisplay ?? "var(--font-mono)",
+    "--font-sans": g.fontBody ?? g.fontDisplay ?? "var(--font-sans-base)",
   };
 }
 
@@ -74,13 +79,10 @@ export function applyGrade(
   if (!g) {
     ALL_VARS.forEach((v) => el.style.removeProperty(v));
     delete el.dataset.grade;
-    delete el.dataset.gradeDisplay;
   } else {
     const vars = gradeVars(g);
     Object.entries(vars).forEach(([k, v]) => el.style.setProperty(k, v));
     el.dataset.grade = g.id;
-    if (g.display) el.dataset.gradeDisplay = g.display;
-    else delete el.dataset.gradeDisplay;
   }
   window.dispatchEvent(
     new CustomEvent<GradeChangeDetail>(GRADE_EVENT, {
@@ -156,13 +158,13 @@ export function gradeBootScript(): string {
     films.map(({ id, film, year, grade, experience }) => [
       id,
       {
-        // One var map: the grade's custom properties plus the film's material
-        // tokens, serialized by the same helpers the runtime writers use.
+        // One var map: the grade's custom properties (colors + type voice)
+        // plus the film's material tokens, serialized by the same helpers
+        // the runtime writers use.
         v: {
           ...gradeVars({ id, film, year, ...grade }),
           ...filmTokenVars(experience.tokens),
         },
-        d: grade.display ?? "",
         m: experience.tokens.motion,
       },
     ])
@@ -171,5 +173,5 @@ export function gradeBootScript(): string {
     GRADE_STORAGE_KEY
   )});if(!id)return;var G=${JSON.stringify(
     data
-  )};var g=G[id];if(!g)return;var d=document.documentElement;for(var k in g.v){d.style.setProperty(k,g.v[k]);}d.dataset.grade=id;if(g.d)d.dataset.gradeDisplay=g.d;d.dataset.filmMode=id;d.dataset.filmMotion=g.m;}catch(e){}})();`;
+  )};var g=G[id];if(!g)return;var d=document.documentElement;for(var k in g.v){d.style.setProperty(k,g.v[k]);}d.dataset.grade=id;d.dataset.filmMode=id;d.dataset.filmMotion=g.m;}catch(e){}})();`;
 }

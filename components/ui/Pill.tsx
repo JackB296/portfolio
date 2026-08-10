@@ -5,16 +5,14 @@ import type {
   ReactNode,
 } from "react";
 
-// The site's pill-shaped call-to-action. Pass `href` for a link — internal
+// The site's call-to-action. Square-cornered and set in the pixel face, so
+// every CTA belongs to the cellular system. Pass `href` for a link — internal
 // navigation renders a Next <Link>; downloads and new-tab links render a
-// plain <a> — or button props (type, onClick, disabled) for a <button>. The
-// variant and size classes are the exact sets the pages used before this
-// component existed, so the rendered CSS is unchanged.
+// plain <a> — or button props (type, onClick, disabled) for a <button>.
 
-const BASE = "rounded-full text-sm font-medium transition-colors";
+const BASE = "font-pixel text-sm lowercase tracking-wide transition-colors";
 
-/** The accent-solid recipe, shared with MagneticButton so the two solid
-    pills can't drift apart. */
+/** The accent-solid recipe. */
 export const PILL_SOLID_CLASSES = "bg-accent text-ink hover:bg-accent-bright";
 
 const VARIANTS = {

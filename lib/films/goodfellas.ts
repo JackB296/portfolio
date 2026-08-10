@@ -12,7 +12,7 @@ const goodfellas: FilmDefinition = {
     accent: "220 38 38",
     accentBright: "252 165 165",
     accentDim: "127 29 29",
-    display: "serif",
+    fontDisplay: "'Times New Roman', Times, Georgia, serif"
   },
   experience: defineExperience({
     label: "Copacabana to final day",

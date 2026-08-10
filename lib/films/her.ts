@@ -12,6 +12,7 @@ const her: FilmDefinition = {
     accent: "251 113 133",
     accentBright: "253 164 175",
     accentDim: "190 18 60",
+    fontDisplay: "ui-rounded, 'Hiragino Maru Gothic ProN', 'Trebuchet MS', sans-serif",
   },
   experience: defineExperience({
     label: "Attentive operating system",

@@ -313,7 +313,7 @@ test("open hero removes terminal framing and softens the Game of Life", async ({
   const intro = page.getByTestId("hero-intro");
   await expect(intro).toBeVisible();
   await expect(intro.locator("h1")).toBeVisible();
-  await expect(intro.getByRole("link", { name: /View Projects/ })).toBeVisible();
+  await expect(intro.getByRole("link", { name: /view projects/i })).toBeVisible();
   await expect(page.getByTestId("hero-terminal-frame")).toHaveCount(0);
   await expect(page.getByText("jackson@portfolio: ~", { exact: true })).toHaveCount(0);
   await expect(page.getByText("neofetch", { exact: true })).toHaveCount(0);

@@ -68,18 +68,16 @@ export default function Projects() {
 
         {/* Group 1: personal / class projects */}
         <Reveal>
-          <h3 className="mb-6 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.2em] text-white/60">
-            Projects
-            <span className="h-px flex-1 bg-white/[0.08]" />
+          <h3 className="mb-6 font-pixel text-[11px] lowercase tracking-wide text-white/60">
+            projects · {String(projects.length).padStart(2, "0")}
           </h3>
         </Reveal>
         <Grid items={projects} />
 
         {/* Group 2: professional case studies */}
         <Reveal>
-          <h3 className="mb-6 mt-16 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.2em] text-white/60">
-            Case Studies
-            <span className="h-px flex-1 bg-white/[0.08]" />
+          <h3 className="mb-6 mt-16 font-pixel text-[11px] lowercase tracking-wide text-white/60">
+            case studies · {String(caseStudyCards.length).padStart(2, "0")}
           </h3>
         </Reveal>
         <Grid items={caseStudyCards} />

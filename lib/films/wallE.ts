@@ -12,6 +12,7 @@ const wallE: FilmDefinition = {
     accent: "34 211 238",
     accentBright: "103 232 249",
     accentDim: "14 116 144",
+    fontDisplay: "'Arial Rounded MT Bold', Verdana, 'Trebuchet MS', sans-serif",
   },
   experience: defineExperience({
     label: "Dust and regrowth",

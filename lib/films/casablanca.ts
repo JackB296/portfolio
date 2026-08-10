@@ -16,7 +16,7 @@ const casablanca: FilmDefinition = {
     accentDim: "113 113 122",
     grain: 0.09,
     imageFilter: "grayscale(1) contrast(1.05)",
-    display: "serif",
+    fontDisplay: "Georgia, 'Times New Roman', serif"
   },
   experience: defineExperience({
     label: "Departing airfield",

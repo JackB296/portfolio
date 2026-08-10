@@ -12,6 +12,7 @@ const bladeRunner: FilmDefinition = {
     accent: "234 88 12",
     accentBright: "251 146 60",
     accentDim: "154 52 18",
+    fontDisplay: "'OCR A Extended', 'OCR A', Consolas, 'Lucida Console', monospace",
   },
   experience: defineExperience({
     label: "Ochre memory rain",

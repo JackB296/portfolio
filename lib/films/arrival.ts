@@ -15,6 +15,7 @@ const arrival: FilmDefinition = {
     accentBright: "203 213 225",
     accentDim: "100 116 139",
     grain: 0.05,
+    fontDisplay: "'Segoe UI Light', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
   },
   experience: defineExperience({
     label: "Nonlinear threshold",

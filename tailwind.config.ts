@@ -25,6 +25,10 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        pixel: ["var(--font-pixel)", "var(--font-mono)", "ui-monospace", "monospace"],
+        // The hero name's own slot: JetBrains Mono under the house grade,
+        // re-voiced with the rest of the site under a film grade.
+        name: ["var(--font-name)", "ui-monospace", "monospace"],
       },
     },
   },

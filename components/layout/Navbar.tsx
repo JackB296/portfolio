@@ -53,10 +53,9 @@ export default function Navbar() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className="group relative px-4 py-2 text-sm text-white/70 transition-colors hover:text-white"
+                className="px-4 py-2 font-pixel text-xs lowercase tracking-wide text-white/70 transition-colors hover:text-accent-bright"
               >
                 {link.label}
-                <span className="absolute inset-x-4 -bottom-0.5 h-px origin-left scale-x-0 bg-accent transition-transform duration-300 group-hover:scale-x-100" />
               </a>
             </li>
           ))}
@@ -89,12 +88,11 @@ export default function Navbar() {
             >
               <LinkedInIcon className="h-[18px] w-[18px]" />
             </a>
-            {/* Accent-tinted pill (here and in the mobile menu below): a deliberate third dialect, intentionally not ui/Pill. */}
             <a
               href={profile.resume}
-              className="ml-1 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-ink"
+              className="ml-1 border border-accent/40 px-4 py-2 font-pixel text-xs lowercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-ink"
             >
-              Resume
+              resume
             </a>
           </li>
         </ul>
@@ -201,9 +199,9 @@ export default function Navbar() {
               <a
                 href={profile.resume}
                 onClick={() => setOpen(false)}
-                className="rounded-full border border-accent/40 bg-accent/10 px-7 py-3 text-base font-medium text-accent transition-colors hover:bg-accent hover:text-ink"
+                className="border border-accent/40 px-7 py-3 font-pixel text-sm lowercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-ink"
               >
-                Resume
+                resume
               </a>
             </motion.div>
           </motion.div>

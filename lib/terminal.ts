@@ -144,7 +144,9 @@ const filmTxt = (f: Film): readonly string[] => [
   "## grade (rgb custom properties)",
   `accent: ${f.grade.accent} · bright: ${f.grade.accentBright} · dim: ${f.grade.accentDim}`,
   `ink: ${f.grade.ink} · soft: ${f.grade.inkSoft} · card: ${f.grade.inkCard}`,
-  `grain: ${f.grade.grain ?? 0.035} · display: ${f.grade.display ?? "sans"}`,
+  `grain: ${f.grade.grain ?? 0.035} · typeface: ${
+    f.grade.fontDisplay?.split(",")[0].replace(/['"]/g, "").replace("var(--font-pixel-base)", "departure mono").replace("var(--font-mono)", "jetbrains mono") ?? "house pixel"
+  }`,
   "",
   "## experience",
   `label: ${f.experience.label}`,

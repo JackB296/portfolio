@@ -12,6 +12,7 @@ const furyRoad: FilmDefinition = {
     accent: "249 115 22",
     accentBright: "251 146 60",
     accentDim: "194 65 12",
+    fontDisplay: "'Franklin Gothic Medium', 'Arial Narrow', Impact, sans-serif",
   },
   experience: defineExperience({
     label: "Centered chase",

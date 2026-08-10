@@ -40,7 +40,7 @@ export default function About() {
                     key={c}
                     className="flex items-start gap-3 text-sm text-white/75"
                   >
-                    <span className="mt-1.5 h-1.5 w-1.5 flex-none rotate-45 bg-accent" />
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-none bg-accent" />
                     {c}
                   </li>
                 ))}
@@ -50,9 +50,9 @@ export default function About() {
 
           {/* Education / quick facts card */}
           <Reveal delay={0.15}>
-            <div className="glass rounded-2xl p-7">
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-accent">
-                Education
+            <div className="glass p-7">
+              <p className="font-pixel text-[11px] lowercase tracking-wide text-accent">
+                education
               </p>
               <h3 className="mt-3 text-xl font-semibold text-white">
                 {education.school}
@@ -75,14 +75,14 @@ export default function About() {
               </dl>
 
               <div className="mt-6 border-t border-white/[0.07] pt-6">
-                <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-white/60">
-                  Relevant Coursework
+                <p className="mb-3 font-pixel text-[11px] lowercase tracking-wide text-white/60">
+                  relevant coursework
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {education.coursework.map((c) => (
                     <span
                       key={c}
-                      className="rounded-md border border-white/[0.07] bg-white/[0.02] px-2.5 py-1 text-xs text-white/65"
+                      className="bg-white/[0.05] px-2.5 py-1 font-pixel text-[10px] text-white/65"
                     >
                       {c}
                     </span>

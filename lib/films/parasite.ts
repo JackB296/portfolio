@@ -12,6 +12,7 @@ const parasite: FilmDefinition = {
     accent: "20 184 166",
     accentBright: "45 212 191",
     accentDim: "15 118 110",
+    fontDisplay: "'Helvetica Neue', Helvetica, Arial, sans-serif",
   },
   experience: defineExperience({
     label: "Above and below",

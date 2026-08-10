@@ -12,6 +12,7 @@ const theBatman: FilmDefinition = {
     accent: "225 29 72",
     accentBright: "251 113 133",
     accentDim: "159 18 57",
+    fontDisplay: "Constantia, Cambria, Georgia, serif",
   },
   experience: defineExperience({
     label: "Rain-soaked investigation",

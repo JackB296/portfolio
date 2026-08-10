@@ -14,7 +14,7 @@ export default function Experience() {
       <div className="container-x relative z-10">
         <Reveal>
           <h2 className="mb-16 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            Expierence
+            Experience.
           </h2>
         </Reveal>
 
@@ -27,11 +27,11 @@ export default function Experience() {
               <Reveal key={`${job.company}-${i}`} delay={i * 0.05}>
                 <div className="group relative sm:pl-14">
                   {/* node */}
-                  <span className="absolute left-[1px] top-2 hidden h-3.5 w-3.5 -translate-x-1/2 items-center justify-center rounded-full border border-accent/50 bg-ink sm:flex">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent transition-all duration-300 group-hover:scale-150" />
+                  <span className="absolute left-[1px] top-2 hidden h-3.5 w-3.5 -translate-x-1/2 items-center justify-center border border-accent/50 bg-ink sm:flex">
+                    <span className="h-1.5 w-1.5 bg-accent transition-all duration-300 group-hover:scale-150" />
                   </span>
 
-                  <div className="glass rounded-2xl p-6 transition-colors duration-300 hover:border-accent/25 sm:p-7">
+                  <div className="glass p-6 transition-colors duration-300 hover:border-accent/25 sm:p-7">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                       <h3 className="text-lg font-semibold text-white">
                         {job.role}
@@ -51,7 +51,7 @@ export default function Experience() {
                           key={j}
                           className="flex gap-3 text-sm leading-relaxed text-white/65"
                         >
-                          <span className="mt-2 h-1 w-1 flex-none rounded-full bg-accent/70" />
+                          <span className="mt-2 h-1 w-1 flex-none bg-accent/70" />
                           {p}
                         </li>
                       ))}
@@ -62,7 +62,7 @@ export default function Experience() {
                         {job.tags.map((t) => (
                           <span
                             key={t}
-                            className="rounded-full border border-white/[0.08] bg-white/[0.02] px-3 py-1 font-mono text-[11px] text-white/55"
+                            className="bg-white/[0.05] px-2.5 py-1 font-pixel text-[10px] text-white/60"
                           >
                             {t}
                           </span>

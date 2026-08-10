@@ -58,7 +58,7 @@ export default function ProjectCard({ project }: { project: Project }) {
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
-      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-ink-card/60 p-7 transition-colors duration-300 hover:border-accent/30 ${
+      className={`group relative flex flex-col overflow-hidden border border-white/[0.08] bg-ink-card/60 p-7 transition-colors duration-300 hover:border-accent/30 ${
         project.featured ? "lg:col-span-2" : ""
       }`}
     >
@@ -103,7 +103,7 @@ export default function ProjectCard({ project }: { project: Project }) {
 
       <div className="pointer-events-none relative z-10 flex items-start justify-between gap-4">
         <div>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
+          <span className="font-pixel text-[11px] lowercase tracking-wide text-accent">
             {project.accentLabel}
           </span>
           <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
@@ -115,7 +115,7 @@ export default function ProjectCard({ project }: { project: Project }) {
             <a
               href={project.live}
               aria-label={`Open ${project.name} live demo`}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-accent/30 bg-accent/10 text-accent transition-colors hover:bg-accent hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center border border-accent/30 bg-accent/10 text-accent transition-colors hover:bg-accent hover:text-ink"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M8 5v14l11-7z" fill="currentColor" stroke="none" />
@@ -126,7 +126,7 @@ export default function ProjectCard({ project }: { project: Project }) {
             <a
               href={`/work/${project.caseStudy}`}
               aria-label={`Read the ${project.name} case study`}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-accent/30 bg-accent/10 text-accent transition-colors hover:bg-accent hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center border border-accent/30 bg-accent/10 text-accent transition-colors hover:bg-accent hover:text-ink"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinecap="round" strokeLinejoin="round" />
@@ -140,7 +140,7 @@ export default function ProjectCard({ project }: { project: Project }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${project.name} on GitHub`}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-accent/40 hover:text-white"
+              className="flex h-9 w-9 items-center justify-center border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-accent/40 hover:text-white"
             >
               <GitHubIcon />
             </a>
@@ -157,7 +157,7 @@ export default function ProjectCard({ project }: { project: Project }) {
           {project.tools.map((t) => (
             <span
               key={t}
-              className="rounded-md border border-white/[0.07] bg-white/[0.02] px-2.5 py-1 font-mono text-[11px] text-white/55"
+              className="bg-white/[0.05] px-2.5 py-1 font-pixel text-[10px] text-white/60"
             >
               {t}
             </span>

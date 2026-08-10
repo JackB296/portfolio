@@ -61,20 +61,18 @@ export default function Skills() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {skillGroups.map((group, i) => (
             <Reveal key={group.title} delay={i * 0.06}>
-              <div className="glass h-full rounded-2xl p-6 transition-colors duration-300 hover:border-accent/25">
+              <div className="glass h-full p-6 transition-colors duration-300 hover:border-accent/25">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/30 bg-accent/10 text-accent">
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      {icons[group.title]}
-                    </svg>
-                  </span>
+                  <svg className="h-5 w-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    {icons[group.title]}
+                  </svg>
                   <h3 className="text-base font-semibold text-white">{group.title}</h3>
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2">
                   {group.skills.map((s) => (
                     <span
                       key={s}
-                      className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-1.5 text-xs text-white/70 transition-colors hover:border-accent/40 hover:text-white"
+                      className="bg-white/[0.05] px-2.5 py-1.5 font-pixel text-[11px] text-white/70 transition-colors hover:bg-accent/15 hover:text-white"
                     >
                       {s}
                     </span>

@@ -27,6 +27,16 @@
      writers share one var mapping in lib/grades.ts (FILM_TOKEN_VARS). */
   --film-radius: 10px;
   --film-line-opacity: 0.2;
+
+  /* Type slots. The Tailwind families read these; the -base vars are the raw
+     next/font faces (app/layout.tsx). A film grade re-voices the whole site
+     by writing --font-pixel / --font-sans / --font-name inline on <html>
+     from its own fontDisplay/fontBody stacks (lib/grades.ts gradeVars). */
+  --font-pixel: var(--font-pixel-base);
+  --font-sans: var(--font-sans-base);
+  /* The hero name's face: JetBrains Mono under the house grade (a deliberate
+     step apart from the pixel labels around it). */
+  --font-name: var(--font-mono);
 }
 
 * {
@@ -89,20 +99,11 @@ body {
   }
 }
 
-/* Film-grade hooks: image treatment + heading typeface per grade */
+/* Film-grade hooks: image treatment per grade. (Each film's type voice is
+   data, not CSS: the grade record's fontDisplay/fontBody stacks are written
+   onto the --font-* slots inline by lib/grades.ts.) */
 img {
   filter: var(--grade-image-filter);
-}
-html[data-grade-display="serif"] h1,
-html[data-grade-display="serif"] h2,
-html[data-grade-display="serif"] h3 {
-  font-family: Georgia, "Times New Roman", serif;
-}
-html[data-grade-display="mono"] h1,
-html[data-grade-display="mono"] h2,
-html[data-grade-display="mono"] h3 {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  letter-spacing: -0.02em;
 }
 
 /* The cinematic layer never changes document structure. These restrained
