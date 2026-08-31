@@ -87,8 +87,9 @@ export default function FilmExperienceRoot() {
   }, [ready, state.activeId]);
 
   // Committing a film is a user gesture, so sound defaults on; hydration has
-  // no gesture and would be blocked by autoplay policy. Silent commits (the
-  // feature-presentation leader) opt out: the visitor hasn't asked for audio.
+  // no gesture and would be blocked by autoplay policy. Silent commits
+  // (`silent: true`, reserved for any auto-committed screening) opt out: the
+  // visitor hasn't asked for audio.
   useEffect(() => {
     if (state.lastIntent === "commit" && state.committedId && !state.lastSilent)
       setSoundEnabled(true);

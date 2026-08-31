@@ -21,9 +21,9 @@ const furyRoad: FilmDefinition = {
     motion: "rush",
     radius: "1px",
     // No bed and no engine: the wasteland runs on dust alone. The dust loop is
-    // the same ledgered CC0 sand recording Dune uses, driven differently here —
-    // darker filter, more scroll response, so it reads as grit at speed rather
-    // than the slow drift of a dune. See docs/assets/film-mode-audio-ledger.md.
+    // the same CC0 sand recording Dune uses (credited on /film-credits),
+    // driven differently here — darker filter, more scroll response, so it
+    // reads as grit at speed rather than the slow drift of a dune.
     audio: {
       effects: [effect("loop", "Dust at speed", "/audio/film-modes/dune-sand.mp3", { volume: 0.2, filterFrequency: 9_000, scrollResponse: 0.45, scrollGain: 0.25, scrollRate: 0.12 })],
     },

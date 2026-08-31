@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import SmoothScroll from "@/components/layout/SmoothScroll";
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/home/Hero";
@@ -9,6 +10,10 @@ import Contact from "@/components/home/Contact";
 import Footer from "@/components/layout/Footer";
 import { profilePageJsonLd } from "@/lib/structuredData";
 import JsonLd from "@/components/JsonLd";
+
+// Title, description, and the social card inherit from the root layout, which
+// describes exactly this page; only the canonical is declared here.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default function Home() {
   return (

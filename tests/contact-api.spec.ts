@@ -44,16 +44,19 @@ test("limiter prunes expired windows instead of clobbering live state", () => {
   expect(limiter.allow("live", 2_000)).toBe(false);
 });
 
-test("limiter caps tracked keys by evicting the oldest window under churn", () => {
+test("limiter fails closed on new keys once the cap is all live windows", () => {
   const limiter = createRateLimiter({ windowMs: 60_000, max: 1, maxEntries: 2 });
   expect(limiter.allow("a", 0)).toBe(true);
   expect(limiter.allow("b", 1)).toBe(true);
   expect(limiter.allow("a", 2)).toBe(false);
-  // A third live key hits the cap and evicts "a", the oldest window...
-  expect(limiter.allow("c", 3)).toBe(true);
-  // ...so "a" comes back as a fresh key: memory stays bounded at the cost of
-  // forgetting the oldest limiter state.
-  expect(limiter.allow("a", 4)).toBe(true);
+  // A third live key hits the cap. Evicting an established window would hand
+  // a key-churning flood a fresh budget for every counter it pushes out, so
+  // the newcomer is refused instead...
+  expect(limiter.allow("c", 3)).toBe(false);
+  // ...established keys keep their state...
+  expect(limiter.allow("a", 4)).toBe(false);
+  // ...and the cap clears as soon as the old windows expire.
+  expect(limiter.allow("c", 60_003)).toBe(true);
 });
 
 // --- Contact route behavior (request fixture against baseURL) ---------------
@@ -127,6 +130,20 @@ test("contact rejects an over-long message with a 400", async ({ request }) => {
 });
 
 test("contact silently accepts a honeypot submission", async ({ request }) => {
+  const response = await contact(
+    request,
+    { ...validMessage, topic: "Totally Real Inc" },
+    uniqueIp()
+  );
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toEqual({ ok: true });
+});
+
+test("contact still honors the retired honeypot field name", async ({
+  request,
+}) => {
+  // Stale cached clients may post the old "company" field; it must stay a
+  // honeypot rather than silently becoming an ignored extra.
   const response = await contact(
     request,
     { ...validMessage, company: "Totally Real Inc" },

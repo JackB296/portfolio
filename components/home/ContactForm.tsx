@@ -59,15 +59,14 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={onSubmit} className="glass rounded-2xl p-6 text-left sm:p-7">
-      {/* Honeypot — hidden from humans */}
-      <input
-        type="text"
-        name="company"
-        tabIndex={-1}
-        autoComplete="off"
-        className="absolute left-[-9999px] h-0 w-0 opacity-0"
-        aria-hidden
-      />
+      {/* Honeypot — hidden from humans. display:none (not offscreen) so
+          password managers skip it: an autofilled honeypot silently discards a
+          real message. The name avoids every autofill category ("company" was
+          autofilled as an organization field) while still reading like a field
+          naive bots want to fill. */}
+      <div style={{ display: "none" }} aria-hidden>
+        <input type="text" name="topic" tabIndex={-1} autoComplete="off" />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Name">

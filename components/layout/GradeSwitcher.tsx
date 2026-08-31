@@ -22,9 +22,9 @@ export default function GradeSwitcher() {
 
   useEffect(() => {
     setActive(document.documentElement.dataset.grade ?? null);
-    // Track grade changes from every dispatcher — the feature-presentation
-    // leader, the guest terminal, the dialog's own previews — so the Now
-    // Showing label always names the grade the visitor is looking at.
+    // Track grade changes from every dispatcher — the guest terminal, the
+    // dialog's own previews — so the Now Showing label always names the
+    // grade the visitor is looking at.
     const onGradeChange = (event: Event) => {
       const detail = (event as CustomEvent<GradeChangeDetail>).detail;
       setActive(detail?.gradeId ?? null);

@@ -243,6 +243,20 @@ html[data-film-motion="rupture"] button {
 
 .film-asset--breathe { animation: film-asset-breathe 13s ease-in-out infinite; }
 
+/* Cross-page fade, applied by app/template.tsx on every route change. Pure
+   CSS on purpose: a Framer Motion `initial={{opacity: 0}}` serializes into the
+   server HTML, so nothing was visible until the client bundle hydrated (and
+   nothing ever appeared with JS disabled). A CSS animation starts on first
+   paint instead, and the reduced-motion block below collapses it to a cut. */
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.page-fade {
+  animation: page-fade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Honor the OS "Reduce Motion" setting: drop smooth scrolling and neutralize
    CSS animations/transitions. JS-driven motion (Lenis smooth scroll, the WebGL
    hero, and Framer Motion) is gated separately in those components. */

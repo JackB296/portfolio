@@ -32,8 +32,9 @@ let jumpSound;
 let gameOverSound;
 
 function setup() {
+  // p5 already ran the global preload() and waited for it before calling
+  // setup — calling it again here loaded every asset twice.
   setupCanvas();
-  preload();
   frameRate(60);
   initializeGame();
 }
@@ -70,8 +71,9 @@ function preload() {
   pipeBottomImage = loadImage("img/pipebottom.png");
   groundImage = loadImage("img/ground.png");
 
-  // load sound files
-  backgroundMusic = loadSound("sounds/background_music.mp3");
+  // load the small sound effects only — the multi-megabyte music track is
+  // fetched lazily on the first music-toggle press (see toggleMute), so the
+  // game no longer blocks setup() on a download most visitors never hear
   jumpSound = loadSound("sounds/jump_sound.mp3");
   gameOverSound = loadSound("sounds/game_over_sounds.wav");
 }
@@ -244,10 +246,15 @@ function switchDebugMode() {
 }
 
 function toggleMute() {
+  if (!backgroundMusic) {
+    // first press: fetch the track and start looping once it arrives
+    backgroundMusic = loadSound("sounds/background_music.mp3", (sound) => sound.loop());
+    return;
+  }
   if (!backgroundMusic.isPlaying()) {
     backgroundMusic.loop();
   } else {
-    backgroundMusic.pause(); 
+    backgroundMusic.pause();
   }
 }
 

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { caseStudies, getCaseStudy, professionalCaseStudySlugs } from "@/lib/caseStudies";
 import { nextForWork } from "@/lib/projectNav";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import BackLink from "@/components/ui/BackLink";
 import DemoVideo from "@/components/ui/DemoVideo";
 import Glow from "@/components/ui/Glow";
@@ -23,11 +24,13 @@ export function generateMetadata({
   params: { slug: string };
 }): Metadata {
   const cs = getCaseStudy(params.slug);
-  if (!cs) return { title: "Case Study" };
-  return {
+  if (!cs) return { title: `Case Study · ${profile.name}` };
+  return routeMetadata({
     title: `${cs.company} · Case Study · ${profile.name}`,
     description: cs.summary,
-  };
+    path: `/work/${cs.slug}`,
+    ogType: "article",
+  });
 }
 
 export default function CaseStudyPage({

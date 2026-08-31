@@ -88,7 +88,15 @@ export default function TheaterDialog({
     if (!open || !focusedEntry) return;
     // Grade-change protocol (see GradeChangeIntent in lib/grades.ts):
     // browsing the wall previews; it never persists or arms sound.
-    applyGrade(focusedEntry.grade, "preview");
+    // Debounced: every preview rewrites 11 custom properties on <html> and
+    // kicks off that film's dynamic visuals chunk, so an unthrottled pointer
+    // sweep across the wall fired both once per cover it crossed. The cover
+    // highlight and review copy still track focus instantly — only the
+    // document-wide grade waits for the pointer to settle.
+    const timer = window.setTimeout(() => {
+      applyGrade(focusedEntry.grade, "preview");
+    }, 90);
+    return () => window.clearTimeout(timer);
   }, [focusedEntry, open]);
 
   useFocusTrap(dialogRef, open, onClose, closeRef);

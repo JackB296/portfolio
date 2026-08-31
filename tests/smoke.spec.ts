@@ -268,8 +268,8 @@ test("theater trigger carries the Now Showing label and dialog stays inset", asy
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
 
-  // Since the uniqueness suite (docs/specs/uniqueness-suite-2026-07-17.md) the
-  // trigger is a compact marquee pill: icon plus the active grade's name.
+  // Since the uniqueness-suite redesign (July 2026) the trigger is a compact
+  // marquee pill: icon plus the active grade's name.
   const trigger = page.locator('header button[aria-haspopup="dialog"]').first();
   await expect(trigger).toBeVisible();
   await expect(trigger).toHaveAttribute("title", "Film theater");

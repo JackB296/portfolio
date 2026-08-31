@@ -69,6 +69,15 @@ const gameCsp = {
   ].join("; "),
 };
 
+// Large static media (film-mode audio, the vendored p5 game). Not immutable —
+// tracks are swapped in place at stable URLs — so bound staleness at a day and
+// let stale-while-revalidate hide the refresh. Without this, Vercel serves
+// public/ with max-age=0 and every film commit re-downloads its audio.
+const mediaCache = {
+  key: "Cache-Control",
+  value: "public, max-age=86400, stale-while-revalidate=604800",
+};
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -76,10 +85,12 @@ const nextConfig = {
   async headers() {
     return [
       // Game assets get the blob-friendly CSP.
-      { source: "/neat-flappy/:path*", headers: [...baseHeaders, gameCsp] },
+      { source: "/neat-flappy/:path*", headers: [...baseHeaders, gameCsp, mediaCache] },
       // Everything except the game gets the strict CSP (negative lookahead so
       // only one CSP header is ever emitted per path).
       { source: "/((?!neat-flappy/).*)", headers: [...baseHeaders, appCsp] },
+      // Later matches win per header key, so this only adds the cache policy.
+      { source: "/audio/:path*", headers: [mediaCache] },
     ];
   },
 };

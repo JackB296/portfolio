@@ -6,9 +6,8 @@
 // the one way the rights holder sanctions — YouTube's own embedded player,
 // unmodified, from a verified rights-holder upload. The site never hosts,
 // copies, crops, covers, autoplays, or strips audio from any clip; it links to
-// the same player YouTube serves everywhere else. This is the path the media
-// research in docs/research/movie-theme-media-copyright-and-youtube.md
-// approved: visible standard player, no background or audio-only playback.
+// the same player YouTube serves everywhere else. That is the whole policy:
+// visible standard player, no background or audio-only playback.
 //
 // The privacy-enhanced host (youtube-nocookie.com) is deliberate: it defers
 // tracking cookies until playback, which keeps the site's cookieless promise on
@@ -23,9 +22,9 @@ export type SimulationClip = Readonly<{
   label: string;
   /**
    * The uploading channel. Optional only because it is filled in as each
-   * upload is checked — see the pre-launch note in
-   * docs/assets/film-mode-ledger.md. The embed works either way; this field
-   * exists so the rights-holder review is auditable rather than assumed.
+   * upload's rights-holder is verified. The embed works either way; this
+   * field exists so that review is auditable rather than assumed — an entry
+   * with no channel is an entry whose upload has not been checked yet.
    */
   channel?: string;
   /** Optional start offset in seconds, when the moment is deep in the video. */

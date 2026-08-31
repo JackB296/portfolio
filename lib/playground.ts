@@ -1,55 +1,14 @@
 "use client";
 
-// Playground-takeover state: the toggle, the film-mode deferral rule, and the
-// scoreboard. Layers and the pill live in components/playground/; this module
-// is the shared behavior, mirroring how lib/grades.ts backs the film system.
+// Playground-takeover state: the toggle and the film-mode deferral rule.
+// Layers and the pill live in components/playground/; this module is the
+// shared behavior, mirroring how lib/grades.ts backs the film system.
 
 import { useEffect, useState } from "react";
 import { useHtmlAttr } from "@/lib/useHtmlAttr";
 
 export const PLAYGROUND_STORAGE_KEY = "playground-enabled";
 export const PLAYGROUND_EVENT = "playgroundchange";
-export const PLAYGROUND_SCORE_EVENT = "playgroundscore";
-export const PLAYGROUND_SCORES_KEY = "playground-scores";
-
-export type PlaygroundScores = Readonly<{
-  /** Game of Life generations simulated behind the Projects section. */
-  generations: number;
-  /** Cloth threads sliced behind the Skills section. */
-  threadsCut: number;
-}>;
-
-const ZERO_SCORES: PlaygroundScores = { generations: 0, threadsCut: 0 };
-
-export function readScores(): PlaygroundScores {
-  try {
-    const raw = localStorage.getItem(PLAYGROUND_SCORES_KEY);
-    if (!raw) return ZERO_SCORES;
-    const parsed = JSON.parse(raw) as Partial<PlaygroundScores>;
-    return {
-      generations: Number(parsed.generations) || 0,
-      threadsCut: Number(parsed.threadsCut) || 0,
-    };
-  } catch {
-    return ZERO_SCORES;
-  }
-}
-
-/** Add to the persisted scores and tell the pill. */
-export function addScores(delta: Partial<PlaygroundScores>) {
-  const next: PlaygroundScores = {
-    generations: readScores().generations + (delta.generations ?? 0),
-    threadsCut: readScores().threadsCut + (delta.threadsCut ?? 0),
-  };
-  try {
-    localStorage.setItem(PLAYGROUND_SCORES_KEY, JSON.stringify(next));
-  } catch {
-    // Storage blocked: scores are session-only.
-  }
-  window.dispatchEvent(
-    new CustomEvent<PlaygroundScores>(PLAYGROUND_SCORE_EVENT, { detail: next })
-  );
-}
 
 // The playground is ON by default; the key stores an explicit opt-out ("0").
 export function setPlaygroundEnabled(on: boolean) {

@@ -126,7 +126,7 @@ export default function CommentaryRoot() {
         onClick={toggle}
         aria-pressed={enabled}
         title={enabled ? "Turn commentary off" : "How this site is built"}
-        className="fixed bottom-4 right-4 z-30 flex items-center gap-2 rounded-full border border-white/10 bg-ink/80 px-3 py-2 font-mono text-[10px] tracking-[0.14em] text-white/70 shadow-xl shadow-black/30 backdrop-blur-xl transition-colors hover:border-accent/40 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:bottom-5 sm:right-5"
+        className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/10 bg-ink/80 px-3 py-2 font-mono text-[10px] tracking-[0.14em] text-white/70 shadow-xl shadow-black/30 backdrop-blur-xl transition-colors hover:border-accent/40 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <span
           aria-hidden

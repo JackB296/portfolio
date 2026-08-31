@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import BackLink from "@/components/ui/BackLink";
 import Glow from "@/components/ui/Glow";
 
 export const metadata: Metadata = {
-  title: `Privacy Policy · ${profile.name}`,
-  description: `How ${profile.name}'s portfolio handles the limited personal data it collects.`,
+  ...routeMetadata({
+    title: `Privacy Policy · ${profile.name}`,
+    description: `How ${profile.name}'s portfolio handles the limited personal data it collects.`,
+    path: "/privacy",
+  }),
   // No reason to index a boilerplate policy page.
   robots: { index: false, follow: true },
 };

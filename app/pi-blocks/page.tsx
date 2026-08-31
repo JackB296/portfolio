@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import PiBlocks from "@/components/demos/PiBlocks";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import DemoShell from "@/components/demos/DemoShell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Pi from Collisions · ${profile.name}`,
   description:
     "Two colliding blocks compute the digits of pi, an interactive physics demo.",
-};
+  path: "/pi-blocks",
+});
 
 export default function PiBlocksPage() {
   return (

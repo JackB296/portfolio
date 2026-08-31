@@ -25,9 +25,9 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 // Bell" — the first computer-sung song, and the reason the scene exists. Its
 // rights position is UNVERIFIED (Dacre's 1892 composition is public domain,
 // but a 1961 sound recording is not: under the Music Modernization Act,
-// pre-1972 recordings of this vintage stay protected into the 2060s), so it is
-// logged in docs/assets/film-mode-audio-ledger.md as requiring clearance
-// before a public deploy.
+// pre-1972 recordings of this vintage stay protected into the 2060s), so the
+// clip link needs a rights-holder check — this comment is the open flag for
+// that review until it happens.
 const SCORE_ID = "space-odyssey-disconnect";
 
 /** The owner-supplied Bell Labs recording. See the ledger before deploying. */

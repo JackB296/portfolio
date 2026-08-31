@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import DemoShell from "@/components/demos/DemoShell";
 import { DemoFrame } from "@/components/demos/chrome";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Neuroevolution Flappy Bird · ${profile.name}`,
   description:
     "An AI-driven Flappy Bird that evolves a population of neural-network agents through neuroevolution. Here it is playable, embedded live in the portfolio.",
-};
+  path: "/flappy",
+});
 
 export default function FlappyPage() {
   return (

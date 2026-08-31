@@ -46,10 +46,11 @@ export function createRateLimiter({
       }
 
       if (hits.size >= maxEntries) {
-        // Map iteration preserves insertion order, so the first key holds the
-        // oldest live window — the fairest one to sacrifice at the cap.
-        const oldest = hits.keys().next().value;
-        if (oldest !== undefined) hits.delete(oldest);
+        // Expired windows were just pruned, so a full map means maxEntries
+        // *live* windows — a flood of distinct keys. Evicting the oldest here
+        // would hand a key-churning flood a fresh budget for every counter it
+        // pushes out; fail closed on new keys instead until a window expires.
+        return false;
       }
       hits.set(key, { count: 1, ts: now });
       return true;

@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import GameOfLife from "@/components/demos/GameOfLife";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import DemoShell from "@/components/demos/DemoShell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Game of Life · ${profile.name}`,
   description:
     "Conway's Game of Life with age-colored cells, interactive in the browser.",
-};
+  path: "/game-of-life",
+});
 
 export default function GameOfLifePage() {
   return (

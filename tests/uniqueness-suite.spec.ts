@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { dispatchGrade, visiblePixelCount, waitForHydration } from "./helpers";
 
-// Coverage for the uniqueness suite (docs/specs/uniqueness-suite-2026-07-17.md):
+// Coverage for the uniqueness suite — the features that make the site itself:
 // the Now Showing label, director's commentary, the guest terminal, and the
 // playground takeover.
 

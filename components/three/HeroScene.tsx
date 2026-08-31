@@ -42,6 +42,34 @@ export default function HeroScene() {
   // particles settle into a static frame instead of perpetually animating.
   const reducedMotion = useReducedMotion();
 
+  // Also pause while the hero is scrolled out of view or the tab is hidden —
+  // "always" would otherwise keep the GPU rendering for the whole session.
+  // LifeHero and the canvas demos gate the same way.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    let inView = true;
+    let tabVisible = document.visibilityState === "visible";
+    const update = () => setVisible(inView && tabVisible);
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      update();
+    });
+    observer.observe(el);
+    const onVisibility = () => {
+      tabVisible = document.visibilityState === "visible";
+      update();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    update();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
   // Insurance: nudge react-use-measure after mount so the canvas never starts
   // collapsed if the initial ResizeObserver callback is delayed.
   useEffect(() => {
@@ -58,6 +86,7 @@ export default function HeroScene() {
 
   return (
     <div
+      ref={containerRef}
       data-testid="orbit-theme"
       data-orbit-accent={palette.accent}
       data-orbit-bright={palette.bright}
@@ -69,7 +98,7 @@ export default function HeroScene() {
         camera={{ position: [0, 0, 6], fov: 45 }}
         dpr={[1, 1.8]}
         gl={{ antialias: true, alpha: true }}
-        frameloop={reducedMotion ? "demand" : "always"}
+        frameloop={reducedMotion || !visible ? "demand" : "always"}
         style={{ pointerEvents: "none" }}
       >
         <Suspense fallback={null}>

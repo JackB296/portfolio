@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Mandelbrot from "@/components/demos/Mandelbrot";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import DemoShell from "@/components/demos/DemoShell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Mandelbrot Set · ${profile.name}`,
   description:
     "An interactive Mandelbrot set renderer with zoom, ported from my Python notebook.",
-};
+  path: "/mandelbrot",
+});
 
 export default function MandelbrotPage() {
   return (

@@ -55,7 +55,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: profile.name, url: siteUrl }],
   creator: profile.name,
-  alternates: { canonical: "/" },
+  // No `alternates` here: a canonical set on the layout is inherited verbatim
+  // by every page that doesn't override it. The homepage's lives in app/page.tsx;
+  // subpages declare their own via lib/pageMetadata.ts.
   openGraph: {
     title: `${profile.name} · ${profile.title}`,
     description: profile.tagline,
@@ -97,9 +99,13 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: gradeBootScript() }} />
         {children}
         <FilmExperienceRoot />
-        <CommentaryRoot />
+        {/* Bottom-right utility pills share one row; the wrapper ignores
+            pointer events so only the pills themselves catch clicks. */}
+        <div className="pointer-events-none fixed bottom-4 right-4 z-30 flex flex-wrap items-center justify-end gap-2 sm:bottom-5 sm:right-5">
+          <PlaygroundToggle />
+          <CommentaryRoot />
+        </div>
         <GuestTerminal />
-        <PlaygroundToggle />
         <KonamiCode />
         <Analytics />
       </body>

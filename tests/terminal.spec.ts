@@ -1,5 +1,28 @@
 import { expect, test } from "@playwright/test";
+import { runCommand } from "../lib/terminal";
 import { waitForHydration } from "./helpers";
+
+// --- Pure command-engine contract (direct import, no browser) ----------------
+
+test("cat and man refuse Object.prototype keys instead of crashing", () => {
+  // The VFS and man registries are plain objects; a bare property read used to
+  // find inherited members, hand the renderer a Function as "file lines", and
+  // take down the page for anyone who typed `cat toString` into the shell.
+  for (const name of ["toString", "valueOf", "constructor", "hasOwnProperty"]) {
+    expect(runCommand(`cat ${name}`)).toEqual({
+      lines: [`cat: no such file: ${name}`],
+    });
+    expect(runCommand(`man ${name}`)).toEqual({
+      lines: [`no manual entry for ${name}`],
+    });
+  }
+  expect(runCommand("ls constructor")).toEqual({
+    lines: ["ls: no such file or directory: constructor"],
+  });
+  expect(runCommand("cd constructor")).toEqual({
+    lines: ["cd: no such directory: constructor"],
+  });
+});
 
 // The macOS guest terminal: window management (drag, resize, minimize, zoom),
 // the shell features (ghost suggestions, persistent history, the unix-flavored

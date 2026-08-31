@@ -25,14 +25,14 @@ The site behind [jbialecki.com](https://jbialecki.com): a WebGL hero, sixteen fi
 ## Highlights
 
 - **A WebGL hero.** A noise-displaced icosahedron and a GPU particle field, both driven by custom GLSL vertex and fragment shaders, under a camera that eases toward the cursor. It's code-split out of the main bundle and capped to the device pixel ratio, so it stays smooth on a phone and collapses to a still frame under reduced-motion. A corner toggle swaps the whole scene for a live Game of Life.
-- **Sixteen film modes.** Pick a film from the theater wall and the site re-themes to match: a color grade applied before first paint, a score with per-section audio cues, and a visual layer built for that film (WarGames draws a live missile-map simulation). A date-hashed feature presentation screens one film per day for first-time visitors, and every track is attributed on `/film-credits`.
+- **Sixteen film modes.** Pick a film from the theater wall and the site re-themes to match: a color grade applied before first paint, a score with per-section audio cues, and a visual layer built for that film (WarGames draws a live missile-map simulation). Each film also carries a slate of original mini-games — 45 across the sixteen films, every one fronted by a reference card linking the scene it alludes to — and every track is attributed on `/film-credits`.
 - **A guest terminal.** `cd`, `ls`, `cat`, and tab completion over a virtual filesystem generated from the same typed registries that render the pages, so the terminal can never drift from the site it navigates. It opens any route and applies any film grade.
 - **Director's commentary.** A toggle that pins a commentary track to each home section: the site explaining how it's engineered, with a link to the exact source file on GitHub.
-- **A playground takeover.** Flip the switch and live simulations run behind the home page itself, Game of Life behind Projects and the cloth sim behind Skills, with a persistent scoreboard.
+- **A playground takeover.** Flip the switch and live simulations run behind the home page itself, Game of Life behind Projects and the cloth sim behind Skills.
 - **Seven interactive demos.** Six began as Python projects and were rebuilt in JavaScript and canvas: a raycaster, a Verlet cloth, Conway's Game of Life, the Mandelbrot set, a perceptron, and the pi-from-collisions trick. The Neuroevolution Flappy Bird runs as its original p5.js build, embedded live. All seven share one canvas scaffold that handles DPR sizing, pauses off-screen, and holds a still frame under reduced-motion.
 - **A serverless contact backend.** The form posts to `/api/contact`, which validates the payload, blocks bots with a honeypot, rate-limits by IP through a clock-injectable limiter with bounded memory, and sends mail through Resend. With no API key set it stays working and shows a friendly "email me directly" message.
 - **Case studies, written up as problem, approach, and outcome.** A manufacturing dashboard at Voyage Foods, a Canvas LMS integration at JAKAPA, shipping on a 50+ engineer team at LCS, a solo database migration at American Equity Funding, and two personal builds: an 8-bit computer wired by hand on breadboards, and a self-hosted archiver that keeps 11,000+ short-form videos on my own disk.
-- **Production plumbing.** Vercel CI/CD, a generated Open Graph image, a sitemap, robots rules, JSON-LD structured data, and five Playwright suites that run in CI so a bad change can't quietly break a route.
+- **Production plumbing.** Vercel CI/CD, a generated Open Graph image, a sitemap, robots rules, JSON-LD structured data, and Playwright suites — smoke, SEO, terminal, contact API, and one per film's mini-games — that run in CI so a bad change can't quietly break a route.
 
 ## Film modes
 
@@ -60,7 +60,7 @@ Each one runs live in the browser, and most link to their source on GitHub from 
 ## Built with
 
 - **Framework:** Next.js 14 (App Router), TypeScript, React 18
-- **3D and graphics:** Three.js, React Three Fiber, drei, custom GLSL shaders, HTML canvas
+- **3D and graphics:** Three.js, React Three Fiber, custom GLSL shaders, HTML canvas
 - **Motion:** Framer Motion, Lenis smooth scroll
 - **Styling:** Tailwind CSS, a dark theme on a single emerald accent (`#34d399`), plus a film grade layer of CSS custom properties
 - **Backend:** Resend, on a serverless Vercel route
@@ -83,7 +83,7 @@ npm run build      # type-check, lint, and a production build
 npm test           # Playwright (run `npx playwright install chromium` once first)
 ```
 
-CI runs lint, the build, and the full Playwright run on every push and pull request. The smoke suite opens every page, confirms the canvases mount, and checks the main navigation; the other suites drive the film modes through a full pick-preview-commit lifecycle, exercise the guest terminal command by command, hit the contact API directly, and cover the feature presentation, commentary, and playground layers.
+CI runs lint, the build, and the full Playwright run on every push and pull request. The smoke suite opens every page, confirms the canvases mount, and checks the main navigation; the other suites drive the film modes through a full pick-preview-commit lifecycle, exercise the guest terminal command by command, hit the contact API directly, play every film's mini-games, and cover the commentary and playground layers.
 
 <details>
 <summary><b>Project structure</b></summary>
@@ -103,11 +103,12 @@ app/
   sitemap.ts robots.ts   SEO surface
 components/
   home/ layout/ ui/      Page sections and shared primitives (theater dialog,
-                         grade switcher, feature presentation)
+                         grade switcher, navbar)
   three/                 HeroScene, DistortedSphere, ParticleField, shared GLSL noise
   demos/                 DemoShell, the useDemoCanvas lifecycle hook, shared
                          chrome, and one component per demo
-  film-experience/       AudioDirector, CinematicLayer, and per-film visual modes
+  film-experience/       AudioDirector, CinematicLayer, per-film visual modes,
+                         and simulations/ — the 45 mini-games and their shared shell
   terminal/              The guest terminal
   commentary/            The director's-commentary overlay
   playground/            The behind-the-page simulation layer
@@ -118,11 +119,12 @@ lib/
   films/                 One record per film; grades, audio, and credits derive from it
   grades.ts              Applies a film's color grade to <html>, including the pre-paint boot script
   terminal.ts            The terminal's command engine and virtual filesystem
-  commentary.ts featurePresentation.ts playground.ts
+  commentary.ts playground.ts simulationScores.ts
   rateLimit.ts           Clock-injectable rate limiter behind the contact route
 tests/
-  smoke.spec.ts film-modes.spec.ts terminal.spec.ts
-  uniqueness-suite.spec.ts contact-api.spec.ts
+  smoke.spec.ts film-modes.spec.ts terminal.spec.ts seo.spec.ts
+  uniqueness-suite.spec.ts contact-api.spec.ts her-narration.spec.ts
+  sim-*.spec.ts          One suite per film's mini-games (16 films)
 ```
 
 </details>

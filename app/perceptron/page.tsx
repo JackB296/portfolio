@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Perceptron from "@/components/demos/Perceptron";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import DemoShell from "@/components/demos/DemoShell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Perceptron Classifier · ${profile.name}`,
   description:
     "An interactive single-perceptron classifier learning a linear boundary, live in the browser.",
-};
+  path: "/perceptron",
+});
 
 export default function PerceptronPage() {
   return (

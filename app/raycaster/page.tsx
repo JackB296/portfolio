@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Raycaster from "@/components/demos/Raycaster";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import DemoShell from "@/components/demos/DemoShell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Raycasting Engine · ${profile.name}`,
   description:
     "An interactive, Wolfenstein-style raycasting renderer running live in the browser. Walk through this pseudo-3D world built from a 2D grid.",
-};
+  path: "/raycaster",
+});
 
 export default function RaycasterPage() {
   return (

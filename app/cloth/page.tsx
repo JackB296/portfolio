@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import ClothSim from "@/components/demos/ClothSim";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import DemoShell from "@/components/demos/DemoShell";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Cloth Simulation · ${profile.name}`,
   description:
     "An interactive Verlet-integration cloth simulation running live in the browser. Just drag your mouse across it to slice through the threads.",
-};
+  path: "/cloth",
+});
 
 export default function ClothPage() {
   return (

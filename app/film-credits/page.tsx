@@ -3,10 +3,14 @@ import BackLink from "@/components/ui/BackLink";
 import Glow from "@/components/ui/Glow";
 import { films } from "@/lib/films";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 
 export const metadata: Metadata = {
-  title: `Film mode media credits · ${profile.name}`,
-  description: "Sources and licenses for the portfolio's optional film-mode media.",
+  ...routeMetadata({
+    title: `Film mode media credits · ${profile.name}`,
+    description: "Sources and licenses for the portfolio's optional film-mode media.",
+    path: "/film-credits",
+  }),
   robots: { index: false, follow: true },
 };
 

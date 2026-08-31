@@ -324,10 +324,13 @@ export default function AudioDirector({ filmId, enabled, onStatus }: AudioDirect
           const loadBuffer = (audioCue: ResolvedAudioCue) => {
             let promise = bufferCacheRef.current.get(audioCue.src);
             if (!promise) {
-              // Revalidate rather than force-cache: film-mode recordings are
-              // swapped in place at stable URLs, so an aggressive cache would
-              // keep replaying stale audio after a track is replaced.
-              promise = fetch(audioCue.src, { cache: "no-cache" })
+              // Default HTTP caching on purpose. `cache: "no-cache"` forced a
+              // revalidation round-trip (and, with Vercel's max-age=0 default
+              // on public/, a full re-download) on every film commit — 27 MB
+              // of audio ships uncached. Staleness after an in-place track
+              // swap is bounded instead by the /audio Cache-Control header in
+              // next.config.mjs (max-age one day).
+              promise = fetch(audioCue.src)
                 .then((response) => {
                   if (!response.ok) {
                     throw new Error(`Audio request failed: ${response.status}`);

@@ -14,9 +14,9 @@
 // Licensing note: the shipped lines are rendered locally with macOS's generic
 // `Whisper` system voice from text written for this site — no third-party
 // service, no free-tier attribution or non-commercial terms, and no sampled
-// film dialogue or actor imitation. See docs/assets/film-mode-audio-ledger.md.
-// If a line is ever sourced elsewhere, its terms travel with the file: record
-// the plan/licence in the ledger before a public deploy.
+// film dialogue or actor imitation. If a line is ever sourced elsewhere, its
+// terms travel with the file: record the licence in this comment and credit
+// it on /film-credits before a public deploy.
 
 export const VOICE_BASE = "/audio/sim-voice";
 

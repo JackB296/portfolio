@@ -99,21 +99,6 @@ export default async function OG() {
           />
         ))}
 
-        {/* Instrument readout */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: 22,
-            color: "rgba(52, 211, 153, 0.75)",
-          }}
-        >
-          <div style={{ display: "flex" }}>conway/life · torus · b3/s23</div>
-          <div style={{ display: "flex", color: "#6ee7b7" }}>
-            gen 0042 · pop 137
-          </div>
-        </div>
-
         {/* Name block, mirroring the hero */}
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div

@@ -10,9 +10,6 @@ const CELL = 16; // CSS px per cell
 const STEP_MS = 150; // generation length
 const SOUP_DENSITY = 0.12;
 
-/** The hero readout listens for this: detail is { gen, pop, preset }. */
-export const LIFE_STATS_EVENT = "life:stats";
-
 type CellPalette = readonly [newborn: string, young: string, mature: string, elder: string];
 
 // The House Grade keeps the original demo's age ramp. Named film grades use
@@ -140,9 +137,6 @@ export default function LifeHero() {
     let running = false;
     let inView = true;
     let palette = getCellPalette();
-    let gen = 0;
-    let pop = 0;
-    let presetName = "";
     // Stagnation tracking: consecutive low-activity generations, and a
     // cooldown so revival stamps never pile on top of each other.
     let dullStreak = 0;
@@ -251,10 +245,8 @@ export default function LifeHero() {
 
     function seed() {
       grid.fill(0);
-      const [name, plant] = PRESETS[Math.floor(Math.random() * PRESETS.length)];
-      presetName = name;
+      const [, plant] = PRESETS[Math.floor(Math.random() * PRESETS.length)];
       plant();
-      gen = 0;
       dullStreak = 0;
       injectCooldown = 0;
     }
@@ -322,8 +314,6 @@ export default function LifeHero() {
         }
       }
       [grid, next] = [next, grid];
-      gen++;
-      pop = alive;
 
       // Boring-field detection. Settled ash (a few blinkers) flips only a
       // handful of cells per generation; healthy soup flips hundreds.
@@ -339,12 +329,6 @@ export default function LifeHero() {
         dullStreak = 0;
         injectCooldown = 90;
       }
-    }
-
-    function publishStats() {
-      window.dispatchEvent(
-        new CustomEvent(LIFE_STATS_EVENT, { detail: { gen, pop, preset: presetName } })
-      );
     }
 
     function draw() {
@@ -368,7 +352,6 @@ export default function LifeHero() {
           ctx!.fillRect(x * CELL + 2, y * CELL + 2, CELL - 4, CELL - 4);
         }
       }
-      publishStats();
     }
 
     function frame(t: number) {

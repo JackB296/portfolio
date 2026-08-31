@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import ResumeViewer from "@/components/resume/ResumeViewer";
 import BackLink from "@/components/ui/BackLink";
 import Glow from "@/components/ui/Glow";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Resume · ${profile.name}`,
   description: `Resume of ${profile.name}, ${profile.title}.`,
-};
+  path: "/resume",
+});
 
 export default function ResumePage() {
   return (

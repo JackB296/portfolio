@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { demos } from "@/lib/demos";
 import { profile } from "@/lib/data";
+import { routeMetadata } from "@/lib/pageMetadata";
 import BackLink from "@/components/ui/BackLink";
 import Glow from "@/components/ui/Glow";
 import { ArrowRightIcon } from "@/components/ui/icons";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = routeMetadata({
   title: `Playground · ${profile.name}`,
   description:
     "A playground of interactive demos: neuroevolution, a raycasting engine, cloth physics, the Mandelbrot set, Conway's Game of Life, a perceptron, and more.",
-};
+  path: "/demos",
+});
 
 export default function DemosPage() {
   return (

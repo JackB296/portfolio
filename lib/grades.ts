@@ -33,9 +33,10 @@ export type GradeChangeIntent = "preview" | "commit" | "restore";
 export type GradeChangeDetail = Readonly<{
   gradeId: string | null;
   intent: GradeChangeIntent;
-  /** A commit that must NOT auto-arm sound: the feature-presentation leader
-   * commits tonight's film for the visit, but the visitor hasn't asked for
-   * audio (and may not have gestured), so the toggle stays off. */
+  /** A commit that must NOT auto-arm sound: reserved for auto-committed
+   * screenings (e.g. a first-visit feature presentation), where the visitor
+   * hasn't asked for audio (and may not have gestured), so the toggle stays
+   * off. */
   silent?: boolean;
 }>;
 

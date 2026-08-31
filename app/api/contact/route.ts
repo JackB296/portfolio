@@ -31,7 +31,12 @@ export async function POST(req: Request) {
       );
     }
 
-    if (Number(req.headers.get("content-length")) > MAX_BODY_BYTES) {
+    // fetch() always sets content-length for string bodies, so a missing or
+    // malformed header only comes from hand-rolled clients — reject instead of
+    // buffering an unbounded chunked body. (`Number(null)` is 0 and NaN
+    // comparisons are false, so a bare `>` check alone waves both through.)
+    const declaredBytes = Number(req.headers.get("content-length"));
+    if (!Number.isInteger(declaredBytes) || declaredBytes <= 0 || declaredBytes > MAX_BODY_BYTES) {
       return NextResponse.json(
         { error: "That message is too large to send." },
         { status: 413 }
@@ -48,11 +53,16 @@ export async function POST(req: Request) {
     const name = String(body.name ?? "").trim().slice(0, 120);
     const email = String(body.email ?? "").trim().slice(0, 200);
     const message = String(body.message ?? "").trim();
-    // Honeypot: real users never fill this hidden field.
-    const company = String(body.company ?? "").trim();
+    // Honeypot: real users never fill this hidden field. "topic" is the
+    // current field name; "company" is honored for any stale cached client
+    // (and was retired because password managers autofill organization-shaped
+    // names, silently eating real messages).
+    const honeypot = String(body.topic ?? body.company ?? "").trim();
 
-    if (company) {
-      // Silently accept to not tip off bots.
+    if (honeypot) {
+      // Silently accept to not tip off bots — but leave a trace in the
+      // function logs so a false positive is observable, not invisible.
+      console.warn("contact: honeypot tripped, message dropped");
       return NextResponse.json({ ok: true });
     }
     if (!name || !email || !message) {

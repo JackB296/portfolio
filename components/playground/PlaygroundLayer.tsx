@@ -11,22 +11,18 @@
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { accentAlpha } from "@/lib/theme";
-import {
-  addScores,
-  useFilmModeActive,
-  usePlaygroundEnabled,
-} from "@/lib/playground";
+import { useFilmModeActive, usePlaygroundEnabled } from "@/lib/playground";
 
 export type PlaygroundKind = "cloth" | "life" | "pi-blocks";
 
 type Pointer = Readonly<{ x: number; y: number; down: boolean; active: boolean }>;
 
-/** Draw one frame; returns score deltas to bank (throttled by the caller). */
+/** Draw one frame. */
 type LayerFrame = (
   ctx: CanvasRenderingContext2D,
   t: number,
   pointer: Pointer
-) => { generations?: number; threadsCut?: number } | void;
+) => void;
 
 type LayerCreate = (w: number, h: number) => LayerFrame;
 
@@ -69,8 +65,6 @@ const createCloth: LayerCreate = (w, h) => {
   let lastPointer: Pointer | null = null;
 
   return (ctx, t, pointer) => {
-    let threadsCut = 0;
-
     for (const p of pts) {
       if (p.pin) continue;
       const vx = (p.x - p.px) * 0.985;
@@ -104,7 +98,6 @@ const createCloth: LayerCreate = (w, h) => {
         const dy = my - pointer.y;
         if (dx * dx + dy * dy < 26 * 26) {
           link.cut = true;
-          threadsCut++;
         }
       }
     }
@@ -142,8 +135,6 @@ const createCloth: LayerCreate = (w, h) => {
       ctx.lineTo(b.x, b.y);
     }
     ctx.stroke();
-
-    return threadsCut ? { threadsCut } : undefined;
   };
 };
 
@@ -160,8 +151,6 @@ const createLife: LayerCreate = (w, h) => {
   let lastStep = 0;
 
   return (ctx, t, pointer) => {
-    let generations = 0;
-
     // Painting: the pointer sows live cells under itself.
     if (pointer.active) {
       const cx = Math.floor(pointer.x / cell);
@@ -179,7 +168,6 @@ const createLife: LayerCreate = (w, h) => {
 
     if (t - lastStep > 0.18) {
       lastStep = t;
-      generations = 1;
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           let n = 0;
@@ -212,8 +200,6 @@ const createLife: LayerCreate = (w, h) => {
         ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, cell - 2);
       }
     }
-
-    return generations ? { generations } : undefined;
   };
 };
 
@@ -310,16 +296,6 @@ function LayerCanvas({ kind }: { kind: PlaygroundKind }) {
     let frame: LayerFrame;
     const start = performance.now();
     const pointer = { x: -1e3, y: -1e3, down: false, active: false };
-    // Bank score deltas locally; flush to storage at most every 2 s.
-    const bank = { generations: 0, threadsCut: 0 };
-    let lastFlush = 0;
-
-    const flush = () => {
-      if (!bank.generations && !bank.threadsCut) return;
-      addScores({ ...bank });
-      bank.generations = 0;
-      bank.threadsCut = 0;
-    };
 
     // The layers default on for every visitor, so they must be cheap: a sim
     // only burns frames while its section is actually on screen.
@@ -327,13 +303,7 @@ function LayerCanvas({ kind }: { kind: PlaygroundKind }) {
 
     const loop = (now: number) => {
       const t = (now - start) / 1000;
-      const delta = frame(ctx, t, { ...pointer });
-      if (delta?.generations) bank.generations += delta.generations;
-      if (delta?.threadsCut) bank.threadsCut += delta.threadsCut;
-      if (now - lastFlush > 2000) {
-        lastFlush = now;
-        flush();
-      }
+      frame(ctx, t, { ...pointer });
       raf = requestAnimationFrame(loop);
     };
     const run = () => {
@@ -416,7 +386,6 @@ function LayerCanvas({ kind }: { kind: PlaygroundKind }) {
       window.removeEventListener("pointerup", onUp);
       section?.removeEventListener("pointerleave", onLeave);
       pause();
-      flush();
     };
   }, [kind, reduced]);
 

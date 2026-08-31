@@ -250,6 +250,15 @@ const MAN_PAGES: Record<string, readonly string[]> = {
   exit: ["exit — close the terminal. the red light also works."],
 };
 
+// The VFS dirs and man pages are plain objects, so a bare `record[name]` would
+// also find `Object.prototype` members — `cat toString` used to hand the
+// renderer a Function instead of file lines. Look up own properties only.
+function own<T>(record: Record<string, T>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(record, key)
+    ? record[key]
+    : undefined;
+}
+
 function ls(args: readonly string[], ctx: TerminalContext): TerminalResult {
   const all = args.some((a) => /^-\w*a/.test(a));
   const target = args.find((a) => !a.startsWith("-"));
@@ -260,7 +269,7 @@ function ls(args: readonly string[], ctx: TerminalContext): TerminalResult {
       : resolvePath(cwd, target);
   if (!resolved) return { lines: [`ls: no such directory: ${target}`] };
   if (resolved.kind === "file") {
-    return VFS[resolved.dir][resolved.name]
+    return own(VFS[resolved.dir], resolved.name)
       ? { lines: [resolved.name] }
       : { lines: [`ls: no such file or directory: ${target}`] };
   }
@@ -290,8 +299,8 @@ function cd(raw: string | undefined, ctx: TerminalContext): TerminalResult {
       : resolvePath(ctx.cwd ?? "~", raw);
   if (!resolved) return { lines: [`cd: no such directory: ${raw}`] };
   if (resolved.kind === "file") {
-    return VFS[resolved.dir][resolved.name] ||
-      VFS[resolved.dir][`${resolved.name}.txt`]
+    return own(VFS[resolved.dir], resolved.name) ||
+      own(VFS[resolved.dir], `${resolved.name}.txt`)
       ? { lines: [`cd: not a directory: ${raw}`] }
       : { lines: [`cd: no such directory: ${raw}`] };
   }
@@ -305,7 +314,7 @@ function cat(raw: string | undefined, ctx: TerminalContext): TerminalResult {
   if (resolved.kind === "dir") return { lines: [`cat: ${raw}: is a directory`] };
   const dir = VFS[resolved.dir];
   // Forgive a missing extension: `cat matrix` finds matrix.txt.
-  const file = dir[resolved.name] ?? dir[`${resolved.name}.txt`];
+  const file = own(dir, resolved.name) ?? own(dir, `${resolved.name}.txt`);
   if (!file) return { lines: [`cat: no such file: ${raw}`] };
   return { lines: file };
 }
@@ -378,7 +387,7 @@ function history(ctx: TerminalContext): TerminalResult {
 
 function man(name: string | undefined): TerminalResult {
   if (!name) return { lines: ["what manual page do you want?"] };
-  const page = MAN_PAGES[name.toLowerCase()];
+  const page = own(MAN_PAGES, name.toLowerCase());
   if (!page) return { lines: [`no manual entry for ${name}`] };
   return { lines: page };
 }
