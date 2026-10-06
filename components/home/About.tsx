@@ -19,8 +19,7 @@ export default function About() {
           <div>
             <Reveal>
               <h2 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-                Full Stack Engineer who writes the software{" "}
-                <span className="text-accent">factories run on</span>
+                Full Stack Engineer
               </h2>
             </Reveal>
             <div className="mt-7 space-y-5">
